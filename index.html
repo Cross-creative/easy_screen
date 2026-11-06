@@ -145,6 +145,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <div class="row">
       <span class="badge" id="count">0 espectadores</span>
       <button id="hostFs">Tela cheia</button>
+      <button id="hostMute" disabled>Desativar áudio</button>
       <button id="stopHost" class="stop">Parar</button>
     </div>
     <div class="stage" id="hostStage">
@@ -158,7 +159,8 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <button id="leave">Sair</button>
       <button id="viewFs">Tela cheia</button>
       <span class="badge" id="viewCount" hidden></span>
-      <button id="unmute" hidden>Ativar som</button>
+<button id="muteBtn">Silenciar</button>
+<input type="range" id="volume" min="0" max="1" step="0.05" value="1">
     </div>
     <div class="stage" id="viewStage">
       <video id="viewVideo" autoplay playsinline></video>
@@ -305,6 +307,9 @@ async function startHost() {
     return;
   }
   $("hostVideo").srcObject = stream;
+  const audioTrack = stream.getAudioTracks()[0];
+$("hostMute").disabled = !audioTrack;
+$("hostMute").textContent = "Desativar áudio";
   stream.getVideoTracks()[0].addEventListener("ended", stopHost);
   show(hostView);
   startPeerHost(0);
@@ -358,7 +363,6 @@ function joinRoom(code) {
   $("viewOverlay").hidden = false;
   $("viewOverlay").textContent = "Conectando...";
   $("viewCount").hidden = true;
-  $("unmute").hidden = true;
   setStatus($("viewStatus"), "");
 
   peer = new Peer();
@@ -385,11 +389,11 @@ function joinRoom(code) {
       const v = $("viewVideo");
       v.srcObject = remote;
       $("viewOverlay").hidden = true;
-      v.play().catch(() => {
-        v.muted = true;
-        $("unmute").hidden = false;
-        v.play().catch(() => {});
-      });
+v.play().catch(() => {
+  v.muted = true;
+  updateMuteBtn();
+  v.play().catch(() => {});
+});
     });
     call.on("close", () => viewerEnded("A transmissão foi encerrada."));
   });
@@ -411,6 +415,9 @@ function leaveRoom() {
   }
   $("viewVideo").srcObject = null;
   $("viewVideo").muted = false;
+  $("volume").value = 1;
+$("viewVideo").volume = 1;
+updateMuteBtn();
   if (document.fullscreenElement) document.exitFullscreen();
   show(home);
 }
@@ -429,9 +436,34 @@ $("codeInput").addEventListener("keydown", (e) => {
 });
 $("leave").addEventListener("click", leaveRoom);
 $("viewFs").addEventListener("click", () => toggleFullscreen($("viewStage")));
-$("unmute").addEventListener("click", () => {
-  $("viewVideo").muted = false;
-  $("unmute").hidden = true;
+
+  function updateMuteBtn() {
+  const v = $("viewVideo");
+  $("muteBtn").textContent = v.muted || v.volume === 0 ? "Ativar som" : "Silenciar";
+}
+
+$("muteBtn").addEventListener("click", () => {
+  const v = $("viewVideo");
+  v.muted = !v.muted;
+  if (!v.muted && v.volume === 0) {
+    v.volume = 1;
+    $("volume").value = 1;
+  }
+  updateMuteBtn();
+});
+
+$("volume").addEventListener("input", (e) => {
+  const v = $("viewVideo");
+  v.volume = Number(e.target.value);
+  v.muted = v.volume === 0;
+  updateMuteBtn();
+});
+
+$("hostMute").addEventListener("click", () => {
+  const track = stream && stream.getAudioTracks()[0];
+  if (!track) return;
+  track.enabled = !track.enabled;
+  $("hostMute").textContent = track.enabled ? "Desativar áudio" : "Ativar áudio";
 });
 
 const params = new URLSearchParams(location.search);
