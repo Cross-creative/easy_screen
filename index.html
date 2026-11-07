@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data:; media-src blob: mediastream:; connect-src https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tela Fácil</title>
 <link rel="icon" type="image/png" href="icone.png">
@@ -78,6 +80,14 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
   visibility: visible;
   transition-delay: 0.6s;
 }
+.banner {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+.banner a { color: inherit; font-weight: 700; word-break: break-all; }
 .card.highlight { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .notice p { margin: 0; color: var(--muted); }
 .sub { color: var(--muted); margin: 0 0 20px; }
@@ -205,6 +215,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 </head>
 <body>
 <main>
+  <div class="banner" id="fakeBanner" hidden>
+  <span data-i18n="unofficial">Atenção: este não é o site oficial. Use apenas o endereço oficial:</span>
+  <a id="officialLink" rel="noopener noreferrer"></a>
+</div>
   <h1 data-i18n="heading">Tela Fácil</h1>
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
@@ -305,9 +319,21 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" integrity="sha256-rV2IcNHjiZFPnLqNNb4xPEMnxp7goiHkgum/diETb+U=" crossorigin="anonymous"></script>
 <script>
+const OFFICIAL_URL = "https://cross-creative.github.io/easy_screen/";
+
+function checkOfficial() {
+  const h = location.hostname;
+  const local = h === "" || h === "localhost" || h === "127.0.0.1";
+  if (local || h === new URL(OFFICIAL_URL).hostname) return;
+  const a = $("officialLink");
+  a.href = OFFICIAL_URL;
+  a.textContent = OFFICIAL_URL;
+  $("fakeBanner").hidden = false;
+}
 const PREFIX = "tcompartilha-";
+const MAX_VIEWERS = 16;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const QUALITIES = {
   light: { width: 854, height: 480, fps: 10, kbps: 300 },
@@ -372,6 +398,8 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    unofficial: "Atenção: este não é o site oficial. Use apenas o endereço oficial:",
+    roomFull: "A sala está cheia.",
     duplicateTab: "Você já está assistindo esta sala em outra aba. Feche a outra aba para assistir aqui.",
     uploadHelp: "Upload é a velocidade com que seu computador envia dados pela internet, medida em Mbps (megabits por segundo). Cada espectador recebe um vídeo separado, então o número cresce com a quantidade de pessoas. Se passar do seu upload real, o vídeo pode travar.",
     noShare: "Compartilhar a tela só funciona no computador.",
@@ -435,6 +463,8 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+    unofficial: "Warning: this is not the official site. Only use the official address:",
+    roomFull: "The room is full.",
     duplicateTab: "You are already watching this room in another tab. Close the other tab to watch here.",
     uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
     noShare: "Screen sharing only works on a computer.",
@@ -814,29 +844,37 @@ function startPeerHost(attempt) {
     updateHostCount();
   });
 
-  peer.on("connection", (conn) => {
-conn.on("open", () => {
-  const vid = conn.metadata && conn.metadata.vid;
-  for (const other of viewers.values()) {
-    if (vid && other.vid === vid && other.conn.open) {
-      conn.send({ duplicate: true });
+peer.on("connection", (conn) => {
+  if (viewers.size >= MAX_VIEWERS) {
+    conn.on("open", () => {
+      conn.send({ full: true });
       setTimeout(() => conn.close(), 500);
-      return;
+    });
+    return;
+  }
+  conn.on("open", () => {
+    const raw = conn.metadata && conn.metadata.vid;
+    const vid = typeof raw === "string" && /^[A-Z0-9]{12}$/.test(raw) ? raw : null;
+    for (const other of viewers.values()) {
+      if (vid && other.vid === vid && other.conn.open) {
+        conn.send({ duplicate: true });
+        setTimeout(() => conn.close(), 500);
+        return;
+      }
     }
-  }
-  const v = { conn, call: null, vid };
-  viewers.set(conn.peer, v);
-  if (stream) {
-    sendStream(conn.peer, v);
-  } else {
-    conn.send({ sharing: false });
-  }
-  updateHostCount();
-});
-    conn.on("close", () => dropViewer(conn.peer));
-    conn.on("error", () => dropViewer(conn.peer));
+    const v = { conn, call: null, vid };
+    viewers.set(conn.peer, v);
+    if (stream) {
+      sendStream(conn.peer, v);
+    } else {
+      conn.send({ sharing: false });
+    }
+    updateHostCount();
   });
-
+  conn.on("close", () => dropViewer(conn.peer));
+  conn.on("error", () => dropViewer(conn.peer));
+});
+  
   peer.on("disconnected", () => {
     if (peer && !peer.destroyed) peer.reconnect();
   });
@@ -899,15 +937,29 @@ function joinRoom(code) {
   blockedTab = false;
 
   peer = new Peer();
+  peer.on("connection", (c) => c.close());
 
   peer.on("open", () => {
     const conn = peer.connect(PREFIX + code, { reliable: true, metadata: { vid: getViewerId() } });
-    conn.on("data", (d) => {
-      if (!d) return;
-      if (d.duplicate) {
-  blockedTab = true;
-  viewerEnded("duplicateTab");
-  return;
+conn.on("data", (d) => {
+  if (!d || typeof d !== "object") return;
+  if (d.duplicate === true) {
+    blockedTab = true;
+    viewerEnded("duplicateTab");
+    return;
+  }
+  if (d.full === true) {
+    blockedTab = true;
+    viewerEnded("roomFull");
+    return;
+  }
+  if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
+    $("viewCount").hidden = false;
+    setT($("viewCount"), d.count === 1 ? "viewersOne" : "viewersMany", { n: d.count });
+  }
+  if (d.sharing === false) showWaiting();
+  if (d.closed === true) viewerEnded("roomEndedByHost");
+});
 }
       if (typeof d.count === "number") {
         $("viewCount").hidden = false;
@@ -934,6 +986,10 @@ conn.on("error", () => {
   });
 
   peer.on("call", (call) => {
+    if (call.peer !== PREFIX + code) {
+  call.close();
+  return;
+}
     if (currentCall) currentCall.close();
     currentCall = call;
     call.answer();
@@ -1047,6 +1103,7 @@ $("langEn").addEventListener("click", () => setLang("en"));
 
 lang = detectLang();
 applyLang();
+  checkOfficial();
   if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) {
   $("shareCard").hidden = true;
   $("shareNotice").hidden = false;
