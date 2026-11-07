@@ -112,6 +112,7 @@ button.mini { padding: 2px 8px; font-size: 0.8rem; border-radius: 8px; }
   padding: 18px;
 }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+.hostname { font-weight: 700; margin-bottom: 8px; word-break: break-word; }
 button, select, input[type="text"] {
   font: inherit;
   padding: 10px 14px;
@@ -341,20 +342,33 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   </section>
 
   <section id="viewerView" hidden>
-    <div class="row back">
-      <button id="leave" data-i18n="leave">Sair</button>
-      <button id="viewFs" data-i18n="fullscreen">Tela cheia</button>
-      <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
-      <button id="pipView" data-i18n="pip" hidden>Janelinha flutuante</button>
-      <span class="badge" id="viewCount" hidden></span>
-      <button id="muteBtn" data-i18n="mute">Silenciar</button>
-      <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
-    </div>
+<div class="row back">
+  <button id="leave" data-i18n="leave">Sair</button>
+  <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
+  <span class="badge" id="viewCount" hidden></span>
+  <button id="openViewOptions" data-i18n="options">Opções</button>
+</div>
+<div class="hostname" id="hostName" hidden></div>
     <div class="stage" id="viewStage">
       <video id="viewVideo" autoplay playsinline></video>
       <div class="overlay" id="viewOverlay" data-i18n="connecting">Conectando...</div>
     </div>
     <div class="status" id="viewStatus"></div>
+    <div class="backdrop" id="viewBackdrop" hidden></div>
+<aside class="panel" id="viewPanel" aria-hidden="true">
+  <div class="panel-head">
+    <h2 data-i18n="options">Opções</h2>
+    <button id="closeViewOptions" data-i18n="close">Fechar</button>
+  </div>
+  <div class="panel-body">
+    <label class="field"><span data-i18n="volume">Volume</span>
+      <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
+    </label>
+    <button id="muteBtn" data-i18n="mute">Silenciar</button>
+    <button id="viewFs" data-i18n="fullscreen">Tela cheia</button>
+    <button id="pipView" data-i18n="pip" hidden>Janelinha flutuante</button>
+  </div>
+</aside>
   </section>
 
   <aside class="panel" id="chatPanel" aria-hidden="true">
@@ -455,6 +469,8 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    eyeCount: "👁 {n}",
+    volume: "Volume",
     nickTaken: "Esse apelido já está em uso nesta sala. Escolha outro.",
     kicked: "Você foi removido da sala. Tente de novo em {min} min.",
     muteUser: "Silenciar",
@@ -536,6 +552,8 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+    eyeCount: "👁 {n}",
+    volume: "Volume",
     nickTaken: "That nickname is already in use in this room. Pick another one.",
     kicked: "You were removed from the room. Try again in {min} min.",
     muteUser: "Mute",
@@ -591,6 +609,19 @@ const bans = new Map();
 let chatSeq = 0;
 let chatMuted = false;
 let blockedTab = false;
+
+function openViewPanel() {
+  closeChat();
+  $("viewPanel").classList.add("open");
+  $("viewPanel").setAttribute("aria-hidden", "false");
+  $("viewBackdrop").hidden = false;
+}
+
+function closeViewPanel() {
+  $("viewPanel").classList.remove("open");
+  $("viewPanel").setAttribute("aria-hidden", "true");
+  $("viewBackdrop").hidden = true;
+}
 
 function sameNick(a, b) {
   return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
@@ -691,6 +722,7 @@ function updateUnread() {
 
 function openChat() {
   closePanel();
+  closeViewPanel();
   $("chatPanel").classList.add("open");
   $("chatPanel").setAttribute("aria-hidden", "false");
   chatUnread = 0;
@@ -1185,6 +1217,7 @@ peer.on("connection", (conn) => {
     if (taken) return refuse(conn, { nickTaken: true });
     const v = { conn, call: null, vid, nick, muted: false, lastMsg: 0 };
     viewers.set(conn.peer, v);
+    conn.send({ hostNick: myNick });
     if (stream) {
       sendStream(conn.peer, v);
     } else {
@@ -1275,6 +1308,11 @@ function joinRoom(code) {
 viewerConn = conn;
 conn.on("data", (d) => {
   if (!d || typeof d !== "object") return;
+  if (typeof d.hostNick === "string") {
+  $("hostName").textContent = cleanNick(d.hostNick);
+  $("hostName").hidden = false;
+  return;
+}
   if (d.chat && typeof d.chat === "object") {
     addChat(d.chat);
     return;
@@ -1312,7 +1350,7 @@ conn.on("data", (d) => {
   }
   if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
     $("viewCount").hidden = false;
-    setT($("viewCount"), d.count === 1 ? "viewersOne" : "viewersMany", { n: d.count });
+    setT($("viewCount"), "eyeCount", { n: d.count });
   }
   if (d.sharing === false) showWaiting();
   if (d.closed === true) viewerEnded("roomEndedByHost");
@@ -1377,6 +1415,9 @@ function leaveRoom() {
     peer.destroy();
     peer = null;
   }
+  closeViewPanel();
+  $("hostName").hidden = true;
+  $("hostName").textContent = "";
   $("viewVideo").srcObject = null;
   $("viewVideo").muted = false;
   $("viewVideo").volume = 1;
@@ -1387,6 +1428,12 @@ function leaveRoom() {
 }
 
 document.querySelectorAll(".chatBtn").forEach((b) => b.addEventListener("click", toggleChat));
+$("openViewOptions").addEventListener("click", openViewPanel);
+$("closeViewOptions").addEventListener("click", closeViewPanel);
+$("viewBackdrop").addEventListener("click", closeViewPanel);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeViewPanel();
+});
 $("closeChat").addEventListener("click", closeChat);
 $("chatSend").addEventListener("click", sendChat);
 $("chatInput").addEventListener("keydown", (e) => {
@@ -1396,7 +1443,10 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeChat();
 });
 $("startHost").addEventListener("click", startHost);
-$("pipView").addEventListener("click", () => togglePip($("viewVideo"), $("viewStatus")));
+$("pipView").addEventListener("click", () => {
+  closeViewPanel();
+  togglePip($("viewVideo"), $("viewStatus"));
+});
 $("pipHost").addEventListener("click", () => {
   closePanel();
   togglePip($("hostVideo"), $("hostStatus"));
@@ -1449,7 +1499,10 @@ $("codeInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") joinRoom($("codeInput").value);
 });
 $("leave").addEventListener("click", leaveRoom);
-$("viewFs").addEventListener("click", () => toggleFullscreen($("viewStage")));
+$("viewFs").addEventListener("click", () => {
+  closeViewPanel();
+  toggleFullscreen($("viewStage"));
+});
 $("muteBtn").addEventListener("click", () => {
   const v = $("viewVideo");
   v.muted = !v.muted;
