@@ -372,6 +372,7 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    duplicateTab: "Você já está assistindo esta sala em outra aba. Feche a outra aba para assistir aqui.",
     uploadHelp: "Upload é a velocidade com que seu computador envia dados pela internet, medida em Mbps (megabits por segundo). Cada espectador recebe um vídeo separado, então o número cresce com a quantidade de pessoas. Se passar do seu upload real, o vídeo pode travar.",
     noShare: "Compartilhar a tela só funciona no computador.",
     noFullscreen: "Seu aparelho não suporta tela cheia aqui (comum no iPhone).",
@@ -434,7 +435,8 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
-        uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
+    duplicateTab: "You are already watching this room in another tab. Close the other tab to watch here.",
+    uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
     noShare: "Screen sharing only works on a computer.",
     noFullscreen: "Your device does not support fullscreen here (common on iPhone).",
     q_light: "Very light (480p, 10 fps)",
@@ -461,6 +463,17 @@ let viewerTimeout = null;
 let currentCall = null;
 let monitorTimer = null;
 let lang = "pt";
+let blockedTab = false;
+
+function getViewerId() {
+  let id = null;
+  try { id = localStorage.getItem("viewerId"); } catch (e) {}
+  if (!id) {
+    id = makeCode() + makeCode();
+    try { localStorage.setItem("viewerId", id); } catch (e) {}
+  }
+  return id;
+}
 
 function t(key, vars) {
   let s = (I18N[lang] && I18N[lang][key]) || I18N.pt[key] || key;
@@ -802,16 +815,24 @@ function startPeerHost(attempt) {
   });
 
   peer.on("connection", (conn) => {
-    conn.on("open", () => {
-      const v = { conn, call: null };
-      viewers.set(conn.peer, v);
-      if (stream) {
-        sendStream(conn.peer, v);
-      } else {
-        conn.send({ sharing: false });
-      }
-      updateHostCount();
-    });
+conn.on("open", () => {
+  const vid = conn.metadata && conn.metadata.vid;
+  for (const other of viewers.values()) {
+    if (vid && other.vid === vid && other.conn.open) {
+      conn.send({ duplicate: true });
+      setTimeout(() => conn.close(), 500);
+      return;
+    }
+  }
+  const v = { conn, call: null, vid };
+  viewers.set(conn.peer, v);
+  if (stream) {
+    sendStream(conn.peer, v);
+  } else {
+    conn.send({ sharing: false });
+  }
+  updateHostCount();
+});
     conn.on("close", () => dropViewer(conn.peer));
     conn.on("error", () => dropViewer(conn.peer));
   });
@@ -875,13 +896,19 @@ function joinRoom(code) {
   $("viewCount").hidden = true;
   setStatus($("viewStatus"), "");
   updateMuteBtn();
+  blockedTab = false;
 
   peer = new Peer();
 
   peer.on("open", () => {
-    const conn = peer.connect(PREFIX + code, { reliable: true });
+    const conn = peer.connect(PREFIX + code, { reliable: true, metadata: { vid: getViewerId() } });
     conn.on("data", (d) => {
       if (!d) return;
+      if (d.duplicate) {
+  blockedTab = true;
+  viewerEnded("duplicateTab");
+  return;
+}
       if (typeof d.count === "number") {
         $("viewCount").hidden = false;
         setT($("viewCount"), d.count === 1 ? "viewersOne" : "viewersMany", { n: d.count });
@@ -897,8 +924,12 @@ function joinRoom(code) {
         }
       }, 15000);
     });
-    conn.on("close", () => viewerEnded("roomEnded"));
-    conn.on("error", () => viewerEnded("connLost"));
+conn.on("close", () => {
+  if (!blockedTab) viewerEnded("roomEnded");
+});
+conn.on("error", () => {
+  if (!blockedTab) viewerEnded("connLost");
+});
     viewerTimeout = setTimeout(() => viewerEnded("cantConnect"), 20000);
   });
 
@@ -932,6 +963,7 @@ function joinRoom(code) {
 function leaveRoom() {
   clearTimeout(viewerTimeout);
   currentCall = null;
+  blockedTab = false;
   if (peer) {
     peer.destroy();
     peer = null;
@@ -946,6 +978,9 @@ function leaveRoom() {
 }
 
 $("startHost").addEventListener("click", startHost);
+window.addEventListener("pagehide", () => {
+  if (peer) peer.destroy();
+});
 $("shareBtn").addEventListener("click", reshare);
 $("stopShare").addEventListener("click", stopShare);
 $("openOptions").addEventListener("click", openPanel);
