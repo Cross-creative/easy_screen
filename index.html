@@ -31,6 +31,17 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+.warn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
 body {
   margin: 0;
   background: var(--bg);
@@ -113,10 +124,12 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         <h2>Compartilhar minha tela</h2>
         <div class="row">
           <select id="quality">
+            <option value="light">Muito leve (480p, 10 fps)</option>
             <option value="eco">Econômica (720p, 15 fps)</option>
             <option value="mid">Equilibrada (720p, 24 fps)</option>
             <option value="high">Alta (1080p, 30 fps)</option>
             <option value="extreme">Extrema (1440p, 60 fps)</option>
+            <option value="uhd">4K (2160p, 30 fps)</option>
           </select>
         </div>
         <div class="row">
@@ -147,10 +160,15 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <span class="badge" id="count">0 espectadores</span>
       <button id="hostFs">Tela cheia</button>
       <button id="hostMute" disabled>Desativar áudio</button>
+      <select id="liveQuality"></select>
     <button id="shareBtn">Trocar aba ou janela</button>
     <button id="stopShare">Parar de compartilhar</button>
     <button id="closeRoom" class="stop">Encerrar sala</button>
     </div>
+    <div class="warn" id="hostWarn" hidden>
+  <span id="hostWarnText"></span>
+  <button id="lowerQ">Reduzir qualidade</button>
+  </div>
     <div class="stage" id="hostStage">
       <video id="hostVideo" autoplay playsinline muted></video>
       <div class="overlay" id="hostOverlay" hidden>Compartilhamento pausado</div>
@@ -179,16 +197,20 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 const PREFIX = "tcompartilha-";
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const QUALITIES = {
+  light: { width: 854, height: 480, fps: 10, kbps: 300 },
   eco: { width: 1280, height: 720, fps: 15, kbps: 800 },
   mid: { width: 1280, height: 720, fps: 24, kbps: 1500 },
   high: { width: 1920, height: 1080, fps: 30, kbps: 3000 },
-  extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 }
+  extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 },
+  uhd: { width: 3840, height: 2160, fps: 30, kbps: 15000 }
 };
+const ORDER = ["light", "eco", "mid", "high", "extreme", "uhd"];
 
 const $ = (id) => document.getElementById(id);
 const home = $("home");
 const hostView = $("hostView");
 const viewerView = $("viewerView");
+$("liveQuality").innerHTML = $("quality").innerHTML;
 
 let peer = null;
 let stream = null;
@@ -197,6 +219,66 @@ let viewers = new Map();
 let currentCode = "";
 let viewerTimeout = null;
 let currentCall = null;
+let qualityKey = "eco";
+let monitorTimer = null;
+
+function setQuality(key) {
+  qualityKey = key;
+  quality = QUALITIES[key];
+  $("liveQuality").value = key;
+  const track = stream && stream.getVideoTracks()[0];
+  if (track) {
+    track.contentHint = key === "extreme" || key === "uhd" ? "detail" : "";
+    track.applyConstraints({
+      width: { max: quality.width },
+      height: { max: quality.height },
+      frameRate: { max: quality.fps }
+    }).catch(() => {});
+  }
+  viewers.forEach((v) => {
+    if (v.call) limitBitrate(v.call, quality.kbps);
+  });
+  updateHostCount();
+  checkLoad();
+}
+
+async function checkLoad() {
+  let reason = "";
+  for (const v of viewers.values()) {
+    const pc = v.call && v.call.peerConnection;
+    if (!pc) continue;
+    try {
+      const stats = await pc.getStats();
+      stats.forEach((r) => {
+        if (r.type === "outbound-rtp" && r.kind === "video" && r.qualityLimitationReason && r.qualityLimitationReason !== "none") {
+          reason = r.qualityLimitationReason;
+        }
+      });
+    } catch (e) {}
+  }
+  const estimate = (viewers.size * quality.kbps) / 1000;
+  let text = "";
+  if (reason === "bandwidth") {
+    text = "Seu upload está no limite e o vídeo pode travar para os espectadores.";
+  } else if (reason === "cpu") {
+    text = "Seu computador está sobrecarregado e o vídeo pode travar.";
+  } else if (estimate >= 20) {
+    text = "Upload estimado em cerca de " + estimate.toFixed(0) + " Mbps. Pode pesar na sua conexão.";
+  }
+  $("hostWarnText").textContent = text;
+  $("lowerQ").hidden = qualityKey === ORDER[0];
+  $("hostWarn").hidden = !text || !stream;
+}
+
+function startMonitor() {
+  stopMonitor();
+  monitorTimer = setInterval(checkLoad, 3000);
+}
+
+function stopMonitor() {
+  clearInterval(monitorTimer);
+  monitorTimer = null;
+}
 
 function show(section) {
   home.hidden = section !== home;
@@ -245,7 +327,7 @@ function applyStream(newStream) {
   const old = stream;
   stream = newStream;
   const track = newStream.getVideoTracks()[0];
-  if ($("quality").value === "extreme") track.contentHint = "detail";
+  if ($("quality").value === "extreme" || $("quality").value === "uhd") track.contentHint = qualityKey === "extreme" || qualityKey === "uhd" ? "detail" : "";
   track.addEventListener("ended", () => {
     if (stream === newStream) stopShare();
   });
@@ -257,13 +339,16 @@ function applyStream(newStream) {
 }
 
 async function startHost() {
-  quality = QUALITIES[$("quality").value];
+qualityKey = $("quality").value;
+quality = QUALITIES[qualityKey];
   const s = await captureScreen();
   if (!s) {
     setStatus($("homeStatus"), "Compartilhamento cancelado, bloqueado ou não suportado.", true);
     return;
   }
-  show(hostView);
+show(hostView);
+$("liveQuality").value = qualityKey;
+startMonitor();
   startPeerHost(0);
   applyStream(s);
 }
@@ -285,11 +370,14 @@ function stopShare() {
       v.call = null;
     }
   });
+  $("hostWarn").hidden = true;
   setSharingUI(false);
   updateHostCount();
 }
 
 function closeRoom() {
+  stopMonitor();
+  $("hostWarn").hidden = true;
   if (stream) {
     stream.getTracks().forEach((t) => t.stop());
     stream = null;
@@ -517,6 +605,11 @@ updateMuteBtn();
 }
 
 $("shareBtn").addEventListener("click", reshare);
+$("liveQuality").addEventListener("change", (e) => setQuality(e.target.value));
+$("lowerQ").addEventListener("click", () => {
+  const i = ORDER.indexOf(qualityKey);
+  if (i > 0) setQuality(ORDER[i - 1]);
+});
 $("stopShare").addEventListener("click", stopShare);
 $("closeRoom").addEventListener("click", closeRoom);
 $("startHost").addEventListener("click", startHost);
