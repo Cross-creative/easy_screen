@@ -259,10 +259,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
-    <div class="grid">
-      <div class="row">
+          <div class="row">
   <input type="text" id="nick" maxlength="20" autocomplete="off" placeholder="Seu apelido">
 </div>
+    <div class="grid">
       <div class="card" id="shareCard">
         <h2 data-i18n="shareMyScreen">Compartilhar minha tela</h2>
         <div class="row">
@@ -273,14 +273,14 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         </div>
         <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
       </div>
-
+<div class="card notice" id="shareNotice" hidden>
       <div class="card" id="watchCard">
         <h2 data-i18n="watchWithCode">Assistir com um código</h2>
         <div class="row">
           <input type="text" id="codeInput" maxlength="6" placeholder="CÓDIGO" autocomplete="off">
           <button id="join" class="primary" data-i18n="join">Entrar</button>
         </div>
-        <div class="card notice" id="shareNotice" hidden>
+        
          <p data-i18n="noShare">Compartilhar a tela só funciona no computador.</p>
          </div>
       </div>
@@ -355,13 +355,13 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
     <div class="status" id="viewStatus"></div>
   </section>
-  <div class="people" id="people" hidden></div>
+
   <aside class="panel" id="chatPanel" aria-hidden="true">
   <div class="panel-head">
-    
     <h2 data-i18n="chat">Chat</h2>
     <button id="closeChat" data-i18n="close">Fechar</button>
   </div>
+  <div class="people" id="people" hidden></div>
   <div class="chat-list" id="chatList"></div>
   <div class="chat-form">
     <input type="text" id="chatInput" maxlength="300" autocomplete="off" placeholder="Escreva uma mensagem">
@@ -966,6 +966,7 @@ function applyStream(newStream) {
 }
 
 async function startHost() {
+  if (!requireNick()) return;
   qualityKey = $("quality").value;
   quality = QUALITIES[qualityKey];
   const s = await captureScreen();
@@ -1006,6 +1007,7 @@ function stopShare() {
 }
 
 function closeRoom() {
+  leavePip();
   bans.clear();
   clearChat();
   stopMonitor();
@@ -1144,8 +1146,8 @@ function updateHostCount() {
   $("uploadInfo").hidden = !(stream && n);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ count: n });
-  renderPeople();
   });
+  renderPeople();
 }
 
 function dropViewer(id) {
@@ -1201,28 +1203,6 @@ peer.on("connection", (conn) => {
   conn.on("close", () => dropViewer(conn.peer));
   conn.on("error", () => dropViewer(conn.peer));
 });
-  conn.on("open", () => {
-    const raw = conn.metadata && conn.metadata.vid;
-    const vid = typeof raw === "string" && /^[A-Z0-9]{12}$/.test(raw) ? raw : null;
-    for (const other of viewers.values()) {
-      if (vid && other.vid === vid && other.conn.open) {
-        conn.send({ duplicate: true });
-        setTimeout(() => conn.close(), 500);
-        return;
-      }
-    }
-    const v = { conn, call: null, vid, nick: cleanNick(conn.metadata && conn.metadata.nick) || "?", lastMsg: 0 };
-    viewers.set(conn.peer, v);
-    if (stream) {
-      sendStream(conn.peer, v);
-    } else {
-      conn.send({ sharing: false });
-    }
-    updateHostCount();
-  });
-  conn.on("close", () => dropViewer(conn.peer));
-  conn.on("error", () => dropViewer(conn.peer));
-});
 
 peer.on("disconnected", () => {
   if (peer && !peer.destroyed) peer.reconnect();
@@ -1274,10 +1254,10 @@ function updateMuteBtn() {
 function joinRoom(code) {
   code = code.trim().toUpperCase();
   if (code.length !== 6) {
-  if (!requireNick()) return;
     setStatus($("homeStatus"), "codeLength", true);
     return;
   }
+  if (!requireNick()) return;
   show(viewerView);
   $("viewOverlay").hidden = false;
   setT($("viewOverlay"), "connecting");
@@ -1344,15 +1324,6 @@ conn.on("data", (d) => {
         }
       }, 15000);
     });
-conn.on("data", (d) => {
-  const v = viewers.get(conn.peer);
-  if (!v || !d || typeof d !== "object" || typeof d.msg !== "string") return;
-  const now = Date.now();
-  if (now - v.lastMsg < 700) return;
-  v.lastMsg = now;
-  const text = d.msg.trim().slice(0, CHAT_MAX);
-  if (text) broadcastChat(v.nick, text);
-});
 conn.on("close", () => {
   if (!blockedTab) viewerEnded("roomEnded");
 });
@@ -1395,6 +1366,7 @@ conn.on("error", () => {
 }
 
 function leaveRoom() {
+  leavePip();
   clearChat();
   clearTimeout(viewerTimeout);
   viewerConn = null;
