@@ -1,0 +1,98 @@
+# Screen Sharing
+
+Share a browser tab or window directly with other people, with no account, no install and no server of your own. The whole app is a single HTML file.
+
+**Live site:** https://cross-creative.github.io/easy_screen/
+
+## How it works
+
+Video travels directly from the host's browser to each viewer's browser (peer-to-peer, using WebRTC). A public [PeerJS](https://peerjs.com) server is used only to help browsers find each other. No video passes through it, and nothing is stored.
+
+## Quick start
+
+**Sharing**
+
+1. Open the site on a computer.
+2. Pick a quality level and choose whether to share audio.
+3. Click **Choose a tab or window** and select what to share.
+4. Send the 6-character room code, or the link, to your viewers.
+
+**Watching**
+
+1. Open the link, or type the room code on the home page and click **Join**.
+2. If the video starts muted because of browser autoplay rules, click **Unmute**.
+
+## Features
+
+- Room codes: each host gets a random 6-character code, plus a shareable link that joins the room directly
+- Tab or window sharing with optional audio
+- Quality levels from 480p up to 4K, adjustable while streaming
+- Warning for the host when upload bandwidth or CPU is overloaded, with a one-click option to lower the quality
+- Estimated upload usage and a live viewer counter
+- Stop and resume sharing, or switch to another tab or window, without kicking anyone out of the room
+- Options panel for the host, with a confirmation before ending the room
+- One tab per viewer per room: duplicate tabs from the same browser are blocked
+- Volume and mute controls for viewers, audio toggle for the host
+- Fullscreen for both host and viewers
+- English and Portuguese (Brazil), detected from the browser and remembered
+- Light and dark theme, following the system setting
+
+## Quality levels and upload
+
+Each viewer receives a separate copy of the video, so the host's upload grows with the audience. These are approximate values per viewer:
+
+| Level | Resolution | Frame rate | Upload per viewer |
+|---|---|---|---|
+| Very light | 480p | 10 fps | ~0.3 Mbps |
+| Economy | 720p | 15 fps | ~0.8 Mbps |
+| Balanced | 720p | 24 fps | ~1.5 Mbps |
+| High | 1080p | 30 fps | ~3 Mbps |
+| QHD | 1440p | 60 fps | ~8 Mbps |
+| 4K | 2160p | 30 fps | ~15 Mbps |
+
+Example: 4 viewers at Balanced need about 6 Mbps of upload. The actual resolution also depends on the size of the shared tab or window.
+
+## Browser support
+
+| | Share | Watch |
+|---|---|---|
+| Desktop Chrome, Edge, Firefox, Safari | Yes | Yes |
+| Android browsers | No | Yes |
+| iOS browsers | No | Yes |
+
+Mobile browsers do not currently support screen capture, so on phones the site only lets you watch. Audio capture also depends on the browser: sharing a tab's audio works best in Chrome and Edge, and sharing a whole window's audio is limited.
+
+## Deploy your own copy
+
+Only `index.html` is required.
+
+**GitHub Pages**
+
+1. Put `index.html` in the root of a repository.
+2. In the repository settings, open **Pages** and select the branch to publish.
+
+**Netlify**
+
+Drag the folder containing `index.html` into [app.netlify.com/drop](https://app.netlify.com/drop).
+
+Both serve the site over HTTPS, which browsers require for screen capture.
+
+## Limitations
+
+- Mesh topology: the host uploads one stream per viewer. It is meant for small groups, roughly 3 to 6 people.
+- Depends on the free public PeerJS server, which can be slow or unavailable.
+- Viewers behind very restrictive networks, such as some school or company networks, may fail to connect without a TURN server.
+- Duplicate-tab detection only works within the same browser profile. Another browser, a private window or another device counts as a different viewer.
+
+## Privacy
+
+- No accounts, no analytics and no cookies.
+- The browser stores only your language choice and a random identifier used to detect duplicate tabs. Both stay on your device.
+- Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
+- Only share content you have the right to share. Streaming protected material, such as movies or series, may violate the terms of the service that provides it.
+
+## License
+
+All rights reserved. The source code is public for reference only. Copying, modifying, redistributing or reusing it requires prior written permission from the author.
+
+Contact: supervxz99@gmail.com
