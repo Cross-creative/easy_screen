@@ -25,6 +25,7 @@ Watching
 Features
 
 - Room codes: each host gets a random 6-character code, plus a shareable link that joins the room directly
+- Chat: user's can chat with each other, You are responsable for what you say, the host can kick you.
 - Tab or window sharing with optional audio
 - Quality levels from 480p up to 4K, adjustable while streaming
 - Warning for the host when upload bandwidth or CPU is overloaded, with a one-click option to lower the quality
