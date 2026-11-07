@@ -749,8 +749,9 @@ $("hostMute").addEventListener("click", () => {
 const params = new URLSearchParams(location.search);
 const roomParam = params.get("sala");
 if (roomParam) {
-  $("codeInput").value = roomParam.toUpperCase().slice(0, 6);
-  setStatus($("homeStatus"), "Clique em Entrar para assistir.");
+  const code = roomParam.toUpperCase().slice(0, 6);
+  $("codeInput").value = code;
+  joinRoom(code);
 }
 </script>
 </body>
