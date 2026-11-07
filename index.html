@@ -54,6 +54,19 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
   outline: none;
 }
 .info:hover, .info:focus { color: var(--text); }
+.people {
+  max-height: 32%;
+  overflow-y: auto;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.person { display: flex; align-items: center; gap: 6px; }
+.person .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.mini { padding: 2px 8px; font-size: 0.8rem; border-radius: 8px; }
+.msg .mini { margin-left: 8px; opacity: 0.7; }
 .tip {
   position: absolute;
   bottom: 140%;
@@ -342,9 +355,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
     <div class="status" id="viewStatus"></div>
   </section>
-
+  <div class="people" id="people" hidden></div>
   <aside class="panel" id="chatPanel" aria-hidden="true">
   <div class="panel-head">
+    
     <h2 data-i18n="chat">Chat</h2>
     <button id="closeChat" data-i18n="close">Fechar</button>
   </div>
@@ -440,6 +454,14 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    nickTaken: "Esse apelido já está em uso nesta sala. Escolha outro.",
+    kicked: "Você foi removido da sala. Tente de novo em {min} min.",
+    muteUser: "Silenciar",
+    unmuteUser: "Reativar",
+    kickUser: "Expulsar",
+    delMsg: "Apagar",
+    noPeople: "Nenhum espectador na sala.",
+    chatMutedPh: "O host silenciou você",
     chat: "Chat",
     send: "Enviar",
     nickPlaceholder: "Seu apelido",
@@ -513,6 +535,14 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+    nickTaken: "That nickname is already in use in this room. Pick another one.",
+    kicked: "You were removed from the room. Try again in {min} min.",
+    muteUser: "Mute",
+    unmuteUser: "Unmute",
+    kickUser: "Kick",
+    delMsg: "Delete",
+    noPeople: "No viewers in the room.",
+    chatMutedPh: "The host muted you",
     chat: "Chat",
     send: "Send",
     nickPlaceholder: "Your nickname",
@@ -555,7 +585,85 @@ const CHAT_MAX = 300;
 let myNick = "";
 let viewerConn = null;
 let chatUnread = 0;
+const BAN_MS = 5 * 60 * 1000;
+const bans = new Map();
+let chatSeq = 0;
+let chatMuted = false;
 let blockedTab = false;
+
+function sameNick(a, b) {
+  return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+}
+
+function refuse(conn, msg) {
+  conn.send(msg);
+  setTimeout(() => conn.close(), 500);
+}
+
+function updateChatInput() {
+  $("chatInput").disabled = chatMuted;
+  $("chatSend").disabled = chatMuted;
+  $("chatInput").placeholder = t(chatMuted ? "chatMutedPh" : "chatPlaceholder");
+}
+
+function removeMessage(id) {
+  const row = $("chatList").querySelector('[data-id="' + id + '"]');
+  if (row) row.remove();
+}
+
+function deleteMessage(id) {
+  removeMessage(id);
+  viewers.forEach((v) => {
+    if (v.conn.open) v.conn.send({ del: id });
+  });
+}
+
+function toggleMuteUser(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  v.muted = !v.muted;
+  if (v.conn.open) v.conn.send({ muted: v.muted });
+  renderPeople();
+}
+
+function kickViewer(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  if (v.vid) bans.set(v.vid, Date.now() + BAN_MS);
+  if (v.conn.open) v.conn.send({ kicked: true, wait: BAN_MS / 1000 });
+  setTimeout(() => v.conn.close(), 500);
+  dropViewer(id);
+}
+
+function renderPeople() {
+  const box = $("people");
+  if (box.hidden) return;
+  box.innerHTML = "";
+  if (!viewers.size) {
+    const e = document.createElement("div");
+    e.className = "status";
+    setT(e, "noPeople");
+    box.appendChild(e);
+    return;
+  }
+  viewers.forEach((v, id) => {
+    const row = document.createElement("div");
+    row.className = "person";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = v.nick;
+    const mute = document.createElement("button");
+    mute.className = "mini";
+    setT(mute, v.muted ? "unmuteUser" : "muteUser");
+    mute.addEventListener("click", () => toggleMuteUser(id));
+    const kick = document.createElement("button");
+    kick.className = "mini stop";
+    setT(kick, "kickUser");
+    kick.addEventListener("click", () => kickViewer(id));
+    row.append(name, mute, kick);
+    box.appendChild(row);
+  });
+}
 
 function cleanNick(s) {
   return String(s || "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 20);
@@ -606,22 +714,34 @@ function toggleChat() {
 function clearChat() {
   closeChat();
   $("chatList").innerHTML = "";
+  $("people").hidden = true;
+  $("people").innerHTML = "";
+  chatMuted = false;
   chatUnread = 0;
+  updateChatInput();
   updateUnread();
 }
 
-function addChat(m) {
+function addChat(m, mod) {
   if (!m || typeof m.nick !== "string" || typeof m.text !== "string") return;
   const list = $("chatList");
   const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
   const row = document.createElement("div");
   row.className = "msg";
+  if (Number.isInteger(m.id)) row.dataset.id = String(m.id);
   const who = document.createElement("strong");
   who.textContent = m.nick.slice(0, 20) + ":";
   const body = document.createElement("span");
   body.textContent = " " + m.text.slice(0, CHAT_MAX);
   row.appendChild(who);
   row.appendChild(body);
+  if (mod && Number.isInteger(m.id)) {
+    const del = document.createElement("button");
+    del.className = "mini";
+    setT(del, "delMsg");
+    del.addEventListener("click", () => deleteMessage(m.id));
+    row.appendChild(del);
+  }
   list.appendChild(row);
   while (list.children.length > 200) list.removeChild(list.firstChild);
   if (nearBottom) list.scrollTop = list.scrollHeight;
@@ -632,8 +752,8 @@ function addChat(m) {
 }
 
 function broadcastChat(nick, text) {
-  const m = { nick: nick, text: text };
-  addChat(m);
+  const m = { id: ++chatSeq, nick: nick, text: text };
+  addChat(m, true);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ chat: m });
   });
@@ -742,7 +862,7 @@ function applyLang() {
   });
   $("codeInput").placeholder = t("codePlaceholder");
   $("nick").placeholder = t("nickPlaceholder");
-  $("chatInput").placeholder = t("chatPlaceholder");
+  updateChatInput();
   fillQuality();
   $("langPt").classList.toggle("active", lang === "pt");
   $("langEn").classList.toggle("active", lang === "en");
@@ -854,6 +974,7 @@ async function startHost() {
     return;
   }
   show(hostView);
+  $("people").hidden = false;
   $("liveQuality").value = qualityKey;
   $("hostWarn").hidden = true;
   startMonitor();
@@ -885,6 +1006,7 @@ function stopShare() {
 }
 
 function closeRoom() {
+  bans.clear();
   clearChat();
   stopMonitor();
   $("hostWarn").hidden = true;
@@ -1022,6 +1144,7 @@ function updateHostCount() {
   $("uploadInfo").hidden = !(stream && n);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ count: n });
+  renderPeople();
   });
 }
 
@@ -1043,13 +1166,41 @@ function startPeerHost(attempt) {
   });
 
 peer.on("connection", (conn) => {
-  if (viewers.size >= MAX_VIEWERS) {
-    conn.on("open", () => {
-      conn.send({ full: true });
-      setTimeout(() => conn.close(), 500);
-    });
-    return;
-  }
+  conn.on("open", () => {
+    if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+    const meta = conn.metadata || {};
+    const vid = typeof meta.vid === "string" && /^[A-Z0-9]{12}$/.test(meta.vid) ? meta.vid : null;
+    const nick = cleanNick(meta.nick);
+    const ban = vid ? bans.get(vid) : 0;
+    if (ban && ban > Date.now()) {
+      return refuse(conn, { kicked: true, wait: Math.ceil((ban - Date.now()) / 1000) });
+    }
+    for (const other of viewers.values()) {
+      if (vid && other.vid === vid && other.conn.open) return refuse(conn, { duplicate: true });
+    }
+    const taken = !nick || sameNick(nick, myNick) || [...viewers.values()].some((o) => sameNick(o.nick, nick));
+    if (taken) return refuse(conn, { nickTaken: true });
+    const v = { conn, call: null, vid, nick, muted: false, lastMsg: 0 };
+    viewers.set(conn.peer, v);
+    if (stream) {
+      sendStream(conn.peer, v);
+    } else {
+      conn.send({ sharing: false });
+    }
+    updateHostCount();
+  });
+  conn.on("data", (d) => {
+    const v = viewers.get(conn.peer);
+    if (!v || v.muted || !d || typeof d !== "object" || typeof d.msg !== "string") return;
+    const now = Date.now();
+    if (now - v.lastMsg < 700) return;
+    v.lastMsg = now;
+    const text = d.msg.trim().slice(0, CHAT_MAX);
+    if (text) broadcastChat(v.nick, text);
+  });
+  conn.on("close", () => dropViewer(conn.peer));
+  conn.on("error", () => dropViewer(conn.peer));
+});
   conn.on("open", () => {
     const raw = conn.metadata && conn.metadata.vid;
     const vid = typeof raw === "string" && /^[A-Z0-9]{12}$/.test(raw) ? raw : null;
@@ -1144,9 +1295,30 @@ viewerConn = conn;
 conn.on("data", (d) => {
   if (!d || typeof d !== "object") return;
   if (d.chat && typeof d.chat === "object") {
-  addChat(d.chat);
-  return;
-}
+    addChat(d.chat);
+    return;
+  }
+  if (Number.isInteger(d.del)) {
+    removeMessage(d.del);
+    return;
+  }
+  if (typeof d.muted === "boolean") {
+    chatMuted = d.muted;
+    updateChatInput();
+    return;
+  }
+  if (d.nickTaken === true) {
+    leaveRoom();
+    setStatus($("homeStatus"), "nickTaken", true);
+    $("nick").focus();
+    return;
+  }
+  if (d.kicked === true) {
+    const mins = Math.max(1, Math.ceil((Number(d.wait) || 300) / 60));
+    leaveRoom();
+    setStatus($("homeStatus"), "kicked", true, { min: mins });
+    return;
+  }
   if (d.duplicate === true) {
     blockedTab = true;
     viewerEnded("duplicateTab");
