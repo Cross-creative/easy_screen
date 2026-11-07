@@ -285,6 +285,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         </label>
         <button id="hostMute" data-i18n="muteAudio" disabled>Desativar áudio</button>
         <button id="hostFs" data-i18n="fullscreen">Tela cheia</button>
+        <button id="pipHost" data-i18n="pip" hidden>Janelinha flutuante</button>
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
         <button id="stopShare" data-i18n="stopShare">Parar de compartilhar</button>
         <hr>
@@ -302,6 +303,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <div class="row back">
       <button id="leave" data-i18n="leave">Sair</button>
       <button id="viewFs" data-i18n="fullscreen">Tela cheia</button>
+      <button id="pipView" data-i18n="pip" hidden>Janelinha flutuante</button>
       <span class="badge" id="viewCount" hidden></span>
       <button id="muteBtn" data-i18n="mute">Silenciar</button>
       <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
@@ -398,6 +400,8 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    pip: "Janelinha flutuante",
+    pipFail: "Não foi possível abrir a janelinha flutuante.",
     unofficial: "Atenção: este não é o site oficial. Use apenas o endereço oficial:",
     roomFull: "A sala está cheia.",
     duplicateTab: "Você já está assistindo esta sala em outra aba. Feche a outra aba para assistir aqui.",
@@ -463,6 +467,8 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+    pip: "Floating window",
+    pipFail: "Could not open the floating window.",
     unofficial: "Warning: this is not the official site. Only use the official address:",
     roomFull: "The room is full.",
     duplicateTab: "You are already watching this room in another tab. Close the other tab to watch here.",
@@ -494,6 +500,40 @@ let currentCall = null;
 let monitorTimer = null;
 let lang = "pt";
 let blockedTab = false;
+
+function pipSupported() {
+  return !!document.pictureInPictureEnabled || typeof $("viewVideo").webkitSetPresentationMode === "function";
+}
+
+async function togglePip(video, statusEl) {
+  try {
+    if (document.pictureInPictureElement === video) {
+      await document.exitPictureInPicture();
+    } else if (document.pictureInPictureEnabled && video.requestPictureInPicture) {
+      if (video.readyState === 0) throw new Error("not ready");
+      await video.requestPictureInPicture();
+    } else if (typeof video.webkitSetPresentationMode === "function") {
+      video.webkitSetPresentationMode(video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture");
+    }
+  } catch (e) {
+    setStatus(statusEl, "pipFail", true);
+  }
+}
+
+function setupAutoPip(video, active) {
+  if (!("mediaSession" in navigator)) return;
+  try {
+    navigator.mediaSession.setActionHandler(
+      "enterpictureinpicture",
+      active ? () => { video.requestPictureInPicture().catch(() => {}); } : null
+    );
+  } catch (e) {}
+}
+
+function leavePip() {
+  setupAutoPip(null, false);
+  if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
+}
 
 function getViewerId() {
   let id = null;
@@ -643,6 +683,7 @@ function applyStream(newStream) {
     if (stream === newStream) stopShare();
   });
   $("hostVideo").srcObject = newStream;
+  setupAutoPip($("hostVideo"), true);
   if (old) old.getTracks().forEach((tr) => tr.stop());
   setSharingUI(true);
   viewers.forEach((v, id) => sendStream(id, v));
@@ -672,6 +713,7 @@ async function reshare() {
 
 function stopShare() {
   if (!stream) return;
+  leavePip();
   stream.getTracks().forEach((tr) => tr.stop());
   stream = null;
   $("hostVideo").srcObject = null;
@@ -989,6 +1031,7 @@ conn.on("error", () => {
       clearTimeout(viewerTimeout);
       const v = $("viewVideo");
       v.srcObject = remote;
+      setupAutoPip(v, true);
       $("viewOverlay").hidden = true;
       v.play().catch(() => {
         v.muted = true;
@@ -1026,6 +1069,11 @@ function leaveRoom() {
 }
 
 $("startHost").addEventListener("click", startHost);
+$("pipView").addEventListener("click", () => togglePip($("viewVideo"), $("viewStatus")));
+$("pipHost").addEventListener("click", () => {
+  closePanel();
+  togglePip($("hostVideo"), $("hostStatus"));
+});
 window.addEventListener("pagehide", () => {
   if (peer) peer.destroy();
 });
@@ -1100,6 +1148,10 @@ applyLang();
   $("shareCard").hidden = true;
   $("shareNotice").hidden = false;
   $("watchCard").classList.add("highlight");
+}
+  if (pipSupported()) {
+  $("pipView").hidden = false;
+  $("pipHost").hidden = false;
 }
 
 const params = new URLSearchParams(location.search);
