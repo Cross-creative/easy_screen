@@ -101,6 +101,7 @@ button.mini { padding: 2px 8px; font-size: 0.8rem; border-radius: 8px; }
   color: var(--danger);
 }
 .banner a { color: inherit; font-weight: 700; word-break: break-all; }
+.hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 12px; }
 .card.highlight { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .notice p { margin: 0; color: var(--muted); }
 .sub { color: var(--muted); margin: 0 0 20px; }
@@ -271,6 +272,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       </div>
       <div class="row">
         <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
+        <p class="hint" data-i18n="audioTip">Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.</p>
       </div>
       <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
     </div>
@@ -311,6 +313,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <div class="overlay" id="hostOverlay" data-i18n="paused" hidden>Compartilhamento pausado</div>
     </div>
     <div class="statusrow">
+    <div class="status error" id="audioNote" data-i18n="audioMissing" hidden>O áudio não está sendo compartilhado.</div>
   <div class="status" id="hostStatus"></div>
   <span class="info" id="uploadInfo" tabindex="0" hidden>🛈<span class="tip" role="tooltip" data-i18n="uploadHelp">Upload é a velocidade com que seu computador envia dados pela internet.</span></span>
 </div>
@@ -469,6 +472,8 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    audioTip: "Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.",
+    audioMissing: "O áudio não está sendo compartilhado. Clique em “Trocar aba ou janela” e, na janela de seleção, ative “Compartilhar com áudio do sistema”.",
     eyeCount: "👁 {n}",
     volume: "Volume",
     nickTaken: "Esse apelido já está em uso nesta sala. Escolha outro.",
@@ -552,6 +557,8 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+    audioTip: "To share sound, turn on “Share system audio” in the browser’s selection window.",
+    audioMissing: "Audio is not being shared. Click “Switch tab or window” and turn on “Share system audio” in the selection window.",
     eyeCount: "👁 {n}",
     volume: "Volume",
     nickTaken: "That nickname is already in use in this room. Pick another one.",
@@ -960,7 +967,8 @@ async function captureScreen() {
         height: { max: quality.height },
         frameRate: { max: quality.fps }
       },
-      audio: $("audio").checked
+      audio: $("audio").checked,
+      systemAudio: "include"
     });
   } catch (err) {
     return null;
@@ -996,6 +1004,7 @@ function applyStream(newStream) {
   setSharingUI(true);
   viewers.forEach((v, id) => sendStream(id, v));
   updateHostCount();
+  $("audioNote").hidden = !($("audio").checked && !newStream.getAudioTracks().length);
 }
 
 async function startHost() {
@@ -1026,6 +1035,7 @@ function stopShare() {
   leavePip();
   stream.getTracks().forEach((tr) => tr.stop());
   stream = null;
+  $("audioNote").hidden = true;
   $("hostVideo").srcObject = null;
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ sharing: false });
@@ -1044,6 +1054,7 @@ function closeRoom() {
   bans.clear();
   clearChat();
   stopMonitor();
+  $("audioNote").hidden = true;
   $("hostWarn").hidden = true;
   if (stream) {
     stream.getTracks().forEach((tr) => tr.stop());
