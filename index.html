@@ -1223,10 +1223,10 @@ peer.on("connection", (conn) => {
   conn.on("close", () => dropViewer(conn.peer));
   conn.on("error", () => dropViewer(conn.peer));
 });
-  
-  peer.on("disconnected", () => {
-    if (peer && !peer.destroyed) peer.reconnect();
-  });
+
+peer.on("disconnected", () => {
+  if (peer && !peer.destroyed) peer.reconnect();
+});
 
   peer.on("error", (err) => {
     if (err.type === "unavailable-id" && attempt < 5) {
