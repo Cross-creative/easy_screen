@@ -538,7 +538,7 @@ const I18N = {
     leave: "Sair",
     mute: "Silenciar",
     unmute: "Ativar som",
-    viewersOne: "1 espectador",
+    hostLabel: "Host: {name}",
     viewersMany: "{n} 👁",
     connecting: "Conectando...",
     reconnecting: "Reconectando... ({n}/{max})",
@@ -628,7 +628,7 @@ const I18N = {
     leave: "Leave",
     mute: "Mute",
     unmute: "Unmute",
-    viewersOne: "1 viewer",
+    hostLabel: "Host: {name}",
     viewersMany: "{n} 👁",
     connecting: "Connecting...",
     reconnecting: "Reconnecting... ({n}/{max})",
@@ -1000,7 +1000,7 @@ function t(key, vars) {
     Object.keys(vars).forEach((k) => {
       let val = String(vars[k]);
       if (k === "m" && lang === "pt") val = val.replace(".", ",");
-      s = s.replace("{" + k + "}", val);
+      s = s.replace("{" + k + "}", () => val);
     });
   }
   return s;
@@ -1323,7 +1323,7 @@ function stopMonitor() {
 
 function updateHostCount() {
   const n = viewers.size;
-  setT($("count"), n === 1 ? "viewersOne" : "viewersMany", { n: n });
+  setT($("count"), "viewersMany", { n: n });
   if (!stream) {
     setStatus($("hostStatus"), "hostPausedStatus");
   } else if (n) {
@@ -1620,7 +1620,7 @@ function connectToRoom(code) {
     conn.on("data", (d) => {
       if (peer !== p || !d || typeof d !== "object") return;
       if (typeof d.hostNick === "string") {
-        $("hostName").textContent = cleanNick(d.hostNick);
+        setT($("hostName"), "hostLabel", { name: cleanNick(d.hostNick) });
         $("hostName").hidden = false;
         if (typeof d.yourNick === "string") {
           const accepted = cleanNick(d.yourNick);
@@ -1761,6 +1761,8 @@ function leaveRoom() {
   }
   closeViewPanel();
   $("hostName").hidden = true;
+  delete $("hostName").dataset.i18n;
+  delete $("hostName").dataset.vars;
   $("hostName").textContent = "";
   $("viewVideo").srcObject = null;
   $("viewVideo").muted = false;
