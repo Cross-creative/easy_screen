@@ -42,6 +42,42 @@ body {
 main { max-width: 960px; margin: 0 auto; padding: 24px 16px 72px; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 h2 { font-size: 1.1rem; margin: 0 0 12px; }
+.statusrow { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.statusrow .status { margin-top: 0; }
+.info {
+  position: relative;
+  color: var(--muted);
+  cursor: help;
+  line-height: 1;
+  outline: none;
+}
+.info:hover, .info:focus { color: var(--text); }
+.tip {
+  position: absolute;
+  bottom: 140%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(260px, 80vw);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  z-index: 15;
+  pointer-events: none;
+}
+.info:hover .tip, .info:focus .tip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.6s;
+}
 .card.highlight { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .notice p { margin: 0; color: var(--muted); }
 .sub { color: var(--muted); margin: 0 0 20px; }
@@ -218,7 +254,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <video id="hostVideo" autoplay playsinline muted></video>
       <div class="overlay" id="hostOverlay" data-i18n="paused" hidden>Compartilhamento pausado</div>
     </div>
-    <div class="status" id="hostStatus"></div>
+    <div class="statusrow">
+  <div class="status" id="hostStatus"></div>
+  <span class="info" id="uploadInfo" tabindex="0" hidden>🛈<span class="tip" role="tooltip" data-i18n="uploadHelp">Upload é a velocidade com que seu computador envia dados pela internet.</span></span>
+</div>
 
     <div class="backdrop" id="backdrop" hidden></div>
     <aside class="panel" id="panel" aria-hidden="true">
@@ -333,6 +372,7 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    uploadHelp: "Upload é a velocidade com que seu computador envia dados pela internet, medida em Mbps (megabits por segundo). Cada espectador recebe um vídeo separado, então o número cresce com a quantidade de pessoas. Se passar do seu upload real, o vídeo pode travar.",
     noShare: "Compartilhar a tela só funciona no computador.",
     noFullscreen: "Seu aparelho não suporta tela cheia aqui (comum no iPhone).",
     q_light: "Muito leve (480p, 10 fps)",
@@ -394,6 +434,7 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+        uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
     noShare: "Screen sharing only works on a computer.",
     noFullscreen: "Your device does not support fullscreen here (common on iPhone).",
     q_light: "Very light (480p, 10 fps)",
@@ -737,6 +778,7 @@ function updateHostCount() {
   } else {
     setStatus($("hostStatus"), "hostWaiting");
   }
+  $("uploadInfo").hidden = !(stream && n);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ count: n });
   });
