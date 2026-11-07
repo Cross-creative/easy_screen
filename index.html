@@ -259,35 +259,36 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
-          <div class="row">
-  <input type="text" id="nick" maxlength="20" autocomplete="off" placeholder="Seu apelido">
-</div>
-    <div class="grid">
-      <div class="card" id="shareCard">
-        <h2 data-i18n="shareMyScreen">Compartilhar minha tela</h2>
-        <div class="row">
-          <select id="quality"></select>
-        </div>
-        <div class="row">
-          <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
-        </div>
-        <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
+  <div class="row">
+    <input type="text" id="nick" maxlength="20" autocomplete="off" placeholder="Seu apelido">
+  </div>
+  <div class="grid">
+    <div class="card" id="shareCard">
+      <h2 data-i18n="shareMyScreen">Compartilhar minha tela</h2>
+      <div class="row">
+        <select id="quality"></select>
       </div>
-<div class="card notice" id="shareNotice" hidden>
-      <div class="card" id="watchCard">
-        <h2 data-i18n="watchWithCode">Assistir com um código</h2>
-        <div class="row">
-          <input type="text" id="codeInput" maxlength="6" placeholder="CÓDIGO" autocomplete="off">
-          <button id="join" class="primary" data-i18n="join">Entrar</button>
-        </div>
-        
-         <p data-i18n="noShare">Compartilhar a tela só funciona no computador.</p>
-         </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
+      </div>
+      <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
+    </div>
+
+    <div class="card" id="watchCard">
+      <h2 data-i18n="watchWithCode">Assistir com um código</h2>
+      <div class="row">
+        <input type="text" id="codeInput" maxlength="6" placeholder="CÓDIGO" autocomplete="off">
+        <button id="join" class="primary" data-i18n="join">Entrar</button>
       </div>
     </div>
-    <div class="status" id="homeStatus"></div>
-  </section>
 
+    <div class="card notice" id="shareNotice" hidden>
+      <p data-i18n="noShare">Compartilhar a tela só funciona no computador.</p>
+    </div>
+  </div>
+  <div class="status" id="homeStatus"></div>
+</section>
+  
   <section id="hostView" hidden>
     <div class="row">
       <span data-i18n="codeLabel">Código:</span>
