@@ -497,6 +497,7 @@ const I18N = {
     viewersOne: "1 espectador",
     viewersMany: "{n} 👁",
     connecting: "Conectando...",
+    reconnecting: "Reconectando... ({n}/{max})",
     waiting: "Aguardando transmissão...",
     shareFailed: "Compartilhamento cancelado, bloqueado ou não suportado.",
     roomEndedHome: "Sala encerrada.",
@@ -582,6 +583,7 @@ const I18N = {
     viewersOne: "1 viewer",
     viewersMany: "{n} 👁",
     connecting: "Connecting...",
+    reconnecting: "Reconnecting... ({n}/{max})",
     waiting: "Waiting for the stream...",
     shareFailed: "Sharing was cancelled, blocked or is not supported.",
     roomEndedHome: "Room ended.",
@@ -654,10 +656,18 @@ let myNick = "";
 let viewerConn = null;
 let chatUnread = 0;
 const BAN_MS = 5 * 60 * 1000;
+const BAN_IP_MS = 2 * 60 * 1000;
 const bans = new Map();
 let chatSeq = 0;
 let chatMuted = false;
 let blockedTab = false;
+const MAX_RETRY = 6;
+const tabId = makeCode() + makeCode();
+let retry = 0;
+let retryTimer = null;
+let retryPending = false;
+let intentionalEnd = false;
+let activeCode = "";
 
 function openViewPanel() {
   closeChat();
@@ -679,6 +689,35 @@ function sameNick(a, b) {
 function refuse(conn, msg) {
   conn.send(msg);
   setTimeout(() => conn.close(), 500);
+}
+
+async function remoteIp(conn) {
+  try {
+    const pc = conn.peerConnection;
+    if (!pc) return null;
+    const stats = await pc.getStats();
+    let ip = null;
+    stats.forEach((r) => {
+      if (r.type === "candidate-pair" && r.state === "succeeded" && (r.nominated || r.selected)) {
+        const rc = stats.get(r.remoteCandidateId);
+        const addr = rc && (rc.address || rc.ip);
+        if (addr && !String(addr).endsWith(".local")) ip = String(addr);
+      }
+    });
+    return ip;
+  } catch (e) {
+    return null;
+  }
+}
+
+function banActive(key) {
+  const until = bans.get(key);
+  if (!until) return 0;
+  if (until <= Date.now()) {
+    bans.delete(key);
+    return 0;
+  }
+  return until;
 }
 
 function updateChatInput() {
@@ -710,7 +749,8 @@ function toggleMuteUser(id) {
 function kickViewer(id) {
   const v = viewers.get(id);
   if (!v) return;
-  if (v.vid) bans.set(v.vid, Date.now() + BAN_MS);
+  if (v.vid) bans.set("vid:" + v.vid, Date.now() + BAN_MS);
+  if (v.ip) bans.set("ip:" + v.ip, Date.now() + BAN_IP_MS);
   if (v.conn.open) v.conn.send({ kicked: true, wait: BAN_MS / 1000 });
   setTimeout(() => v.conn.close(), 500);
   dropViewer(id);
@@ -1254,21 +1294,31 @@ function startPeerHost(attempt) {
   });
 
 peer.on("connection", (conn) => {
-  conn.on("open", () => {
-    if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+  conn.on("open", async () => {
+    const ip = await remoteIp(conn);
+    if (!conn.open) return;
     const meta = conn.metadata || {};
     const vid = typeof meta.vid === "string" && /^[A-Z0-9]{12}$/.test(meta.vid) ? meta.vid : null;
+    const tab = typeof meta.tab === "string" && /^[A-Z0-9]{12}$/.test(meta.tab) ? meta.tab : null;
     const nick = cleanNick(meta.nick);
-    const ban = vid ? bans.get(vid) : 0;
-    if (ban && ban > Date.now()) {
+    const ban = Math.max(vid ? banActive("vid:" + vid) : 0, ip ? banActive("ip:" + ip) : 0);
+    if (ban) {
       return refuse(conn, { kicked: true, wait: Math.ceil((ban - Date.now()) / 1000) });
     }
-    for (const other of viewers.values()) {
-      if (vid && other.vid === vid && other.conn.open) return refuse(conn, { duplicate: true });
+    for (const [oid, other] of [...viewers]) {
+      if (vid && other.vid === vid) {
+        if (tab && other.tab === tab) {
+          dropViewer(oid);
+          other.conn.close();
+        } else if (other.conn.open) {
+          return refuse(conn, { duplicate: true });
+        }
+      }
     }
+    if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
     const taken = !nick || sameNick(nick, myNick) || [...viewers.values()].some((o) => sameNick(o.nick, nick));
     if (taken) return refuse(conn, { nickTaken: true });
-    const v = { conn, call: null, vid, nick, muted: false, lastMsg: 0 };
+    const v = { conn, call: null, vid, tab, ip, nick, muted: false, lastMsg: 0 };
     viewers.set(conn.peer, v);
     conn.send({ hostNick: myNick });
     if (stream) {
@@ -1316,6 +1366,9 @@ function copyText(text, el) {
 }
 
 function viewerEnded(key, vars) {
+  intentionalEnd = true;
+  retryPending = false;
+  clearTimeout(retryTimer);
   currentCall = null;
   clearTimeout(viewerTimeout);
   $("viewVideo").srcObject = null;
@@ -1331,6 +1384,35 @@ function showWaiting() {
   $("viewVideo").srcObject = null;
   $("viewOverlay").hidden = false;
   setT($("viewOverlay"), "waiting");
+}
+
+function dropMedia() {
+  if (currentCall) {
+    currentCall.close();
+    currentCall = null;
+  }
+  $("viewVideo").srcObject = null;
+}
+
+function scheduleRetry() {
+  if (intentionalEnd || blockedTab || retryPending) return;
+  clearTimeout(viewerTimeout);
+  if (retry >= MAX_RETRY) {
+    viewerEnded("connLost");
+    return;
+  }
+  retry++;
+  retryPending = true;
+  const wait = Math.min(1000 * 2 ** (retry - 1), 15000);
+  dropMedia();
+  $("viewOverlay").hidden = false;
+  setT($("viewOverlay"), "reconnecting", { n: retry, max: MAX_RETRY });
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => {
+    retryPending = false;
+    if (intentionalEnd) return;
+    connectToRoom(activeCode);
+  }, wait);
 }
 
 function updateMuteBtn() {
@@ -1352,84 +1434,113 @@ function joinRoom(code) {
   setStatus($("viewStatus"), "");
   updateMuteBtn();
   blockedTab = false;
-
-  peer = new Peer();
-  peer.on("connection", (c) => c.close());
-
-  peer.on("open", () => {
-    const conn = peer.connect(PREFIX + code, { reliable: true, metadata: { vid: getViewerId(), nick: myNick } });
-viewerConn = conn;
-conn.on("data", (d) => {
-  if (!d || typeof d !== "object") return;
-  if (typeof d.hostNick === "string") {
-  $("hostName").textContent = cleanNick(d.hostNick);
-  $("hostName").hidden = false;
-  return;
+  intentionalEnd = false;
+  retryPending = false;
+  retry = 0;
+  activeCode = code;
+  connectToRoom(code);
 }
-  if (d.chat && typeof d.chat === "object") {
-    addChat(d.chat);
-    return;
-  }
-  if (Number.isInteger(d.del)) {
-    removeMessage(d.del);
-    return;
-  }
-  if (typeof d.muted === "boolean") {
-    chatMuted = d.muted;
-    updateChatInput();
-    return;
-  }
-  if (d.nickTaken === true) {
-    leaveRoom();
-    setStatus($("homeStatus"), "nickTaken", true);
-    $("nick").focus();
-    return;
-  }
-  if (d.kicked === true) {
-    const mins = Math.max(1, Math.ceil((Number(d.wait) || 300) / 60));
-    leaveRoom();
-    setStatus($("homeStatus"), "kicked", true, { min: mins });
-    return;
-  }
-  if (d.duplicate === true) {
-    blockedTab = true;
-    viewerEnded("duplicateTab");
-    return;
-  }
-  if (d.full === true) {
-    blockedTab = true;
-    viewerEnded("roomFull");
-    return;
-  }
-  if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
-    $("viewCount").hidden = false;
-    setT($("viewCount"), "eyeCount", { n: d.count });
-  }
-  if (d.sharing === false) showWaiting();
-  if (d.closed === true) viewerEnded("roomEndedByHost");
-});
+
+function connectToRoom(code) {
+  clearTimeout(viewerTimeout);
+  clearTimeout(retryTimer);
+  dropMedia();
+  viewerConn = null;
+  const old = peer;
+  peer = null;
+  if (old) old.destroy();
+
+  const p = new Peer();
+  peer = p;
+  p.on("connection", (c) => c.close());
+
+  p.on("open", () => {
+    if (peer !== p) return;
+    const conn = p.connect(PREFIX + code, { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } });
+    viewerConn = conn;
+    conn.on("data", (d) => {
+      if (peer !== p || !d || typeof d !== "object") return;
+      if (typeof d.hostNick === "string") {
+        $("hostName").textContent = cleanNick(d.hostNick);
+        $("hostName").hidden = false;
+        if (retry > 0) setT($("viewOverlay"), "connecting");
+        retry = 0;
+        return;
+      }
+      if (d.chat && typeof d.chat === "object") {
+        addChat(d.chat);
+        return;
+      }
+      if (Number.isInteger(d.del)) {
+        removeMessage(d.del);
+        return;
+      }
+      if (typeof d.muted === "boolean") {
+        chatMuted = d.muted;
+        updateChatInput();
+        return;
+      }
+      if (d.nickTaken === true) {
+        leaveRoom();
+        setStatus($("homeStatus"), "nickTaken", true);
+        $("nick").focus();
+        return;
+      }
+      if (d.kicked === true) {
+        const mins = Math.max(1, Math.ceil((Number(d.wait) || 300) / 60));
+        leaveRoom();
+        setStatus($("homeStatus"), "kicked", true, { min: mins });
+        return;
+      }
+      if (d.duplicate === true) {
+        blockedTab = true;
+        viewerEnded("duplicateTab");
+        return;
+      }
+      if (d.full === true) {
+        blockedTab = true;
+        viewerEnded("roomFull");
+        return;
+      }
+      if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
+        $("viewCount").hidden = false;
+        setT($("viewCount"), "eyeCount", { n: d.count });
+      }
+      if (d.sharing === false) showWaiting();
+      if (d.closed === true) viewerEnded("roomEndedByHost");
+    });
     conn.on("open", () => {
+      if (peer !== p) return;
       clearTimeout(viewerTimeout);
       viewerTimeout = setTimeout(() => {
+        if (peer !== p) return;
         if (!$("viewVideo").srcObject && $("viewOverlay").dataset.i18n === "connecting") {
           viewerEnded("noVideo");
         }
       }, 15000);
     });
-conn.on("close", () => {
-  if (!blockedTab) viewerEnded("roomEnded");
-});
-conn.on("error", () => {
-  if (!blockedTab) viewerEnded("connLost");
-});
-    viewerTimeout = setTimeout(() => viewerEnded("cantConnect"), 20000);
+    conn.on("close", () => {
+      if (peer === p && !blockedTab) scheduleRetry();
+    });
+    conn.on("error", () => {
+      if (peer === p && !blockedTab) scheduleRetry();
+    });
+    viewerTimeout = setTimeout(() => {
+      if (peer !== p) return;
+      if (retry === 0) {
+        viewerEnded("cantConnect");
+      } else {
+        scheduleRetry();
+      }
+    }, 20000);
   });
 
-  peer.on("call", (call) => {
+  p.on("call", (call) => {
+    if (peer !== p) return;
     if (call.peer !== PREFIX + code) {
-  call.close();
-  return;
-}
+      call.close();
+      return;
+    }
     if (currentCall) currentCall.close();
     currentCall = call;
     call.answer();
@@ -1448,16 +1559,27 @@ conn.on("error", () => {
     call.on("close", () => {});
   });
 
-  peer.on("error", (err) => {
+  p.on("error", (err) => {
+    if (peer !== p) return;
     if (err.type === "peer-unavailable") {
-      viewerEnded("roomNotFound");
-    } else {
+      if (retry === 0) {
+        viewerEnded("roomNotFound");
+      } else {
+        scheduleRetry();
+      }
+    } else if (retry === 0) {
       viewerEnded("connError", { e: err.type });
+    } else {
+      scheduleRetry();
     }
   });
 }
 
 function leaveRoom() {
+  intentionalEnd = true;
+  retryPending = false;
+  retry = 0;
+  clearTimeout(retryTimer);
   leavePip();
   clearChat();
   clearTimeout(viewerTimeout);
@@ -1465,8 +1587,9 @@ function leaveRoom() {
   currentCall = null;
   blockedTab = false;
   if (peer) {
-    peer.destroy();
+    const old = peer;
     peer = null;
+    old.destroy();
   }
   closeViewPanel();
   $("hostName").hidden = true;
@@ -1603,7 +1726,6 @@ if (roomParam) {
 </body>
 </html>
 
-<!--
 <!--
 STRICT COPYRIGHT AND AI MODIFICATION RESTRICTIONS
 
