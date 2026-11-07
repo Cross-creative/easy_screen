@@ -202,7 +202,7 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   border: 1px solid var(--border);
 }
 video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
-#nick, #chatInput { text-transform: none; letter-spacing: normal; }
+#nick, #chatInput, #nickNew { text-transform: none; letter-spacing: normal; }
 #nick { width: min(100%, 320px); }
 #chatInput { flex: 1; min-width: 0; width: auto; }
 .chat-list {
@@ -287,6 +287,27 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   border-radius: 10px;
 }
 .confirm p { margin: 0; }
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, 92vw);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  z-index: 40;
+}
+.dialog h2, .dialog p { margin: 0; }
+.dialog p { color: var(--muted); }
+.dialog .status { margin-top: 0; min-height: 0; }
+.dialog .row { margin-bottom: 0; }
+#nickNew { width: 100%; }
 .lang {
   position: fixed;
   right: 16px;
@@ -439,6 +460,18 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   </div>
 </aside>
 
+  <div class="backdrop" id="nickBackdrop" hidden></div>
+  <div class="dialog" id="nickDialog" role="dialog" aria-modal="true" aria-labelledby="nickDialogTitle" hidden>
+    <h2 id="nickDialogTitle" data-i18n="nickTakenTitle">Apelido já em uso</h2>
+    <p data-i18n="nickTakenAsk">Já existe alguém com esse apelido nesta sala. Escolha outro para entrar.</p>
+    <input type="text" id="nickNew" maxlength="20" autocomplete="off" placeholder="Seu apelido">
+    <div class="status error" id="nickDialogError" data-i18n="nickStillTaken" hidden>Esse apelido também está em uso. Escolha outro.</div>
+    <div class="row">
+      <button id="nickConfirm" class="primary" data-i18n="join">Entrar</button>
+      <button id="nickCancel" data-i18n="leave">Sair</button>
+    </div>
+  </div>
+
   <div class="lang" role="group" aria-label="Language">
     <button id="langPt" type="button">PT</button>
     <button id="langEn" type="button">EN</button>
@@ -531,6 +564,9 @@ const I18N = {
     eyeCount: "👁 {n}",
     volume: "Volume",
     nickTaken: "Esse apelido já está em uso nesta sala. Escolha outro.",
+    nickTakenTitle: "Apelido já em uso",
+    nickTakenAsk: "Já existe alguém com esse apelido nesta sala. Escolha outro para entrar.",
+    nickStillTaken: "Esse apelido também está em uso. Escolha outro.",
     kicked: "Você foi removido da sala. Tente de novo em {min} min.",
     muteUser: "Silenciar",
     unmuteUser: "Reativar",
@@ -618,6 +654,9 @@ const I18N = {
     eyeCount: "👁 {n}",
     volume: "Volume",
     nickTaken: "That nickname is already in use in this room. Pick another one.",
+    nickTakenTitle: "Nickname already in use",
+    nickTakenAsk: "Someone in this room already has that nickname. Pick another one to join.",
+    nickStillTaken: "That nickname is also in use. Pick another one.",
     kicked: "You were removed from the room. Try again in {min} min.",
     muteUser: "Mute",
     unmuteUser: "Unmute",
@@ -669,6 +708,10 @@ let viewerConn = null;
 let chatUnread = 0;
 const BAN_MS = 5 * 60 * 1000;
 const BAN_IP_MS = 2 * 60 * 1000;
+const NICK_WAIT_MS = 60 * 1000;
+const NICK_MAX_TRIES = 5;
+const pending = new Map();
+let lastNickTry = "";
 const bans = new Map();
 let chatSeq = 0;
 let chatMuted = false;
@@ -996,6 +1039,7 @@ function applyLang() {
   });
   $("codeInput").placeholder = t("codePlaceholder");
   $("nick").placeholder = t("nickPlaceholder");
+  $("nickNew").placeholder = t("nickPlaceholder");
   updateChatInput();
   fillQuality();
   $("langPt").classList.toggle("active", lang === "pt");
@@ -1159,6 +1203,12 @@ function closeRoom() {
     if (v.call) v.call.close();
     v.conn.close();
   });
+  pending.forEach((p) => {
+    clearTimeout(p.timer);
+    if (p.conn.open) p.conn.send({ closed: true });
+    p.conn.close();
+  });
+  pending.clear();
   viewers.clear();
   if (peer) {
     peer.destroy();
@@ -1296,6 +1346,47 @@ function dropViewer(id) {
   updateHostCount();
 }
 
+function nickInUse(n) {
+  return sameNick(n, myNick) || [...viewers.values()].some((o) => sameNick(o.nick, n));
+}
+
+function dropPending(id) {
+  const p = pending.get(id);
+  if (!p) return;
+  clearTimeout(p.timer);
+  pending.delete(id);
+}
+
+function askNick(conn, ctx, tries) {
+  const prev = pending.get(conn.peer);
+  if (prev) clearTimeout(prev.timer);
+  if (!ctx.deadline) ctx.deadline = Date.now() + NICK_WAIT_MS;
+  const left = ctx.deadline - Date.now();
+  if (tries >= NICK_MAX_TRIES || left <= 0) {
+    pending.delete(conn.peer);
+    return refuse(conn, { nickTaken: true });
+  }
+  const timer = setTimeout(() => {
+    pending.delete(conn.peer);
+    refuse(conn, { nickTaken: true });
+  }, left);
+  pending.set(conn.peer, { conn, ctx, tries, timer });
+  conn.send({ askNick: true, retry: tries > 0 });
+}
+
+function admit(conn, ctx) {
+  if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+  const v = { conn, call: null, vid: ctx.vid, tab: ctx.tab, ip: ctx.ip, nick: ctx.nick, muted: false, lastMsg: 0 };
+  viewers.set(conn.peer, v);
+  conn.send({ hostNick: myNick, yourNick: ctx.nick });
+  if (stream) {
+    sendStream(conn.peer, v);
+  } else {
+    conn.send({ sharing: false });
+  }
+  updateHostCount();
+}
+
 function startPeerHost(attempt) {
   currentCode = makeCode();
   peer = new Peer(PREFIX + currentCode);
@@ -1328,19 +1419,20 @@ peer.on("connection", (conn) => {
       }
     }
     if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
-    const taken = !nick || sameNick(nick, myNick) || [...viewers.values()].some((o) => sameNick(o.nick, nick));
-    if (taken) return refuse(conn, { nickTaken: true });
-    const v = { conn, call: null, vid, tab, ip, nick, muted: false, lastMsg: 0 };
-    viewers.set(conn.peer, v);
-    conn.send({ hostNick: myNick });
-    if (stream) {
-      sendStream(conn.peer, v);
-    } else {
-      conn.send({ sharing: false });
-    }
-    updateHostCount();
+    const ctx = { vid, tab, ip, nick, deadline: 0 };
+    if (!nick || nickInUse(nick)) return askNick(conn, ctx, 0);
+    admit(conn, ctx);
   });
   conn.on("data", (d) => {
+    const p = pending.get(conn.peer);
+    if (p) {
+      if (!d || typeof d !== "object" || typeof d.nick !== "string") return;
+      const n = cleanNick(d.nick);
+      if (!n || nickInUse(n)) return askNick(conn, p.ctx, p.tries + 1);
+      clearTimeout(p.timer);
+      pending.delete(conn.peer);
+      return admit(conn, { ...p.ctx, nick: n });
+    }
     const v = viewers.get(conn.peer);
     if (!v || v.muted || !d || typeof d !== "object" || typeof d.msg !== "string") return;
     const now = Date.now();
@@ -1349,8 +1441,14 @@ peer.on("connection", (conn) => {
     const text = d.msg.trim().slice(0, CHAT_MAX);
     if (text) broadcastChat(v.nick, text);
   });
-  conn.on("close", () => dropViewer(conn.peer));
-  conn.on("error", () => dropViewer(conn.peer));
+  conn.on("close", () => {
+    dropPending(conn.peer);
+    dropViewer(conn.peer);
+  });
+  conn.on("error", () => {
+    dropPending(conn.peer);
+    dropViewer(conn.peer);
+  });
 });
 
 peer.on("disconnected", () => {
@@ -1378,6 +1476,7 @@ function copyText(text, el) {
 }
 
 function viewerEnded(key, vars) {
+  closeNickDialog();
   intentionalEnd = true;
   retryPending = false;
   clearTimeout(retryTimer);
@@ -1398,7 +1497,54 @@ function showWaiting() {
   setT($("viewOverlay"), "waiting");
 }
 
+function openNickDialog(retry) {
+  closeViewPanel();
+  closeChat();
+  clearTimeout(viewerTimeout);
+  $("nickDialogError").hidden = !retry;
+  $("nickBackdrop").hidden = false;
+  $("nickDialog").hidden = false;
+  $("nickNew").value = lastNickTry || myNick;
+  $("nickNew").focus();
+  $("nickNew").select();
+}
+
+function closeNickDialog() {
+  $("nickDialog").hidden = true;
+  $("nickBackdrop").hidden = true;
+}
+
+function armNoVideo(p) {
+  clearTimeout(viewerTimeout);
+  viewerTimeout = setTimeout(() => {
+    if (peer !== p || !$("nickDialog").hidden) return;
+    if (!$("viewVideo").srcObject && $("viewOverlay").dataset.i18n === "connecting") {
+      viewerEnded("noVideo");
+    }
+  }, 15000);
+}
+
+function submitNick() {
+  const n = cleanNick($("nickNew").value);
+  if (!n) {
+    $("nickNew").focus();
+    return;
+  }
+  if (sameNick(n, myNick) || sameNick(n, lastNickTry)) {
+    $("nickDialogError").hidden = false;
+    $("nickNew").focus();
+    return;
+  }
+  if (!viewerConn || !viewerConn.open) return;
+  lastNickTry = n;
+  viewerConn.send({ nick: n });
+  closeNickDialog();
+  setT($("viewOverlay"), "connecting");
+  armNoVideo(peer);
+}
+
 function dropMedia() {
+  closeNickDialog();
   if (currentCall) {
     currentCall.close();
     currentCall = null;
@@ -1450,6 +1596,7 @@ function joinRoom(code) {
   retryPending = false;
   retry = 0;
   activeCode = code;
+  lastNickTry = "";
   connectToRoom(code);
 }
 
@@ -1475,8 +1622,21 @@ function connectToRoom(code) {
       if (typeof d.hostNick === "string") {
         $("hostName").textContent = cleanNick(d.hostNick);
         $("hostName").hidden = false;
+        if (typeof d.yourNick === "string") {
+          const accepted = cleanNick(d.yourNick);
+          if (accepted) {
+            myNick = accepted;
+            lastNickTry = "";
+            $("nick").value = accepted;
+            try { localStorage.setItem("nick", accepted); } catch (e) {}
+          }
+        }
         if (retry > 0) setT($("viewOverlay"), "connecting");
         retry = 0;
+        return;
+      }
+      if (d.askNick === true) {
+        openNickDialog(d.retry === true);
         return;
       }
       if (d.chat && typeof d.chat === "object") {
@@ -1523,13 +1683,7 @@ function connectToRoom(code) {
     });
     conn.on("open", () => {
       if (peer !== p) return;
-      clearTimeout(viewerTimeout);
-      viewerTimeout = setTimeout(() => {
-        if (peer !== p) return;
-        if (!$("viewVideo").srcObject && $("viewOverlay").dataset.i18n === "connecting") {
-          viewerEnded("noVideo");
-        }
-      }, 15000);
+      armNoVideo(p);
     });
     conn.on("close", () => {
       if (peer === p && !blockedTab) scheduleRetry();
@@ -1588,6 +1742,8 @@ function connectToRoom(code) {
 }
 
 function leaveRoom() {
+  closeNickDialog();
+  lastNickTry = "";
   intentionalEnd = true;
   retryPending = false;
   retry = 0;
@@ -1687,6 +1843,11 @@ $("codeInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") joinRoom($("codeInput").value);
 });
 $("leave").addEventListener("click", leaveRoom);
+$("nickConfirm").addEventListener("click", submitNick);
+$("nickCancel").addEventListener("click", leaveRoom);
+$("nickNew").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") submitNick();
+});
 $("viewFs").addEventListener("click", () => {
   closeViewPanel();
   toggleFullscreen($("viewStage"));
@@ -1738,6 +1899,7 @@ if (roomParam) {
 </body>
 </html>
 
+<!--
 <!--
 STRICT COPYRIGHT AND AI MODIFICATION RESTRICTIONS
 
