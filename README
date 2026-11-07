@@ -88,7 +88,7 @@ Privacy
 
 - No accounts, no analytics and no cookies.
 - The browser stores only your language choice and a random identifier used to detect duplicate tabs. Both stay on your device.
-- Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
+- Because connections are peer-to-peer, the host and each viewer can see each other's PUBLIC IP address. Keep this in mind before sharing a room code publicly.
 - Only share content you have the right to share. Streaming protected material, such as movies or series, may violate the terms of the service that provides it.
 
 Disclaimer
