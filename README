@@ -1,44 +1,49 @@
-Easy Screen
+# Easy Screen
 
 Share a browser tab or window directly with other people, with no account, no install and no server of your own. The whole app is a single HTML file.
 
 Live site: https://cross-creative.github.io/easy_screen/
 
-How it works
+## How it works
 
 Video travels directly from the host's browser to each viewer's browser (peer-to-peer, using WebRTC). A public [PeerJS](https://peerjs.com) server is used only to help browsers find each other. No video passes through it, and nothing is stored.
 
-Quick start
+## Quick start
 
-Sharing
+### Sharing
 
 1. Open the site on a computer.
-2. Pick a quality level and choose whether to share audio.
-3. Click Choose a tab or window and select what to share.
+2. Choose a nickname, pick a quality level and decide whether to share audio.
+3. Click **Choose a tab or window** and select what to share.
 4. Send the 6-character room code, or the link, to your viewers.
 
-Watching
+### Watching
 
-1. Open the link, or type the room code on the home page and click Join.
-2. If the video starts muted because of browser autoplay rules, click Unmute.
+1. Open the link, or choose a nickname, type the room code on the home page and click **Join**.
+2. If the video starts muted because of browser autoplay rules, click **Unmute**.
 
-Features
+## Features
 
 - Room codes: each host gets a random 6-character code, plus a shareable link that joins the room directly
-- Chat: user's can chat with each other, You are responsable for what you say, the host can kick you.
+- Nickname required to host or join, with duplicate nicknames blocked inside a room
+- Chat: users can chat with each other. You are responsible for what you say, and the host can mute you, delete your messages or kick you
+- Host moderation: mute, kick and delete messages from the people panel
+- Temporary ban after a kick: 5 minutes by viewer identifier and 2 minutes by IP address
+- Automatic reconnection: if a viewer's connection drops, the site retries up to 6 times with increasing delays and keeps the chat on screen
 - Tab or window sharing with optional audio
 - Quality levels from 480p up to 4K, adjustable while streaming
 - Warning for the host when upload bandwidth or CPU is overloaded, with a one-click option to lower the quality
 - Estimated upload usage and a live viewer counter
+- Up to 16 viewers per room
 - Stop and resume sharing, or switch to another tab or window, without kicking anyone out of the room
 - Options panel for the host, with a confirmation before ending the room
 - One tab per viewer per room: duplicate tabs from the same browser are blocked
 - Volume and mute controls for viewers, audio toggle for the host
-- Fullscreen for both host and viewers
+- Fullscreen and floating window (picture-in-picture) for both host and viewers, where the browser supports it
 - English and Portuguese (Brazil), detected from the browser and remembered
 - Light and dark theme, following the system setting
 
- Quality levels and upload
+## Quality levels and upload
 
 Each viewer receives a separate copy of the video, so the host's upload grows with the audience. These are approximate values per viewer:
 
@@ -53,7 +58,7 @@ Each viewer receives a separate copy of the video, so the host's upload grows wi
 
 Example: 4 viewers at Balanced need about 6 Mbps of upload. The actual resolution also depends on the size of the shared tab or window.
 
-Browser support
+## Browser support
 
 | | Share | Watch |
 |---|---|---|
@@ -63,37 +68,42 @@ Browser support
 
 Mobile browsers do not currently support screen capture, so on phones the site only lets you watch. Audio capture also depends on the browser: sharing a tab's audio works best in Chrome and Edge, and sharing a whole window's audio is limited.
 
-Deploy your own copy
+## Self-hosting
 
-Only `index.html` is required.
+Self-hosting a copy requires prior written permission from the author (see License).
 
-GitHub Pages
+With permission, only `index.html` is required. The optional `icone.png` is used as the page icon, and the page works without it.
+
+### GitHub Pages
 
 1. Put `index.html` in the root of a repository.
 2. In the repository settings, open Pages and select the branch to publish.
 
-Netlify
+### Netlify
 
 Drag the folder containing `index.html` into [app.netlify.com/drop](https://app.netlify.com/drop).
 
 Both serve the site over HTTPS, which browsers require for screen capture.
 
-Limitations
+## Limitations
 
-- Mesh topology: the host uploads one stream per viewer. It is meant for small groups, roughly 3 to 6 people.
+- Mesh topology: the host uploads one stream per viewer. The limit is 16 viewers, but in practice it depends on the host's upload. It is best suited to small groups, roughly 3 to 6 people at higher quality levels.
 - Depends on the free public PeerJS server, which can be slow or unavailable.
-- Viewers behind very restrictive networks, such as some school or company networks, may fail to connect without a TURN server.
+- Viewers behind very restrictive networks, such as some school or company networks, may fail to connect.
 - Duplicate-tab detection only works within the same browser profile. Another browser, a private window or another device counts as a different viewer.
+- Bans after a kick are temporary and can be bypassed, for example with a VPN or a different network. The IP ban may also affect other people who share the same network.
+- Automatic reconnection stops after 6 failed attempts, and the viewer then has to join again.
 
-Privacy
+## Privacy
 
 - No accounts, no analytics and no cookies.
-- The browser stores only your language choice, username and a random identifier used to detect duplicate tabs. Both stay on your device.
-- Because connections are peer-to-peer, the host and each viewer can see each other's PUBLIC IP address. Keep this in mind before sharing a room code publicly.
-- The Chat do not stores or is recorded, it is cleaned after the room ends.
+- The browser stores only your language choice, nickname and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
+- Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
+- The host's browser reads each viewer's IP address only to apply a temporary ban after a kick. It is kept in memory, is never displayed and is discarded when the room ends.
+- Chat is not stored or recorded. It is cleared when the room ends.
 - Only share content you have the right to share. Streaming protected material, such as movies or series, may violate the terms of the service that provides it.
 
-Disclaimer
+## Disclaimer
 
 This software is provided "as is", without warranty of any kind, express or implied.
 
@@ -102,7 +112,7 @@ This software is provided "as is", without warranty of any kind, express or impl
 - The service depends on third-party infrastructure, such as the public PeerJS server and CDNs, which the author does not control and cannot guarantee.
 - Use it at your own risk. The author is not liable for any damages, data loss or connection problems arising from its use.
 
-License
+## License
 
 All rights reserved. The source code is public for reference only. Copying, modifying, redistributing or reusing it requires prior written permission from the author.
 
