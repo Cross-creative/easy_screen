@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Easy Screen</title>
+<title>Compartilhar tela</title>
 <link rel="icon" type="image/png" href="icone.png">
 <style>
 :root {
@@ -32,55 +32,6 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-.backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 20; }
-.panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: min(340px, 90vw);
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(100%);
-  visibility: hidden;
-  transition: transform 0.25s ease, visibility 0.25s;
-}
-.panel.open { transform: none; visibility: visible; }
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--border);
-}
-.panel-head h2 { margin: 0; }
-.panel-body { display: flex; flex-direction: column; gap: 10px; padding: 18px; overflow-y: auto; }
-.panel-body select { width: 100%; }
-.panel-body hr { width: 100%; border: 0; border-top: 1px solid var(--border); margin: 6px 0; }
-.field { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 0.9rem; }
-.confirm {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--danger);
-  border-radius: 10px;
-}
-.confirm p { margin: 0; }
-.warn {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--danger);
-  color: var(--danger);
-}
 body {
   margin: 0;
   background: var(--bg);
@@ -88,7 +39,7 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
 }
-main { max-width: 960px; margin: 0 auto; padding: 24px 16px 40px; }
+main { max-width: 960px; margin: 0 auto; padding: 24px 16px 72px; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 h2 { font-size: 1.1rem; margin: 0 0 12px; }
 .sub { color: var(--muted); margin: 0 0 20px; }
@@ -150,38 +101,93 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .status { margin-top: 12px; color: var(--muted); font-size: 0.95rem; min-height: 1.4em; }
 .status.error { color: var(--danger); }
 .back { margin-bottom: 16px; }
+.warn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+.backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 20; }
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(340px, 90vw);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.25s ease, visibility 0.25s;
+}
+.panel.open { transform: none; visibility: visible; }
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-head h2 { margin: 0; }
+.panel-body { display: flex; flex-direction: column; gap: 10px; padding: 18px; overflow-y: auto; }
+.panel-body select { width: 100%; }
+.panel-body hr { width: 100%; border: 0; border-top: 1px solid var(--border); margin: 6px 0; }
+.field { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 0.9rem; }
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+}
+.confirm p { margin: 0; }
+.lang {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface);
+  z-index: 10;
+}
+.lang button { border: 0; border-radius: 0; padding: 8px 14px; background: transparent; }
+.lang button.active { background: var(--accent); color: var(--accent-text); }
 </style>
 </head>
 <body>
 <main>
-  <h1>Easy Screen</h1>
-  <p class="sub">Transmissão direta entre navegadores, sem cadastro. Por Capir (aka, capivara)</p>
+  <h1 data-i18n="heading">Compartilhar tela</h1>
+  <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
     <div class="grid">
       <div class="card">
-        <h2>Compartilhar minha tela</h2>
+        <h2 data-i18n="shareMyScreen">Compartilhar minha tela</h2>
         <div class="row">
-          <select id="quality">
-            <option value="light">Muito leve (480p, 10 fps)</option>
-            <option value="eco">Econômica (720p, 15 fps)</option>
-            <option value="mid">Equilibrada (720p, 24 fps)</option>
-            <option value="high">Alta (1080p, 30 fps)</option>
-            <option value="extreme">QHD (1440p, 60 fps)</option>
-            <option value="uhd">4K (2160p, 30 fps)</option>
-          </select>
+          <select id="quality"></select>
         </div>
         <div class="row">
-          <label class="check"><input type="checkbox" id="audio" checked> Compartilhar áudio</label>
+          <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
         </div>
-        <button id="startHost" class="primary">Escolher aba ou janela</button>
+        <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
       </div>
 
       <div class="card">
-        <h2>Assistir com um código</h2>
+        <h2 data-i18n="watchWithCode">Assistir com um código</h2>
         <div class="row">
           <input type="text" id="codeInput" maxlength="6" placeholder="CÓDIGO" autocomplete="off">
-          <button id="join" class="primary">Entrar</button>
+          <button id="join" class="primary" data-i18n="join">Entrar</button>
         </div>
       </div>
     </div>
@@ -190,63 +196,69 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 
   <section id="hostView" hidden>
     <div class="row">
-      <span>Código:</span>
+      <span data-i18n="codeLabel">Código:</span>
       <span class="code" id="hostCode">······</span>
-      <button id="copyCode">Copiar código</button>
-      <button id="copyLink">Copiar link</button>
+      <button id="copyCode" data-i18n="copyCode">Copiar código</button>
+      <button id="copyLink" data-i18n="copyLink">Copiar link</button>
     </div>
-<div class="row">
-  <span class="badge" id="count">0 espectadores</span>
-  <button id="openOptions">Opções</button>
-</div>
+    <div class="row">
+      <span class="badge" id="count" data-i18n="viewersMany" data-vars='{"n":0}'>0 espectadores</span>
+      <button id="openOptions" data-i18n="options">Opções</button>
+    </div>
     <div class="warn" id="hostWarn" hidden>
-  <span id="hostWarnText"></span>
-  <button id="lowerQ">Reduzir qualidade</button>
-  </div>
+      <span id="hostWarnText"></span>
+      <button id="lowerQ" data-i18n="lowerQuality">Reduzir qualidade</button>
+    </div>
     <div class="stage" id="hostStage">
       <video id="hostVideo" autoplay playsinline muted></video>
-      <div class="overlay" id="hostOverlay" hidden>Compartilhamento pausado</div>
+      <div class="overlay" id="hostOverlay" data-i18n="paused" hidden>Compartilhamento pausado</div>
     </div>
     <div class="status" id="hostStatus"></div>
+
     <div class="backdrop" id="backdrop" hidden></div>
-<aside class="panel" id="panel" aria-hidden="true">
-  <div class="panel-head">
-    <h2>Opções</h2>
-    <button id="closeOptions">Fechar</button>
-  </div>
-  <div class="panel-body">
-    <label class="field">Qualidade
-      <select id="liveQuality"></select>
-    </label>
-    <button id="hostMute" disabled>Desativar áudio</button>
-    <button id="hostFs">Tela cheia</button>
-    <button id="shareBtn">Trocar aba ou janela</button>
-    <button id="stopShare">Parar de compartilhar</button>
-    <hr>
-    <button id="closeRoom" class="stop">Encerrar sala</button>
-    <div class="confirm" id="confirmBox" hidden>
-      <p>Encerrar a sala desconecta todos os espectadores.</p>
-      <button id="confirmClose" class="stop">Sim, encerrar</button>
-      <button id="cancelClose">Cancelar</button>
-    </div>
-  </div>
-</aside>
+    <aside class="panel" id="panel" aria-hidden="true">
+      <div class="panel-head">
+        <h2 data-i18n="options">Opções</h2>
+        <button id="closeOptions" data-i18n="close">Fechar</button>
+      </div>
+      <div class="panel-body">
+        <label class="field"><span data-i18n="quality">Qualidade</span>
+          <select id="liveQuality"></select>
+        </label>
+        <button id="hostMute" data-i18n="muteAudio" disabled>Desativar áudio</button>
+        <button id="hostFs" data-i18n="fullscreen">Tela cheia</button>
+        <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
+        <button id="stopShare" data-i18n="stopShare">Parar de compartilhar</button>
+        <hr>
+        <button id="closeRoom" class="stop" data-i18n="closeRoom">Encerrar sala</button>
+        <div class="confirm" id="confirmBox" hidden>
+          <p data-i18n="confirmText">Encerrar a sala desconecta todos os espectadores.</p>
+          <button id="confirmClose" class="stop" data-i18n="confirmYes">Sim, encerrar</button>
+          <button id="cancelClose" data-i18n="cancel">Cancelar</button>
+        </div>
+      </div>
+    </aside>
   </section>
 
   <section id="viewerView" hidden>
     <div class="row back">
-      <button id="leave">Sair</button>
-      <button id="viewFs">Tela cheia</button>
+      <button id="leave" data-i18n="leave">Sair</button>
+      <button id="viewFs" data-i18n="fullscreen">Tela cheia</button>
       <span class="badge" id="viewCount" hidden></span>
-<button id="muteBtn">Silenciar</button>
-<input type="range" id="volume" min="0" max="1" step="0.05" value="1">
+      <button id="muteBtn" data-i18n="mute">Silenciar</button>
+      <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
     </div>
     <div class="stage" id="viewStage">
       <video id="viewVideo" autoplay playsinline></video>
-      <div class="overlay" id="viewOverlay">Conectando...</div>
+      <div class="overlay" id="viewOverlay" data-i18n="connecting">Conectando...</div>
     </div>
     <div class="status" id="viewStatus"></div>
   </section>
+
+  <div class="lang" role="group" aria-label="Language">
+    <button id="langPt" type="button">PT</button>
+    <button id="langEn" type="button">EN</button>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -263,21 +275,221 @@ const QUALITIES = {
 };
 const ORDER = ["light", "eco", "mid", "high", "extreme", "uhd"];
 
+const I18N = {
+  pt: {
+    title: "Compartilhar tela",
+    heading: "Compartilhar tela",
+    sub: "Transmissão direta entre navegadores, sem cadastro.",
+    shareMyScreen: "Compartilhar minha tela",
+    shareAudio: "Compartilhar áudio",
+    pickSurface: "Escolher aba ou janela",
+    watchWithCode: "Assistir com um código",
+    codePlaceholder: "CÓDIGO",
+    join: "Entrar",
+    codeLabel: "Código:",
+    copyCode: "Copiar código",
+    copyLink: "Copiar link",
+    copied: "Copiado",
+    options: "Opções",
+    close: "Fechar",
+    quality: "Qualidade",
+    muteAudio: "Desativar áudio",
+    unmuteAudio: "Ativar áudio",
+    fullscreen: "Tela cheia",
+    switchSurface: "Trocar aba ou janela",
+    shareAgain: "Compartilhar novamente",
+    stopShare: "Parar de compartilhar",
+    closeRoom: "Encerrar sala",
+    confirmText: "Encerrar a sala desconecta todos os espectadores.",
+    confirmYes: "Sim, encerrar",
+    cancel: "Cancelar",
+    paused: "Compartilhamento pausado",
+    lowerQuality: "Reduzir qualidade",
+    leave: "Sair",
+    mute: "Silenciar",
+    unmute: "Ativar som",
+    viewersOne: "1 espectador",
+    viewersMany: "{n} espectadores",
+    connecting: "Conectando...",
+    waiting: "Aguardando transmissão...",
+    shareFailed: "Compartilhamento cancelado, bloqueado ou não suportado.",
+    roomEndedHome: "Sala encerrada.",
+    codeLength: "Digite o código de 6 caracteres.",
+    hostWaiting: "Aguardando espectadores. Compartilhe o código ou o link.",
+    hostPausedStatus: "Compartilhamento pausado. Os espectadores continuam na sala.",
+    hostUpload: "Upload estimado: cerca de {m} Mbps.",
+    connError: "Erro de conexão: {e}",
+    warnBandwidth: "Seu upload está no limite e o vídeo pode travar para os espectadores.",
+    warnCpu: "Seu computador está sobrecarregado e o vídeo pode travar.",
+    warnEstimate: "Upload estimado em cerca de {m} Mbps. Pode pesar na sua conexão.",
+    roomEnded: "A sala foi encerrada.",
+    roomEndedByHost: "A sala foi encerrada pelo host.",
+    connLost: "Conexão perdida.",
+    cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
+    noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
+    roomNotFound: "Sala não encontrada. Confira o código.",
+    q_light: "Muito leve (480p, 10 fps)",
+    q_eco: "Econômica (720p, 15 fps)",
+    q_mid: "Equilibrada (720p, 24 fps)",
+    q_high: "Alta (1080p, 30 fps)",
+    q_extreme: "QHD (1440p, 60 fps)",
+    q_uhd: "4K (2160p, 30 fps)"
+  },
+  en: {
+    title: "Screen sharing",
+    heading: "Screen sharing",
+    sub: "Direct browser-to-browser streaming, no sign-up.",
+    shareMyScreen: "Share my screen",
+    shareAudio: "Share audio",
+    pickSurface: "Choose a tab or window",
+    watchWithCode: "Watch with a code",
+    codePlaceholder: "CODE",
+    join: "Join",
+    codeLabel: "Code:",
+    copyCode: "Copy code",
+    copyLink: "Copy link",
+    copied: "Copied",
+    options: "Options",
+    close: "Close",
+    quality: "Quality",
+    muteAudio: "Mute audio",
+    unmuteAudio: "Unmute audio",
+    fullscreen: "Fullscreen",
+    switchSurface: "Switch tab or window",
+    shareAgain: "Share again",
+    stopShare: "Stop sharing",
+    closeRoom: "End room",
+    confirmText: "Ending the room disconnects all viewers.",
+    confirmYes: "Yes, end it",
+    cancel: "Cancel",
+    paused: "Sharing paused",
+    lowerQuality: "Lower quality",
+    leave: "Leave",
+    mute: "Mute",
+    unmute: "Unmute",
+    viewersOne: "1 viewer",
+    viewersMany: "{n} viewers",
+    connecting: "Connecting...",
+    waiting: "Waiting for the stream...",
+    shareFailed: "Sharing was cancelled, blocked or is not supported.",
+    roomEndedHome: "Room ended.",
+    codeLength: "Enter the 6-character code.",
+    hostWaiting: "Waiting for viewers. Share the code or the link.",
+    hostPausedStatus: "Sharing paused. Viewers stay in the room.",
+    hostUpload: "Estimated upload: about {m} Mbps.",
+    connError: "Connection error: {e}",
+    warnBandwidth: "Your upload is at its limit and the video may stutter for viewers.",
+    warnCpu: "Your computer is overloaded and the video may stutter.",
+    warnEstimate: "Estimated upload of about {m} Mbps. This may strain your connection.",
+    roomEnded: "The room was ended.",
+    roomEndedByHost: "The room was ended by the host.",
+    connLost: "Connection lost.",
+    cantConnect: "Could not connect. Check the code and try again.",
+    noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
+    roomNotFound: "Room not found. Check the code.",
+    q_light: "Very light (480p, 10 fps)",
+    q_eco: "Economy (720p, 15 fps)",
+    q_mid: "Balanced (720p, 24 fps)",
+    q_high: "High (1080p, 30 fps)",
+    q_extreme: "QHD (1440p, 60 fps)",
+    q_uhd: "4K (2160p, 30 fps)"
+  }
+};
+
 const $ = (id) => document.getElementById(id);
 const home = $("home");
 const hostView = $("hostView");
 const viewerView = $("viewerView");
-$("liveQuality").innerHTML = $("quality").innerHTML;
 
 let peer = null;
 let stream = null;
+let qualityKey = "eco";
 let quality = QUALITIES.eco;
 let viewers = new Map();
 let currentCode = "";
 let viewerTimeout = null;
 let currentCall = null;
-let qualityKey = "eco";
 let monitorTimer = null;
+let lang = "pt";
+
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.pt[key] || key;
+  if (vars) {
+    Object.keys(vars).forEach((k) => {
+      let val = String(vars[k]);
+      if (k === "m" && lang === "pt") val = val.replace(".", ",");
+      s = s.replace("{" + k + "}", val);
+    });
+  }
+  return s;
+}
+
+function setT(el, key, vars) {
+  el.dataset.i18n = key;
+  if (vars) {
+    el.dataset.vars = JSON.stringify(vars);
+  } else {
+    delete el.dataset.vars;
+  }
+  el.textContent = t(key, vars);
+}
+
+function fillQuality() {
+  [$("quality"), $("liveQuality")].forEach((sel) => {
+    const keep = sel.value || "eco";
+    sel.innerHTML = "";
+    ORDER.forEach((k) => {
+      const o = document.createElement("option");
+      o.value = k;
+      o.textContent = t("q_" + k);
+      sel.appendChild(o);
+    });
+    sel.value = keep;
+  });
+}
+
+function applyLang() {
+  document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+  document.title = t("title");
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const vars = el.dataset.vars ? JSON.parse(el.dataset.vars) : null;
+    el.textContent = t(el.dataset.i18n, vars);
+  });
+  $("codeInput").placeholder = t("codePlaceholder");
+  fillQuality();
+  $("langPt").classList.toggle("active", lang === "pt");
+  $("langEn").classList.toggle("active", lang === "en");
+}
+
+function detectLang() {
+  let saved = null;
+  try { saved = localStorage.getItem("lang"); } catch (e) {}
+  if (saved === "pt" || saved === "en") return saved;
+  return (navigator.language || "pt").toLowerCase().startsWith("pt") ? "pt" : "en";
+}
+
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem("lang", l); } catch (e) {}
+  applyLang();
+}
+
+function show(section) {
+  home.hidden = section !== home;
+  hostView.hidden = section !== hostView;
+  viewerView.hidden = section !== viewerView;
+}
+
+function setStatus(el, key, isError, vars) {
+  if (key) {
+    setT(el, key, vars);
+  } else {
+    delete el.dataset.i18n;
+    delete el.dataset.vars;
+    el.textContent = "";
+  }
+  el.className = isError ? "status error" : "status";
+}
 
 function openPanel() {
   $("panel").classList.add("open");
@@ -293,73 +505,8 @@ function closePanel() {
   $("closeRoom").hidden = false;
 }
 
-function setQuality(key) {
-  qualityKey = key;
-  quality = QUALITIES[key];
-  $("liveQuality").value = key;
-  const track = stream && stream.getVideoTracks()[0];
-  if (track) {
-    track.contentHint = key === "extreme" || key === "uhd" ? "detail" : "";
-    track.applyConstraints({
-      width: { max: quality.width },
-      height: { max: quality.height },
-      frameRate: { max: quality.fps }
-    }).catch(() => {});
-  }
-  viewers.forEach((v) => {
-    if (v.call) limitBitrate(v.call, quality.kbps);
-  });
-  updateHostCount();
-  checkLoad();
-}
-
-async function checkLoad() {
-  let reason = "";
-  for (const v of viewers.values()) {
-    const pc = v.call && v.call.peerConnection;
-    if (!pc) continue;
-    try {
-      const stats = await pc.getStats();
-      stats.forEach((r) => {
-        if (r.type === "outbound-rtp" && r.kind === "video" && r.qualityLimitationReason && r.qualityLimitationReason !== "none") {
-          reason = r.qualityLimitationReason;
-        }
-      });
-    } catch (e) {}
-  }
-  const estimate = (viewers.size * quality.kbps) / 1000;
-  let text = "";
-  if (reason === "bandwidth") {
-    text = "Seu upload está no limite e o vídeo pode travar para os espectadores.";
-  } else if (reason === "cpu") {
-    text = "Seu computador está sobrecarregado e o vídeo pode travar.";
-  } else if (estimate >= 20) {
-    text = "Upload estimado em cerca de " + estimate.toFixed(0) + " Mbps. Pode pesar na sua conexão.";
-  }
-  $("hostWarnText").textContent = text;
-  $("lowerQ").hidden = qualityKey === ORDER[0];
-  $("hostWarn").hidden = !text || !stream;
-}
-
-function startMonitor() {
-  stopMonitor();
-  monitorTimer = setInterval(checkLoad, 3000);
-}
-
-function stopMonitor() {
-  clearInterval(monitorTimer);
-  monitorTimer = null;
-}
-
-function show(section) {
-  home.hidden = section !== home;
-  hostView.hidden = section !== hostView;
-  viewerView.hidden = section !== viewerView;
-}
-
-function setStatus(el, text, isError) {
-  el.textContent = text;
-  el.className = isError ? "status error" : "status";
+function isDetail(key) {
+  return key === "extreme" || key === "uhd";
 }
 
 async function captureScreen() {
@@ -382,9 +529,9 @@ async function captureScreen() {
 function setSharingUI(on) {
   $("hostOverlay").hidden = on;
   $("stopShare").disabled = !on;
-  $("shareBtn").textContent = on ? "Trocar aba ou janela" : "Compartilhar novamente";
+  setT($("shareBtn"), on ? "switchSurface" : "shareAgain");
   $("hostMute").disabled = !on || !stream || !stream.getAudioTracks().length;
-  $("hostMute").textContent = "Desativar áudio";
+  setT($("hostMute"), "muteAudio");
 }
 
 function sendStream(id, v) {
@@ -398,28 +545,29 @@ function applyStream(newStream) {
   const old = stream;
   stream = newStream;
   const track = newStream.getVideoTracks()[0];
-  if ($("quality").value === "extreme" || $("quality").value === "uhd") track.contentHint = qualityKey === "extreme" || qualityKey === "uhd" ? "detail" : "";
+  track.contentHint = isDetail(qualityKey) ? "detail" : "";
   track.addEventListener("ended", () => {
     if (stream === newStream) stopShare();
   });
   $("hostVideo").srcObject = newStream;
-  if (old) old.getTracks().forEach((t) => t.stop());
+  if (old) old.getTracks().forEach((tr) => tr.stop());
   setSharingUI(true);
   viewers.forEach((v, id) => sendStream(id, v));
   updateHostCount();
 }
 
 async function startHost() {
-qualityKey = $("quality").value;
-quality = QUALITIES[qualityKey];
+  qualityKey = $("quality").value;
+  quality = QUALITIES[qualityKey];
   const s = await captureScreen();
   if (!s) {
-    setStatus($("homeStatus"), "Compartilhamento cancelado, bloqueado ou não suportado.", true);
+    setStatus($("homeStatus"), "shareFailed", true);
     return;
   }
-show(hostView);
-$("liveQuality").value = qualityKey;
-startMonitor();
+  show(hostView);
+  $("liveQuality").value = qualityKey;
+  $("hostWarn").hidden = true;
+  startMonitor();
   startPeerHost(0);
   applyStream(s);
 }
@@ -431,7 +579,7 @@ async function reshare() {
 
 function stopShare() {
   if (!stream) return;
-  stream.getTracks().forEach((t) => t.stop());
+  stream.getTracks().forEach((tr) => tr.stop());
   stream = null;
   $("hostVideo").srcObject = null;
   viewers.forEach((v) => {
@@ -450,7 +598,7 @@ function closeRoom() {
   stopMonitor();
   $("hostWarn").hidden = true;
   if (stream) {
-    stream.getTracks().forEach((t) => t.stop());
+    stream.getTracks().forEach((tr) => tr.stop());
     stream = null;
   }
   viewers.forEach((v) => {
@@ -466,7 +614,7 @@ function closeRoom() {
   $("hostVideo").srcObject = null;
   if (document.fullscreenElement) document.exitFullscreen();
   show(home);
-  setStatus($("homeStatus"), "Sala encerrada.");
+  setStatus($("homeStatus"), "roomEndedHome");
 }
 
 function makeCode() {
@@ -504,18 +652,80 @@ function limitBitrate(call, kbps) {
   }, 250);
 }
 
+function setQuality(key) {
+  qualityKey = key;
+  quality = QUALITIES[key];
+  $("liveQuality").value = key;
+  const track = stream && stream.getVideoTracks()[0];
+  if (track) {
+    track.contentHint = isDetail(key) ? "detail" : "";
+    track.applyConstraints({
+      width: { max: quality.width },
+      height: { max: quality.height },
+      frameRate: { max: quality.fps }
+    }).catch(() => {});
+  }
+  viewers.forEach((v) => {
+    if (v.call) limitBitrate(v.call, quality.kbps);
+  });
+  updateHostCount();
+  checkLoad();
+}
+
+async function checkLoad() {
+  if (!stream) {
+    $("hostWarn").hidden = true;
+    return;
+  }
+  let reason = "";
+  for (const v of viewers.values()) {
+    const pc = v.call && v.call.peerConnection;
+    if (!pc) continue;
+    try {
+      const stats = await pc.getStats();
+      stats.forEach((r) => {
+        if (r.type === "outbound-rtp" && r.kind === "video" && r.qualityLimitationReason && r.qualityLimitationReason !== "none") {
+          reason = r.qualityLimitationReason;
+        }
+      });
+    } catch (e) {}
+  }
+  const estimate = (viewers.size * quality.kbps) / 1000;
+  let key = "";
+  let vars = null;
+  if (reason === "bandwidth") {
+    key = "warnBandwidth";
+  } else if (reason === "cpu") {
+    key = "warnCpu";
+  } else if (estimate >= 20) {
+    key = "warnEstimate";
+    vars = { m: estimate.toFixed(0) };
+  }
+  if (key) setT($("hostWarnText"), key, vars);
+  $("lowerQ").hidden = qualityKey === ORDER[0];
+  $("hostWarn").hidden = !key || !stream;
+}
+
+function startMonitor() {
+  stopMonitor();
+  monitorTimer = setInterval(checkLoad, 3000);
+}
+
+function stopMonitor() {
+  clearInterval(monitorTimer);
+  monitorTimer = null;
+}
+
 function updateHostCount() {
   const n = viewers.size;
-  $("count").textContent = n === 1 ? "1 espectador" : n + " espectadores";
-  const mbps = ((n * quality.kbps) / 1000).toFixed(1).replace(".", ",");
- setStatus(
-  $("hostStatus"),
-  !stream
-    ? "Compartilhamento pausado. Os espectadores continuam na sala."
-    : n
-      ? "Upload estimado: cerca de " + mbps + " Mbps."
-      : "Aguardando espectadores. Compartilhe o código ou o link."
-);
+  setT($("count"), n === 1 ? "viewersOne" : "viewersMany", { n: n });
+  if (!stream) {
+    setStatus($("hostStatus"), "hostPausedStatus");
+  } else if (n) {
+    setStatus($("hostStatus"), "hostUpload", false, { m: ((n * quality.kbps) / 1000).toFixed(1) });
+  } else {
+    setStatus($("hostStatus"), "hostWaiting");
+  }
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ count: n });
   });
@@ -539,18 +749,22 @@ function startPeerHost(attempt) {
   });
 
   peer.on("connection", (conn) => {
-conn.on("open", () => {
-  const v = { conn, call: null };
-  viewers.set(conn.peer, v);
-  if (stream) {
-    sendStream(conn.peer, v);
-  } else {
-    conn.send({ sharing: false });
-  }
-  updateHostCount();
-});
+    conn.on("open", () => {
+      const v = { conn, call: null };
+      viewers.set(conn.peer, v);
+      if (stream) {
+        sendStream(conn.peer, v);
+      } else {
+        conn.send({ sharing: false });
+      }
+      updateHostCount();
+    });
     conn.on("close", () => dropViewer(conn.peer));
     conn.on("error", () => dropViewer(conn.peer));
+  });
+
+  peer.on("disconnected", () => {
+    if (peer && !peer.destroyed) peer.reconnect();
   });
 
   peer.on("error", (err) => {
@@ -558,95 +772,27 @@ conn.on("open", () => {
       peer.destroy();
       startPeerHost(attempt + 1);
     } else if (err.type !== "peer-unavailable") {
-      setStatus($("hostStatus"), "Erro de conexão: " + err.type, true);
+      setStatus($("hostStatus"), "connError", true, { e: err.type });
     }
   });
 }
 
 function copyText(text, el) {
-  const original = el.textContent;
   const done = () => {
-    el.textContent = "Copiado";
-    setTimeout(() => { el.textContent = original; }, 1500);
+    el.textContent = t("copied");
+    setTimeout(() => { el.textContent = t(el.dataset.i18n); }, 1500);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(done).catch(() => {});
   }
 }
 
-function viewerEnded(message) {
+function viewerEnded(key, vars) {
   currentCall = null;
   clearTimeout(viewerTimeout);
   $("viewVideo").srcObject = null;
   $("viewOverlay").hidden = false;
-  $("viewOverlay").textContent = message;
-}
-
-function joinRoom(code) {
-  code = code.trim().toUpperCase();
-  if (code.length !== 6) {
-    setStatus($("homeStatus"), "Digite o código de 6 caracteres.", true);
-    return;
-  }
-  show(viewerView);
-  $("viewOverlay").hidden = false;
-  $("viewOverlay").textContent = "Conectando...";
-  $("viewCount").hidden = true;
-  setStatus($("viewStatus"), "");
-
-  peer = new Peer();
-
-  peer.on("open", () => {
-    const conn = peer.connect(PREFIX + code, { reliable: true });
-conn.on("data", (d) => {
-  if (!d) return;
-  if (typeof d.count === "number") {
-    $("viewCount").hidden = false;
-    $("viewCount").textContent = d.count === 1 ? "1 espectador" : d.count + " espectadores";
-  }
-  if (d.sharing === false) showWaiting();
-  if (d.closed) viewerEnded("A sala foi encerrada pelo host.");
-});
-conn.on("open", () => {
-  clearTimeout(viewerTimeout);
-  viewerTimeout = setTimeout(() => {
-    if (!$("viewVideo").srcObject && $("viewOverlay").textContent === "Conectando...") {
-      viewerEnded("Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.");
-    }
-  }, 15000);
-});
-    conn.on("close", () => viewerEnded("A sala foi encerrada."));
-    conn.on("error", () => viewerEnded("Conexão perdida."));
-    viewerTimeout = setTimeout(() => {
-      viewerEnded("Não foi possível conectar. Confira o código e tente de novo.");
-    }, 20000);
-  });
-
-peer.on("call", (call) => {
-  if (currentCall) currentCall.close();
-  currentCall = call;
-  call.answer();
-  call.on("stream", (remote) => {
-      clearTimeout(viewerTimeout);
-      const v = $("viewVideo");
-      v.srcObject = remote;
-      $("viewOverlay").hidden = true;
-v.play().catch(() => {
-  v.muted = true;
-  updateMuteBtn();
-  v.play().catch(() => {});
-});
-    });
-  call.on("close", () => {});
-  });
-
-  peer.on("error", (err) => {
-    if (err.type === "peer-unavailable") {
-      viewerEnded("Sala não encontrada. Confira o código.");
-    } else {
-      viewerEnded("Erro de conexão: " + err.type);
-    }
-  });
+  setT($("viewOverlay"), key, vars);
 }
 
 function showWaiting() {
@@ -656,9 +802,80 @@ function showWaiting() {
   }
   $("viewVideo").srcObject = null;
   $("viewOverlay").hidden = false;
-  $("viewOverlay").textContent = "Aguardando transmissão...";
+  setT($("viewOverlay"), "waiting");
 }
-  
+
+function updateMuteBtn() {
+  const v = $("viewVideo");
+  setT($("muteBtn"), v.muted || v.volume === 0 ? "unmute" : "mute");
+}
+
+function joinRoom(code) {
+  code = code.trim().toUpperCase();
+  if (code.length !== 6) {
+    setStatus($("homeStatus"), "codeLength", true);
+    return;
+  }
+  show(viewerView);
+  $("viewOverlay").hidden = false;
+  setT($("viewOverlay"), "connecting");
+  $("viewCount").hidden = true;
+  setStatus($("viewStatus"), "");
+  updateMuteBtn();
+
+  peer = new Peer();
+
+  peer.on("open", () => {
+    const conn = peer.connect(PREFIX + code, { reliable: true });
+    conn.on("data", (d) => {
+      if (!d) return;
+      if (typeof d.count === "number") {
+        $("viewCount").hidden = false;
+        setT($("viewCount"), d.count === 1 ? "viewersOne" : "viewersMany", { n: d.count });
+      }
+      if (d.sharing === false) showWaiting();
+      if (d.closed) viewerEnded("roomEndedByHost");
+    });
+    conn.on("open", () => {
+      clearTimeout(viewerTimeout);
+      viewerTimeout = setTimeout(() => {
+        if (!$("viewVideo").srcObject && $("viewOverlay").dataset.i18n === "connecting") {
+          viewerEnded("noVideo");
+        }
+      }, 15000);
+    });
+    conn.on("close", () => viewerEnded("roomEnded"));
+    conn.on("error", () => viewerEnded("connLost"));
+    viewerTimeout = setTimeout(() => viewerEnded("cantConnect"), 20000);
+  });
+
+  peer.on("call", (call) => {
+    if (currentCall) currentCall.close();
+    currentCall = call;
+    call.answer();
+    call.on("stream", (remote) => {
+      clearTimeout(viewerTimeout);
+      const v = $("viewVideo");
+      v.srcObject = remote;
+      $("viewOverlay").hidden = true;
+      v.play().catch(() => {
+        v.muted = true;
+        updateMuteBtn();
+        v.play().catch(() => {});
+      });
+    });
+    call.on("close", () => {});
+  });
+
+  peer.on("error", (err) => {
+    if (err.type === "peer-unavailable") {
+      viewerEnded("roomNotFound");
+    } else {
+      viewerEnded("connError", { e: err.type });
+    }
+  });
+}
+
 function leaveRoom() {
   clearTimeout(viewerTimeout);
   currentCall = null;
@@ -668,19 +885,15 @@ function leaveRoom() {
   }
   $("viewVideo").srcObject = null;
   $("viewVideo").muted = false;
+  $("viewVideo").volume = 1;
   $("volume").value = 1;
-$("viewVideo").volume = 1;
-updateMuteBtn();
+  updateMuteBtn();
   if (document.fullscreenElement) document.exitFullscreen();
   show(home);
 }
 
+$("startHost").addEventListener("click", startHost);
 $("shareBtn").addEventListener("click", reshare);
-$("liveQuality").addEventListener("change", (e) => setQuality(e.target.value));
-$("lowerQ").addEventListener("click", () => {
-  const i = ORDER.indexOf(qualityKey);
-  if (i > 0) setQuality(ORDER[i - 1]);
-});
 $("stopShare").addEventListener("click", stopShare);
 $("openOptions").addEventListener("click", openPanel);
 $("closeOptions").addEventListener("click", closePanel);
@@ -704,7 +917,17 @@ $("confirmClose").addEventListener("click", () => {
   closePanel();
   closeRoom();
 });
-$("startHost").addEventListener("click", startHost);
+$("liveQuality").addEventListener("change", (e) => setQuality(e.target.value));
+$("lowerQ").addEventListener("click", () => {
+  const i = ORDER.indexOf(qualityKey);
+  if (i > 0) setQuality(ORDER[i - 1]);
+});
+$("hostMute").addEventListener("click", () => {
+  const track = stream && stream.getAudioTracks()[0];
+  if (!track) return;
+  track.enabled = !track.enabled;
+  setT($("hostMute"), track.enabled ? "muteAudio" : "unmuteAudio");
+});
 $("copyCode").addEventListener("click", (e) => copyText(currentCode, e.currentTarget));
 $("copyLink").addEventListener("click", (e) => {
   const url = location.origin + location.pathname + "?sala=" + currentCode;
@@ -716,12 +939,6 @@ $("codeInput").addEventListener("keydown", (e) => {
 });
 $("leave").addEventListener("click", leaveRoom);
 $("viewFs").addEventListener("click", () => toggleFullscreen($("viewStage")));
-
-  function updateMuteBtn() {
-  const v = $("viewVideo");
-  $("muteBtn").textContent = v.muted || v.volume === 0 ? "Ativar som" : "Silenciar";
-}
-
 $("muteBtn").addEventListener("click", () => {
   const v = $("viewVideo");
   v.muted = !v.muted;
@@ -731,20 +948,17 @@ $("muteBtn").addEventListener("click", () => {
   }
   updateMuteBtn();
 });
-
 $("volume").addEventListener("input", (e) => {
   const v = $("viewVideo");
   v.volume = Number(e.target.value);
   v.muted = v.volume === 0;
   updateMuteBtn();
 });
+$("langPt").addEventListener("click", () => setLang("pt"));
+$("langEn").addEventListener("click", () => setLang("en"));
 
-$("hostMute").addEventListener("click", () => {
-  const track = stream && stream.getAudioTracks()[0];
-  if (!track) return;
-  track.enabled = !track.enabled;
-  $("hostMute").textContent = track.enabled ? "Desativar áudio" : "Ativar áudio";
-});
+lang = detectLang();
+applyLang();
 
 const params = new URLSearchParams(location.search);
 const roomParam = params.get("sala");
