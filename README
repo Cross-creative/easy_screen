@@ -26,7 +26,7 @@ When you click to create a room, you first pick the room type and then choose th
 Watching
 
 1. Open the link, or choose a nickname, type the room code on the home page and click "Join".
-2. If the video starts muted because of browser autoplay rules, click "Unmute".
+2. If the video starts muted because of browser autoplay rules, click the audio icon in the bar under the video and click "Unmute".
 3. To share your own screen, click "Ask to share". When the host allows it, click "Share".
 
 
@@ -36,7 +36,7 @@ Room codes: each host gets a random 6-character code, plus a shareable link that
 
 Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room. The nickname is saved as you type and shown again after you leave a room. Opening a room link joins the room right away when a nickname is saved. Without one, you type the nickname and press Enter or click Join, and the code is already filled in.
 
-The viewer sees "Host: name" at the top, and the host sees a viewer counter like "3 👁".
+The bar under the video shows "Host: name" on the left, with the Picture Mode, Fullscreen and Audio icons on the right. Hold the mouse over an icon for 1 second to see what it does. The host also sees a viewer counter like "3 👁".
 
 Chat: users can chat with each other. You are responsible for what you say, and the host can mute you, delete your messages or kick you.
 
@@ -52,11 +52,19 @@ Multi-sharing: viewers ask to share and the host allows, denies or revokes. Up t
 
 Grid with every shared screen. Click a screen to see only that one, and use the button in its top right corner to go back to all screens. Fullscreen then shows only that screen.
 
-Audio tab: when more than one person is sharing, the options panel shows a volume slider and a mute button for each shared screen. It only affects your own device.
+Audio icon in the bar under the video: opens a small panel. For viewers it has the volume slider and the mute button. For the host it has the button that mutes the audio being shared. When more than one person is sharing, the panel also shows a volume slider and a mute button for each shared screen. This only affects your own device.
 
 Public and private rooms: in a private room the host accepts or declines each person who tries to join. Requests expire after 90 seconds, and people who were accepted can reconnect without asking again.
 
 Quality levels from 480p up to QHD (1440p), adjustable while streaming.
+
+Automatic quality reduction: when the browser reports that your upload or your computer is the bottleneck, the app drops one quality level by itself and shows a notice. After 1 minute without problems it goes back up one level at a time, never above the quality you picked. Both behaviors are on by default and can be turned off in Settings.
+
+Quality limit by number of viewers: the more people in the room, the lower the highest quality that can be selected. Locked levels are marked with a lock in the quality selector, and the quality is lowered automatically if the room grows. This can be turned off in Settings. See "Quality levels and upload" for the exact limits.
+
+Settings: the gear button in the corner of the screen opens the same panel on the home page, in the host room and in the viewer room. It has the language (Portuguese or English), the theme (automatic, light or dark), automatic quality reduction, automatic quality recovery and the quality limit by number of viewers. Settings are saved in your browser.
+
+What's new notice: the home page shows a one-time notice about the settings. It disappears after you click "Got it" or open the settings, and does not come back.
 
 Leave to menu: the host can go to the menu while the room stays open for 8 minutes, with a countdown shown to everyone, and come back with "Back to the room". Starting a new room closes the old one.
 
@@ -72,15 +80,13 @@ Options panel for the host, with a confirmation before ending the room.
 
 One tab per viewer per room: duplicate tabs from the same browser are blocked.
 
-Volume and mute controls for viewers, audio toggle for the host.
-
-Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
+Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, from the bar under the video, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
 
 Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
 
-English and Portuguese (Brazil), detected from the browser and remembered.
+English and Portuguese (Brazil), detected from the browser, remembered and changeable in Settings.
 
-Light and dark theme, following the system setting.
+Light and dark theme, following the system setting by default and changeable in Settings.
 
 
 Quality levels and upload
@@ -94,6 +100,15 @@ High: 1080p, 30 fps, about 3 Mbps
 QHD: 1440p, 60 fps, about 8 Mbps
 
 Example: 4 viewers at Balanced need about 6 Mbps of upload. Anyone who shares uploads one copy to every other person in the room, so 4 people sharing in a room of 16 can need far more. The actual resolution also depends on the size of the shared tab or window.
+
+When the quality limit by number of viewers is on, the app keeps viewers multiplied by the bitrate of the level at or below about 13 Mbps. In practice:
+
+1 viewer: up to QHD
+2 to 4 viewers: up to High
+5 to 8 viewers: up to Balanced
+9 to 16 viewers: up to Economy
+
+The same calculation applies to anyone sharing from inside the room, using the number of people they send video to.
 
 
 Browser support
@@ -127,6 +142,8 @@ Limitations
 
 Mesh topology: everyone who shares uploads one stream per person in the room. The limit is 16 viewers, but in practice it depends on the host's upload. It is best suited to small groups, roughly 3 to 6 people at higher quality levels.
 
+Automatic quality reduction depends on what the browser reports about bandwidth and CPU limits, so it reacts after the problem has started and may not catch every case.
+
 Depends on the free public PeerJS server, which can be slow or unavailable.
 
 Viewers behind very restrictive networks, such as some school or company networks, may fail to connect.
@@ -148,7 +165,7 @@ Privacy
 
 No accounts, no analytics and no cookies.
 
-The browser stores only your language choice, nickname and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
+The browser stores only your settings (language, theme and the automatic quality options), your nickname, a flag saying you already saw the what's new notice, and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
 
 Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
 
