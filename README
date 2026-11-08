@@ -62,13 +62,17 @@ Automatic quality reduction: when the browser reports that your upload or your c
 
 Quality limit by number of viewers: the more people in the room, the lower the highest quality that can be selected. Locked levels are marked with a lock in the quality selector, and the quality is lowered automatically if the room grows. This can be turned off in Settings. See "Quality levels and upload" for the exact limits.
 
-Settings: the gear button in the corner of the screen opens the same panel on the home page, in the host room and in the viewer room. It has the language (Portuguese or English), the theme (automatic, light or dark), automatic quality reduction, automatic quality recovery and the quality limit by number of viewers. Settings are saved in your browser.
+Settings: the gear button in the corner of the screen opens the same panel on the home page, in the host room and in the viewer room. It has the language (Portuguese or English), the theme (automatic, light or dark), automatic quality reduction, automatic quality recovery and the quality limit by number of viewers and the system notifications. Settings are saved in your browser.
 
 What's new notice: the home page shows a one-time notice about the settings. It disappears after you click "Got it" or open the settings, and does not come back.
 
 Leave to menu: the host can go to the menu while the room stays open for 8 minutes, with a countdown shown to everyone, and come back with "Back to the room". Starting a new room closes the old one.
 
 Warning for the host when upload bandwidth or CPU is overloaded, with a one-click option to lower the quality.
+
+Floating alerts: requests to join or share, upload or CPU warnings and automatic quality changes appear as a notice fixed at the top of the window. It follows the screen when you scroll, so it stays visible on small screens.
+
+System notifications: when the room tab is in the background or the window is not focused, the same alerts also appear as a notification on your computer. Clicking one takes you back to the room tab. The browser asks for permission the first time you create a room or start sharing from inside a room. They can be turned off in Settings.
 
 Estimated upload usage and a live viewer counter.
 
@@ -144,6 +148,8 @@ Mesh topology: everyone who shares uploads one stream per person in the room. Th
 
 Automatic quality reduction depends on what the browser reports about bandwidth and CPU limits, so it reacts after the problem has started and may not catch every case.
 
+Floating alerts are not shown while a screen is in fullscreen. System notifications still work if the browser allows them.
+
 Depends on the free public PeerJS server, which can be slow or unavailable.
 
 Viewers behind very restrictive networks, such as some school or company networks, may fail to connect.
@@ -165,7 +171,7 @@ Privacy
 
 No accounts, no analytics and no cookies.
 
-The browser stores only your settings (language, theme and the automatic quality options), your nickname, a flag saying you already saw the what's new notice, and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
+The browser stores only your settings (language, theme, the automatic quality options and the notifications option), your nickname, a flag saying you already saw the what's new notice, and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
 
 Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
 
