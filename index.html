@@ -423,6 +423,79 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   z-index: 10;
 }
 .panel-body .check { align-items: flex-start; }
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.bar .hostname { margin: 0; min-width: 0; flex: 1; }
+.ibtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+}
+.ibtn svg { width: 22px; height: 22px; }
+.ibtn img { width: 22px; height: 22px; display: block; }
+.pipimg {
+  display: block;
+  width: 28px;
+  height: 28px;
+  background-color: currentColor;
+  -webkit-mask: url(data:image/png;base64,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) center / contain no-repeat;
+  mask: url(data:image/png;base64,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) center / contain no-repeat;
+}
+.ibtn .mslash { display: none; }
+.ibtn.muted .mslash { display: block; }
+.ibtn.muted .wave { display: none; }
+.ibtn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  pointer-events: none;
+  z-index: 16;
+}
+.ibtn[data-tip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 1s;
+}
+.ibtn.edge[data-tip]::after { left: auto; right: 0; transform: none; }
+.apop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(280px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  z-index: 15;
+}
 .panel-body .hint { margin: -4px 0 4px 26px; }
 </style>
 </head>
@@ -502,6 +575,19 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <div class="tiles" id="hostGrid"></div>
       <div class="overlay" id="hostOverlay" data-i18n="nobodySharing">Ninguém está compartilhando.</div>
     </div>
+    <div class="bar">
+      <span class="hostname" id="hostSelfName"></span>
+      <button class="ibtn" id="pipHost" data-tipkey="tipPip" hidden><span class="pipimg" aria-hidden="true"></span></button>
+      <button class="ibtn" id="hostFs" data-tipkey="tipFs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="ibtn edge" id="audioBtnHost" data-tipkey="tipAudio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mslash" d="M17 9l5 6M22 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <div class="apop" id="audioPopHost" hidden>
+        <button id="hostMute" data-i18n="muteAudio" disabled>Desativar áudio</button>
+        <details class="audiotab" id="audioTabHost" hidden>
+          <summary data-i18n="audioTab">Áudio das telas</summary>
+          <div class="audiolist" id="audioListHost"></div>
+        </details>
+      </div>
+    </div>
     <div class="status" id="hostNote" hidden></div>
     <div class="statusrow">
     <div class="status error" id="audioNote" data-i18n="audioMissing" hidden>O áudio não está sendo compartilhado.</div>
@@ -519,13 +605,6 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         <label class="field"><span data-i18n="quality">Qualidade</span>
           <select id="liveQuality"></select>
         </label>
-        <button id="hostMute" data-i18n="muteAudio" disabled>Desativar áudio</button>
-        <details class="audiotab" id="audioTabHost" hidden>
-          <summary data-i18n="audioTab">Áudio das telas</summary>
-          <div class="audiolist" id="audioListHost"></div>
-        </details>
-        <button id="hostFs" data-i18n="fullscreen">Tela cheia</button>
-        <button id="pipHost" data-i18n="pip" hidden>Modo Retrato</button>
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
         <button id="stopShare" data-i18n="stopShare">Parar de compartilhar</button>
         <button id="awayBtn" data-i18n="awayBtn">Sair para o menu</button>
@@ -550,10 +629,25 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 </div>
 <div class="warn" id="awayBanner" hidden><span id="awayText"></span></div>
 <div class="warn" id="viewWarn" hidden><span id="viewWarnText"></span></div>
-<div class="hostname" id="hostName" hidden></div>
     <div class="stage" id="viewStage">
       <div class="tiles" id="viewGrid"></div>
       <div class="overlay" id="viewOverlay" data-i18n="connecting">Conectando...</div>
+    </div>
+    <div class="bar">
+      <span class="hostname" id="hostName" hidden></span>
+      <button class="ibtn" id="pipView" data-tipkey="tipPip" hidden><span class="pipimg" aria-hidden="true"></span></button>
+      <button class="ibtn" id="viewFs" data-tipkey="tipFs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="ibtn edge" id="audioBtnView" data-tipkey="tipAudio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mslash" d="M17 9l5 6M22 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <div class="apop" id="audioPopView" hidden>
+        <label class="field"><span data-i18n="volume">Volume</span>
+          <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
+        </label>
+        <button id="muteBtn" data-i18n="mute">Silenciar</button>
+        <details class="audiotab" id="audioTabView" hidden>
+          <summary data-i18n="audioTab">Áudio das telas</summary>
+          <div class="audiolist" id="audioListView"></div>
+        </details>
+      </div>
     </div>
     <div class="status" id="viewStatus"></div>
     <div class="backdrop" id="viewBackdrop" hidden></div>
@@ -569,18 +663,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       </label>
       <label class="check"><input type="checkbox" id="viewAudio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
       <button id="viewSwitch" data-i18n="switchSurface" hidden>Trocar aba ou janela</button>
-      <hr>
     </div>
-    <label class="field"><span data-i18n="volume">Volume</span>
-      <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
-    </label>
-    <button id="muteBtn" data-i18n="mute">Silenciar</button>
-    <details class="audiotab" id="audioTabView" hidden>
-      <summary data-i18n="audioTab">Áudio das telas</summary>
-      <div class="audiolist" id="audioListView"></div>
-    </details>
-    <button id="viewFs" data-i18n="fullscreen">Tela cheia</button>
-    <button id="pipView" data-i18n="pip" hidden>Modo Retrato</button>
   </div>
 </aside>
   </section>
@@ -948,7 +1031,10 @@ const I18N = {
     autoRaised: "Qualidade aumentada automaticamente para: {q}.",
     capLowered: "Qualidade limitada a {q} pelo número de espectadores.",
     newsText: "Novidade: agora o Tela Fácil tem configurações! Toque no ⚙ no canto da tela para mudar idioma, tema e a qualidade automática.",
-    newsOk: "Entendi"
+    newsOk: "Entendi",
+    tipPip: "Modo Retrato (Picture in Picture)",
+    tipFs: "Tela cheia",
+    tipAudio: "Áudio"
   },
   en: {
     title: "Easy Screen",
@@ -1090,7 +1176,10 @@ const I18N = {
     autoRaised: "Quality raised automatically to: {q}.",
     capLowered: "Quality limited to {q} because of the number of viewers.",
     newsText: "New: Easy Screen now has settings! Tap the ⚙ in the corner of the screen to change language, theme and automatic quality.",
-    newsOk: "Got it"
+    newsOk: "Got it",
+    tipPip: "Picture Mode (Picture in Picture)",
+    tipFs: "Fullscreen",
+    tipAudio: "Audio"
   }
 };
 
@@ -1927,6 +2016,11 @@ function applyLang() {
   $("codeInput").placeholder = t("codePlaceholder");
   $("nick").placeholder = t("nickPlaceholder");
   $("nickNew").placeholder = t("nickPlaceholder");
+  document.querySelectorAll("[data-tipkey]").forEach((el) => {
+    const txt = t(el.dataset.tipkey);
+    el.dataset.tip = txt;
+    el.setAttribute("aria-label", txt);
+  });
   $("settingsBtn").title = t("settings");
   $("settingsBtn").setAttribute("aria-label", t("settings"));
   updateChatInput();
@@ -1948,7 +2042,24 @@ function setLang(l) {
   applyLang();
 }
 
+function closeAudioPops() {
+  $("audioPopHost").hidden = true;
+  $("audioPopView").hidden = true;
+}
+
+function toggleAudioPop(id) {
+  const opening = $(id).hidden;
+  closeAudioPops();
+  $(id).hidden = !opening;
+}
+
+function updateHostAudioIcon() {
+  const track = stream && stream.getAudioTracks()[0];
+  $("audioBtnHost").classList.toggle("muted", !!track && !track.enabled);
+}
+
 function show(section) {
+  closeAudioPops();
   home.hidden = section !== home;
   hostView.hidden = section !== hostView;
   viewerView.hidden = section !== viewerView;
@@ -2008,6 +2119,7 @@ function setSharingUI(on) {
   setT($("shareBtn"), on ? "switchSurface" : "shareAgain");
   $("hostMute").disabled = !on || !stream || !stream.getAudioTracks().length;
   setT($("hostMute"), "muteAudio");
+  updateHostAudioIcon();
 }
 
 function sendStream(id, v) {
@@ -2074,6 +2186,7 @@ async function startHost(share) {
   if (hosting) closeRoom();
   roomPrivate = vis === "private";
   setT($("roomType"), roomPrivate ? "roomPrivateBadge" : "roomPublicBadge");
+  setT($("hostSelfName"), "hostLabel", { name: myNick });
   hosting = true;
   activeGrid = $("hostGrid");
   show(hostView);
@@ -2703,6 +2816,7 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
     });
   }
   setT($("roomType"), priv ? "roomPrivateBadge" : "roomPublicBadge");
+  setT($("hostSelfName"), "hostLabel", { name: myNick });
   hosting = true;
   activeGrid = $("hostGrid");
   clearTiles();
@@ -3109,7 +3223,9 @@ function scheduleRetry() {
 }
 
 function updateMuteBtn() {
-  setT($("muteBtn"), viewMuted || viewVolume === 0 ? "unmute" : "mute");
+  const off = viewMuted || viewVolume === 0;
+  setT($("muteBtn"), off ? "unmute" : "mute");
+  $("audioBtnView").classList.toggle("muted", off);
 }
 
 function joinRoom(code) {
@@ -3440,6 +3556,7 @@ document.addEventListener("keydown", (e) => {
   closeChat();
   closePanel();
   closeSettings();
+  closeAudioPops();
   closePipDialog();
   if (visResolve) closeVis(null);
 });
@@ -3500,6 +3617,18 @@ $("hostMute").addEventListener("click", () => {
   if (!track) return;
   track.enabled = !track.enabled;
   setT($("hostMute"), track.enabled ? "muteAudio" : "unmuteAudio");
+  updateHostAudioIcon();
+});
+$("audioBtnHost").addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleAudioPop("audioPopHost");
+});
+$("audioBtnView").addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleAudioPop("audioPopView");
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".apop")) closeAudioPops();
 });
 $("copyCode").addEventListener("click", (e) => copyText(currentCode, e.currentTarget));
 $("copyLink").addEventListener("click", (e) => {
@@ -3611,6 +3740,7 @@ if (!newsSeen()) $("newsBanner").hidden = false;
   $("shareNotice").hidden = false;
   $("watchCard").classList.add("highlight");
   $("viewShareOpts").hidden = true;
+  $("openViewOptions").hidden = true;
 }
   if (pipSupported()) {
   $("pipView").hidden = false;
