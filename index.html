@@ -517,6 +517,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <button id="openViewOptions" data-i18n="options">Opções</button>
 </div>
 <div class="warn" id="awayBanner" hidden><span id="awayText"></span></div>
+<div class="warn" id="viewWarn" hidden><span id="viewWarnText"></span></div>
 <div class="hostname" id="hostName" hidden></div>
     <div class="stage" id="viewStage">
       <div class="tiles" id="viewGrid"></div>
@@ -698,6 +699,7 @@ const I18N = {
     cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
     noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
+    roomSuspicious: "Conflito detectado: mais de um host respondeu a este código. Por segurança, a conexão foi encerrada.",
     audioTip: "Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.",
     audioMissing: "O áudio não está sendo compartilhado. Clique em “Trocar aba ou janela” e, na janela de seleção, ative “Compartilhar com áudio do sistema”.",
     eyeCount: "👁 {n}",
@@ -822,6 +824,7 @@ const I18N = {
     cantConnect: "Could not connect. Check the code and try again.",
     noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
+    roomSuspicious: "Conflict detected: more than one host answered this code. The connection was closed for safety.",
     audioTip: "To share sound, turn on “Share system audio” in the browser’s selection window.",
     audioMissing: "Audio is not being shared. Click “Switch tab or window” and turn on “Share system audio” in the selection window.",
     eyeCount: "👁 {n}",
@@ -908,6 +911,8 @@ const pending = new Map();
 let lastNickTry = "";
 const bans = new Map();
 const grants = new Set();
+const mutedVids = new Set();
+const chatLog = [];
 let chatSeq = 0;
 let chatMuted = false;
 let blockedTab = false;
@@ -1264,17 +1269,25 @@ function removeMessage(id) {
 
 function deleteMessage(id) {
   removeMessage(id);
+  const i = chatLog.findIndex((m) => m.id === id);
+  if (i >= 0) chatLog.splice(i, 1);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ del: id });
   });
+  syncSuccessor();
 }
 
 function toggleMuteUser(id) {
   const v = viewers.get(id);
   if (!v) return;
   v.muted = !v.muted;
+  if (v.vid) {
+    if (v.muted) mutedVids.add(v.vid);
+    else mutedVids.delete(v.vid);
+  }
   if (v.conn.open) v.conn.send({ muted: v.muted });
   renderPeople();
+  syncSuccessor();
 }
 
 function kickViewer(id) {
@@ -1543,10 +1556,13 @@ function addChat(m, mod) {
 
 function broadcastChat(nick, text) {
   const m = { id: ++chatSeq, nick: nick, text: text };
+  chatLog.push(m);
+  if (chatLog.length > 50) chatLog.shift();
   addChat(m, true);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ chat: m });
   });
+  syncSuccessor();
 }
 
 function sendChat() {
@@ -1927,6 +1943,9 @@ function closeRoom() {
   leavePip();
   stopAway();
   bans.clear();
+  mutedVids.clear();
+  chatLog.length = 0;
+  chatSeq = 0;
   grants.clear();
   approvals.forEach((a) => {
     clearTimeout(a.timer);
@@ -2049,13 +2068,17 @@ function setQuality(key) {
 }
 
 async function checkLoad() {
+  const calls = hosting ? [...viewers.values()].map((v) => v.call) : [...outCalls.values()];
+  const count = hosting ? viewers.size : outCalls.size;
+  const box = hosting ? $("hostWarn") : $("viewWarn");
+  const text = hosting ? $("hostWarnText") : $("viewWarnText");
   if (!stream) {
-    $("hostWarn").hidden = true;
+    box.hidden = true;
     return;
   }
   let reason = "";
-  for (const v of viewers.values()) {
-    const pc = v.call && v.call.peerConnection;
+  for (const call of calls) {
+    const pc = call && call.peerConnection;
     if (!pc) continue;
     try {
       const stats = await pc.getStats();
@@ -2066,7 +2089,7 @@ async function checkLoad() {
       });
     } catch (e) {}
   }
-  const estimate = (viewers.size * quality.kbps) / 1000;
+  const estimate = (count * quality.kbps) / 1000;
   let key = "";
   let vars = null;
   if (reason === "bandwidth") {
@@ -2077,9 +2100,9 @@ async function checkLoad() {
     key = "warnEstimate";
     vars = { m: estimate.toFixed(0) };
   }
-  if (key) setT($("hostWarnText"), key, vars);
-  $("lowerQ").hidden = qualityKey === ORDER[0];
-  $("hostWarn").hidden = !key || !stream;
+  if (key) setT(text, key, vars);
+  if (hosting) $("lowerQ").hidden = qualityKey === ORDER[0];
+  box.hidden = !key || !stream;
 }
 
 function startMonitor() {
@@ -2158,6 +2181,22 @@ function strList(a) {
   return Array.isArray(a) ? a.filter((x) => typeof x === "string" && /^[A-Z0-9]{12}$/.test(x)).slice(0, 64) : [];
 }
 
+function banList(a) {
+  if (!Array.isArray(a)) return [];
+  return a
+    .filter((b) => Array.isArray(b) && typeof b[0] === "string" && /^(vid|ip):[A-Za-z0-9:.%-]{1,64}$/.test(b[0]) && Number.isFinite(b[1]))
+    .slice(0, 64)
+    .map((b) => [b[0], b[1]]);
+}
+
+function chatHist(a) {
+  if (!Array.isArray(a)) return [];
+  return a
+    .filter((m) => m && typeof m.nick === "string" && typeof m.text === "string" && Number.isInteger(m.id))
+    .slice(-50)
+    .map((m) => ({ id: m.id, nick: cleanNick(m.nick), text: m.text.slice(0, CHAT_MAX) }));
+}
+
 function saveHostSession(closing) {
   if (!hosting || !currentCode) return;
   try {
@@ -2185,7 +2224,14 @@ function syncSuccessor() {
   viewers.forEach((v, id) => {
     if (!first && v.conn.open) first = id;
   });
-  const st = { priv: roomPrivate, allowed: [...allowed], grants: [...grants] };
+  const st = {
+    priv: roomPrivate,
+    allowed: [...allowed],
+    grants: [...grants],
+    bans: [...bans].filter((b) => b[1] > Date.now()),
+    muted: [...mutedVids],
+    chat: chatLog.slice()
+  };
   const sig = JSON.stringify([first, st]);
   if (sig === succSig) return;
   succSig = sig;
@@ -2252,7 +2298,7 @@ function admit(conn, ctx) {
     tab: ctx.tab,
     ip: ctx.ip,
     nick: ctx.nick,
-    muted: false,
+    muted: !!(ctx.vid && mutedVids.has(ctx.vid)),
     lastMsg: 0,
     canShare: !!(ctx.vid && grants.has(ctx.vid)),
     wantsShare: false,
@@ -2266,6 +2312,8 @@ function admit(conn, ctx) {
     canShare: v.canShare,
     away: away ? Math.max(0, away.deadline - Date.now()) : null
   });
+  if (v.muted) conn.send({ muted: true });
+  if (chatLog.length) conn.send({ history: chatLog });
   if (stream) sendStream(conn.peer, v);
   viewers.forEach((o, oid) => {
     if (oid !== conn.peer && o.sharing && o.conn.open) o.conn.send({ callNew: conn.peer });
@@ -2380,18 +2428,35 @@ peer.on("disconnected", () => {
   });
 }
 
-function enterHost(code, priv, allowedList, grantList, noteKey, gen) {
+function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
   roomPrivate = priv;
   takeoverMode = noteKey === "nowHost";
   allowed.clear();
   allowedList.forEach((x) => allowed.add(x));
   grants.clear();
   grantList.forEach((x) => grants.add(x));
+  bans.clear();
+  mutedVids.clear();
+  chatLog.length = 0;
+  chatSeq = 0;
+  if (extra) {
+    extra.bans.forEach((b) => bans.set(b[0], b[1]));
+    extra.muted.forEach((x) => mutedVids.add(x));
+    extra.chat.forEach((m) => {
+      chatLog.push(m);
+      if (m.id > chatSeq) chatSeq = m.id;
+    });
+  }
   setT($("roomType"), priv ? "roomPrivateBadge" : "roomPublicBadge");
   hosting = true;
   activeGrid = $("hostGrid");
   clearTiles();
   show(hostView);
+  if (extra) {
+    extra.chat.forEach((m) => addChat(m, true));
+    chatUnread = 0;
+    updateUnread();
+  }
   $("people").hidden = false;
   $("liveQuality").value = qualityKey;
   $("viewQuality").value = qualityKey;
@@ -2480,7 +2545,7 @@ function becomeHost() {
   closeViewPanel();
   $("hostName").hidden = true;
   setStatus($("viewStatus"), "");
-  enterHost(code, st.priv, st.allowed, st.grants, "nowHost", (roomGen + 1) % ROOM_GENS);
+  enterHost(code, st.priv, st.allowed, st.grants, "nowHost", (roomGen + 1) % ROOM_GENS, st);
 }
 
 function maybeStartTakeover() {
@@ -2492,13 +2557,28 @@ function maybeStartTakeover() {
   }, TAKEOVER_MS);
 }
 
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.remove();
+  if (ok) done();
+}
+
 function copyText(text, el) {
   const done = () => {
     el.textContent = t("copied");
     setTimeout(() => { el.textContent = t(el.dataset.i18n); }, 1500);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(() => {});
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
   }
 }
 
@@ -2570,6 +2650,10 @@ function updateShareUI() {
 }
 
 function resetShare() {
+  if (!hosting) {
+    stopMonitor();
+    $("viewWarn").hidden = true;
+  }
   if (pendingStream) {
     pendingStream.getTracks().forEach((tr) => tr.stop());
     pendingStream = null;
@@ -2633,6 +2717,7 @@ function beginViewerShare(targets) {
   addTile("me", myNick, s, true);
   shareState = "sharing";
   targets.forEach(callTarget);
+  startMonitor();
   updateShareUI();
 }
 
@@ -2661,6 +2746,8 @@ function viewerStopShare(notify) {
   outCalls.clear();
   removeTile("me");
   if (notify && viewerConn && viewerConn.open) viewerConn.send({ shareStop: true });
+  stopMonitor();
+  $("viewWarn").hidden = true;
   shareState = "allowed";
   updateShareUI();
 }
@@ -2848,7 +2935,14 @@ function connectToRoom(code) {
           return;
         }
         if (d.succState && typeof d.succState === "object") {
-          succState = { priv: d.succState.priv === true, allowed: strList(d.succState.allowed), grants: strList(d.succState.grants) };
+          succState = {
+            priv: d.succState.priv === true,
+            allowed: strList(d.succState.allowed),
+            grants: strList(d.succState.grants),
+            bans: banList(d.succState.bans),
+            muted: strList(d.succState.muted),
+            chat: chatHist(d.succState.chat)
+          };
           return;
         }
         if (d.waiting === true) {
@@ -2863,6 +2957,13 @@ function connectToRoom(code) {
         }
         if (d.askNick === true) {
           openNickDialog(d.retry === true);
+          return;
+        }
+        if (Array.isArray(d.history)) {
+          $("chatList").innerHTML = "";
+          d.history.forEach((m) => addChat(m));
+          chatUnread = 0;
+          updateUnread();
           return;
         }
         if (d.chat && typeof d.chat === "object") {
@@ -2962,14 +3063,20 @@ function connectToRoom(code) {
       conn.on("open", () => {
         if (peer !== p) return;
         if (viewerConn && viewerConn !== conn) {
-          conn.close();
+          blockedTab = true;
+          conns.forEach((o) => o.close());
+          viewerConn = null;
+          viewerEnded("roomSuspicious");
           return;
         }
         viewerConn = conn;
         roomGen = g;
-        conns.forEach((o) => {
-          if (o !== conn) o.close();
-        });
+        setTimeout(() => {
+          if (peer !== p || viewerConn !== conn) return;
+          conns.forEach((o) => {
+            if (o !== conn) o.close();
+          });
+        }, 2000);
         armNoVideo(p);
       });
       conn.on("close", () => {
@@ -3064,15 +3171,17 @@ $("openViewOptions").addEventListener("click", openViewPanel);
 $("closeViewOptions").addEventListener("click", closeViewPanel);
 $("viewBackdrop").addEventListener("click", closeViewPanel);
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeViewPanel();
+  if (e.key !== "Escape") return;
+  closeViewPanel();
+  closeChat();
+  closePanel();
+  closePipDialog();
+  if (visResolve) closeVis(null);
 });
 $("closeChat").addEventListener("click", closeChat);
 $("chatSend").addEventListener("click", sendChat);
 $("chatInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendChat();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeChat();
 });
 $("startHost").addEventListener("click", () => startHost(true));
 $("createRoom").addEventListener("click", () => startHost(false));
@@ -3099,9 +3208,6 @@ $("stopShare").addEventListener("click", stopShare);
 $("openOptions").addEventListener("click", openPanel);
 $("closeOptions").addEventListener("click", closePanel);
 $("backdrop").addEventListener("click", closePanel);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closePanel();
-});
 $("hostFs").addEventListener("click", () => {
   closePanel();
   toggleFullscreen(fsTarget($("hostStage")));
@@ -3146,18 +3252,12 @@ $("visConfirm").addEventListener("click", () => {
 });
 $("visCancel").addEventListener("click", () => closeVis(null));
 $("visBackdrop").addEventListener("click", () => closeVis(null));
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && visResolve) closeVis(null);
-});
 $("nick").addEventListener("input", () => saveNick(cleanNick($("nick").value)));
 $("nick").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && $("codeInput").value.trim().length === 6) joinRoom($("codeInput").value);
 });
 $("pipCancel").addEventListener("click", closePipDialog);
 $("pipBackdrop").addEventListener("click", closePipDialog);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closePipDialog();
-});
 setInterval(() => {
   if (hosting) saveHostSession(false);
 }, 2000);
