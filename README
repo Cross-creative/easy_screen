@@ -19,7 +19,9 @@ Sharing
 3. Click "Choose a tab or window" and select what to share.
 4. Send the 6-character room code, or the link, to your viewers.
 
-You can also click "Create room without sharing" to open the room first and share later.
+You can also click "Create room without sharing (BETA)" to open the room first and share later.
+
+After choosing the tab or window (or right away, when creating a room without sharing), you pick the room type. Public is the default: anyone with the link or code can join. Private: you get a notice with the person's nickname and accept or decline each one.
 
 Watching
 
@@ -48,7 +50,11 @@ Tab or window sharing with optional audio.
 
 Multi-sharing: viewers ask to share and the host allows, denies or revokes. Up to 4 people share at the same time, host included.
 
-Grid with every shared screen. Click a screen to enlarge it, click again to go back.
+Grid with every shared screen. Click a screen to see only that one, and use the button in its top right corner to go back to all screens. Fullscreen then shows only that screen.
+
+Audio tab: when more than one person is sharing, the options panel shows a volume slider and a mute button for each shared screen. It only affects your own device.
+
+Public and private rooms: in a private room the host accepts or declines each person who tries to join. Requests expire after 90 seconds, and people who were accepted can reconnect without asking again.
 
 Quality levels from 480p up to QHD (1440p), adjustable while streaming.
 
@@ -122,6 +128,8 @@ Mesh topology: everyone who shares uploads one stream per person in the room. Th
 Depends on the free public PeerJS server, which can be slow or unavailable.
 
 Viewers behind very restrictive networks, such as some school or company networks, may fail to connect.
+
+The room type cannot be changed after the room is created. Creating a room without sharing is a beta feature.
 
 Duplicate-tab detection only works within the same browser profile. Another browser, a private window or another device counts as a different viewer.
 
