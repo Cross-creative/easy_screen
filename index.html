@@ -163,6 +163,8 @@ button.mini { padding: 2px 8px; font-size: 0.8rem; border-radius: 8px; }
   border-radius: 14px;
   padding: 18px;
 }
+.away-text { margin: 0 0 12px; }
+#awayHome { margin-bottom: 16px; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
 .hostname { font-weight: 700; margin-bottom: 8px; word-break: break-word; }
 button, select, input[type="text"] {
@@ -201,6 +203,41 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   aspect-ratio: 16 / 9;
   border: 1px solid var(--border);
 }
+.tiles {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+}
+.tiles.has-big { grid-template-rows: minmax(0, 2fr); }
+.tile {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  cursor: pointer;
+}
+.tile.big { grid-column: 1 / -1; order: -1; }
+.tile .tag {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
 video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
 #nick, #chatInput, #nickNew { text-transform: none; letter-spacing: normal; }
 #nick { width: min(100%, 320px); }
@@ -234,6 +271,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   text-align: center;
   padding: 16px;
   color: #9aa0a8;
+  pointer-events: none;
 }
 .status { margin-top: 12px; color: var(--muted); font-size: 0.95rem; min-height: 1.4em; }
 .status.error { color: var(--danger); }
@@ -248,6 +286,16 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   border-radius: 10px;
   border: 1px solid var(--danger);
   color: var(--danger);
+}
+.request {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
 }
 .backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 20; }
 .panel {
@@ -277,6 +325,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .panel-body { display: flex; flex-direction: column; gap: 10px; padding: 18px; overflow-y: auto; }
 .panel-body select { width: 100%; }
 .panel-body hr { width: 100%; border: 0; border-top: 1px solid var(--border); margin: 6px 0; }
+.shareopts { display: flex; flex-direction: column; gap: 10px; }
 .field { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 0.9rem; }
 .confirm {
   display: flex;
@@ -333,7 +382,11 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
-  <p class="about" data-i18n="about">Compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Não precisa de cadastro nem de instalação: crie uma sala, envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
+  <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
+  <div class="card highlight" id="awayHome" hidden>
+    <p class="away-text" id="awayHomeText"></p>
+    <button id="backToRoom" class="primary" data-i18n="backToRoom">Voltar para a sala</button>
+  </div>
   <div class="row">
     <input type="text" id="nick" maxlength="20" autocomplete="off" placeholder="Seu apelido">
   </div>
@@ -347,7 +400,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
         <p class="hint" data-i18n="audioTip">Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.</p>
       </div>
-      <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
+      <div class="row">
+        <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
+        <button id="createRoom" data-i18n="createRoomOnly">Criar sala sem compartilhar</button>
+      </div>
     </div>
 
     <div class="card" id="watchCard">
@@ -364,7 +420,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   </div>
   <div class="status" id="homeStatus"></div>
 </section>
-  
+
   <section id="hostView" hidden>
     <div class="row">
       <span data-i18n="codeLabel">Código:</span>
@@ -373,17 +429,18 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <button id="copyLink" data-i18n="copyLink">Copiar link</button>
     </div>
     <div class="row">
-      <span class="badge" id="count" data-i18n="viewersMany" data-vars='{"n":0}'>0 espectadores</span>
+      <span class="badge" id="count" data-i18n="viewersMany" data-vars='{"n":0}'>0 👁</span>
       <button id="openOptions" data-i18n="options">Opções</button>
       <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
     </div>
+    <div id="shareRequests"></div>
     <div class="warn" id="hostWarn" hidden>
       <span id="hostWarnText"></span>
       <button id="lowerQ" data-i18n="lowerQuality">Reduzir qualidade</button>
     </div>
     <div class="stage" id="hostStage">
-      <video id="hostVideo" autoplay playsinline muted></video>
-      <div class="overlay" id="hostOverlay" data-i18n="paused" hidden>Compartilhamento pausado</div>
+      <div class="tiles" id="hostGrid"></div>
+      <div class="overlay" id="hostOverlay" data-i18n="nobodySharing">Ninguém está compartilhando.</div>
     </div>
     <div class="statusrow">
     <div class="status error" id="audioNote" data-i18n="audioMissing" hidden>O áudio não está sendo compartilhado.</div>
@@ -406,6 +463,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         <button id="pipHost" data-i18n="pip" hidden>Janelinha flutuante</button>
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
         <button id="stopShare" data-i18n="stopShare">Parar de compartilhar</button>
+        <button id="awayBtn" data-i18n="awayBtn">Sair para o menu</button>
         <hr>
         <button id="closeRoom" class="stop" data-i18n="closeRoom">Encerrar sala</button>
         <div class="confirm" id="confirmBox" hidden>
@@ -422,11 +480,13 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <button id="leave" data-i18n="leave">Sair</button>
   <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
   <span class="badge" id="viewCount" hidden></span>
+  <button id="shareAction" data-i18n="reqShare" hidden>Pedir para compartilhar</button>
   <button id="openViewOptions" data-i18n="options">Opções</button>
 </div>
+<div class="warn" id="awayBanner" hidden><span id="awayText"></span></div>
 <div class="hostname" id="hostName" hidden></div>
     <div class="stage" id="viewStage">
-      <video id="viewVideo" autoplay playsinline></video>
+      <div class="tiles" id="viewGrid"></div>
       <div class="overlay" id="viewOverlay" data-i18n="connecting">Conectando...</div>
     </div>
     <div class="status" id="viewStatus"></div>
@@ -437,6 +497,14 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <button id="closeViewOptions" data-i18n="close">Fechar</button>
   </div>
   <div class="panel-body">
+    <div class="shareopts" id="viewShareOpts">
+      <label class="field"><span data-i18n="quality">Qualidade</span>
+        <select id="viewQuality"></select>
+      </label>
+      <label class="check"><input type="checkbox" id="viewAudio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
+      <button id="viewSwitch" data-i18n="switchSurface" hidden>Trocar aba ou janela</button>
+      <hr>
+    </div>
     <label class="field"><span data-i18n="volume">Volume</span>
       <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
     </label>
@@ -493,26 +561,28 @@ function checkOfficial() {
 }
 const PREFIX = "tcompartilha-";
 const MAX_VIEWERS = 16;
+const MAX_SHARERS = 4;
+const AWAY_MS = 8 * 60 * 1000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const QUALITIES = {
   light: { width: 854, height: 480, fps: 10, kbps: 300 },
   eco: { width: 1280, height: 720, fps: 15, kbps: 800 },
   mid: { width: 1280, height: 720, fps: 24, kbps: 1500 },
   high: { width: 1920, height: 1080, fps: 30, kbps: 3000 },
-  extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 },
-  uhd: { width: 3840, height: 2160, fps: 30, kbps: 15000 }
+  extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 }
 };
-const ORDER = ["light", "eco", "mid", "high", "extreme", "uhd"];
+const ORDER = ["light", "eco", "mid", "high", "extreme"];
 
 const I18N = {
   pt: {
     title: "Tela Fácil",
     heading: "Tela Fácil",
     sub: "Transmissão direta entre navegadores, sem cadastro.",
-    about: "Compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Não precisa de cadastro nem de instalação: crie uma sala, envie o código ou o link e quem receber assiste na hora, com chat incluso.",
+    about: "Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.",
     shareMyScreen: "Compartilhar minha tela",
     shareAudio: "Compartilhar áudio",
     pickSurface: "Escolher aba ou janela",
+    createRoomOnly: "Criar sala sem compartilhar",
     watchWithCode: "Assistir com um código",
     codePlaceholder: "CÓDIGO",
     join: "Entrar",
@@ -527,13 +597,13 @@ const I18N = {
     unmuteAudio: "Ativar áudio",
     fullscreen: "Tela cheia",
     switchSurface: "Trocar aba ou janela",
-    shareAgain: "Compartilhar novamente",
+    shareAgain: "Compartilhar minha tela",
     stopShare: "Parar de compartilhar",
     closeRoom: "Encerrar sala",
     confirmText: "Encerrar a sala desconecta todos os espectadores.",
     confirmYes: "Sim, encerrar",
     cancel: "Cancelar",
-    paused: "Compartilhamento pausado",
+    nobodySharing: "Ninguém está compartilhando.",
     lowerQuality: "Reduzir qualidade",
     leave: "Sair",
     mute: "Silenciar",
@@ -545,9 +615,10 @@ const I18N = {
     waiting: "Aguardando transmissão...",
     shareFailed: "Compartilhamento cancelado, bloqueado ou não suportado.",
     roomEndedHome: "Sala encerrada.",
+    roomExpired: "A sala foi encerrada porque o host não voltou a tempo.",
     codeLength: "Digite o código de 6 caracteres.",
     hostWaiting: "Aguardando espectadores. Compartilhe o código ou o link.",
-    hostPausedStatus: "Compartilhamento pausado. Os espectadores continuam na sala.",
+    hostPausedStatus: "Você não está compartilhando. A sala continua aberta.",
     hostUpload: "Upload estimado: cerca de {m} Mbps.",
     connError: "Erro de conexão: {e}",
     warnBandwidth: "Seu upload está no limite e o vídeo pode travar para os espectadores.",
@@ -588,21 +659,37 @@ const I18N = {
     uploadHelp: "Upload é a velocidade com que seu computador envia dados pela internet, medida em Mbps (megabits por segundo). Cada espectador recebe um vídeo separado, então o número cresce com a quantidade de pessoas. Se passar do seu upload real, o vídeo pode travar.",
     noShare: "Compartilhar a tela só funciona no computador.",
     noFullscreen: "Seu aparelho não suporta tela cheia aqui (comum no iPhone).",
+    reqShare: "Pedir para compartilhar",
+    reqSent: "Pedido enviado...",
+    shareNow: "Compartilhar",
+    shareReqDenied: "O host recusou o seu pedido.",
+    shareLimit: "Já há {n} pessoas compartilhando. Tente de novo quando alguém parar.",
+    shareRevoked: "O host removeu a sua permissão de compartilhar.",
+    shareAllowed: "O host permitiu que você compartilhe.",
+    requestText: "{name} quer compartilhar a tela.",
+    allow: "Permitir",
+    deny: "Negar",
+    revokeShare: "Revogar",
+    youTag: "{name} (você)",
+    awayBtn: "Sair para o menu",
+    backToRoom: "Voltar para a sala",
+    awayHome: "Sua sala {code} continua aberta e fecha em {time}. Iniciar uma nova sala fecha esta.",
+    awayViewer: "O host saiu para o menu. A sala fecha em {time} se ele não voltar.",
     q_light: "Muito leve (480p, 10 fps)",
     q_eco: "Econômica (720p, 15 fps)",
     q_mid: "Equilibrada (720p, 24 fps)",
     q_high: "Alta (1080p, 30 fps)",
-    q_extreme: "QHD (1440p, 60 fps)",
-    q_uhd: "4K (2160p, 30 fps)"
+    q_extreme: "QHD (1440p, 60 fps)"
   },
   en: {
     title: "Easy Screen",
     heading: "Easy Screen",
     sub: "Direct browser-to-browser streaming, no sign-up.",
-    about: "Share a tab or window from your computer with up to 16 people, straight from the browser. No sign-up or install needed: create a room, send the code or the link and whoever receives it watches right away, with chat included.",
+    about: "Create a room and share a tab or window from your computer with up to 16 people, straight from the browser. People in the room can also ask to share, with your permission. No sign-up or install needed: send the code or the link and whoever receives it watches right away, with chat included.",
     shareMyScreen: "Share my screen",
     shareAudio: "Share audio",
     pickSurface: "Choose a tab or window",
+    createRoomOnly: "Create room without sharing",
     watchWithCode: "Watch with a code",
     codePlaceholder: "CODE",
     join: "Join",
@@ -617,13 +704,13 @@ const I18N = {
     unmuteAudio: "Unmute audio",
     fullscreen: "Fullscreen",
     switchSurface: "Switch tab or window",
-    shareAgain: "Share again",
+    shareAgain: "Share my screen",
     stopShare: "Stop sharing",
     closeRoom: "End room",
     confirmText: "Ending the room disconnects all viewers.",
     confirmYes: "Yes, end it",
     cancel: "Cancel",
-    paused: "Sharing paused",
+    nobodySharing: "Nobody is sharing.",
     lowerQuality: "Lower quality",
     leave: "Leave",
     mute: "Mute",
@@ -635,9 +722,10 @@ const I18N = {
     waiting: "Waiting for the stream...",
     shareFailed: "Sharing was cancelled, blocked or is not supported.",
     roomEndedHome: "Room ended.",
+    roomExpired: "The room was closed because the host did not return in time.",
     codeLength: "Enter the 6-character code.",
     hostWaiting: "Waiting for viewers. Share the code or the link.",
-    hostPausedStatus: "Sharing paused. Viewers stay in the room.",
+    hostPausedStatus: "You are not sharing. The room stays open.",
     hostUpload: "Estimated upload: about {m} Mbps.",
     connError: "Connection error: {e}",
     warnBandwidth: "Your upload is at its limit and the video may stutter for viewers.",
@@ -678,12 +766,27 @@ const I18N = {
     uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
     noShare: "Screen sharing only works on a computer.",
     noFullscreen: "Your device does not support fullscreen here (common on iPhone).",
+    reqShare: "Ask to share",
+    reqSent: "Request sent...",
+    shareNow: "Share",
+    shareReqDenied: "The host declined your request.",
+    shareLimit: "{n} people are already sharing. Try again when someone stops.",
+    shareRevoked: "The host removed your permission to share.",
+    shareAllowed: "The host allowed you to share.",
+    requestText: "{name} wants to share their screen.",
+    allow: "Allow",
+    deny: "Deny",
+    revokeShare: "Revoke",
+    youTag: "{name} (you)",
+    awayBtn: "Leave to menu",
+    backToRoom: "Back to the room",
+    awayHome: "Your room {code} is still open and closes in {time}. Starting a new room closes this one.",
+    awayViewer: "The host went to the menu. The room closes in {time} if they do not return.",
     q_light: "Very light (480p, 10 fps)",
     q_eco: "Economy (720p, 15 fps)",
     q_mid: "Balanced (720p, 24 fps)",
     q_high: "High (1080p, 30 fps)",
-    q_extreme: "QHD (1440p, 60 fps)",
-    q_uhd: "4K (2160p, 30 fps)"
+    q_extreme: "QHD (1440p, 60 fps)"
   }
 };
 
@@ -691,6 +794,7 @@ const $ = (id) => document.getElementById(id);
 const home = $("home");
 const hostView = $("hostView");
 const viewerView = $("viewerView");
+const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 
 let peer = null;
 let stream = null;
@@ -699,7 +803,6 @@ let quality = QUALITIES.eco;
 let viewers = new Map();
 let currentCode = "";
 let viewerTimeout = null;
-let currentCall = null;
 let monitorTimer = null;
 let lang = "pt";
 const CHAT_MAX = 300;
@@ -713,6 +816,7 @@ const NICK_MAX_TRIES = 5;
 const pending = new Map();
 let lastNickTry = "";
 const bans = new Map();
+const grants = new Set();
 let chatSeq = 0;
 let chatMuted = false;
 let blockedTab = false;
@@ -723,6 +827,193 @@ let retryTimer = null;
 let retryPending = false;
 let intentionalEnd = false;
 let activeCode = "";
+let hosting = false;
+let away = null;
+let awayView = null;
+let viewerLive = false;
+let activeGrid = null;
+const tiles = new Map();
+const inCalls = new Map();
+const outCalls = new Map();
+const stashed = new Map();
+let sharerIds = new Set();
+let sharerNames = new Map();
+let shareState = "none";
+let pendingStream = null;
+let viewMuted = false;
+let viewVolume = 1;
+
+function fmtTime(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+}
+
+function pickVideo() {
+  if (!activeGrid) return null;
+  return activeGrid.querySelector(".tile.big video") || activeGrid.querySelector(".tile video");
+}
+
+function layoutTiles() {
+  const g = activeGrid;
+  if (!g) return;
+  g.style.setProperty("--cols", tiles.size <= 1 ? 1 : 2);
+  g.classList.toggle("has-big", !!g.querySelector(".tile.big"));
+}
+
+function applyAudio() {
+  tiles.forEach((t) => {
+    t.video.muted = t.local || viewMuted;
+    t.video.volume = viewVolume;
+  });
+}
+
+function refreshOverlays() {
+  if (hosting) {
+    $("hostOverlay").hidden = tiles.size > 0;
+    return;
+  }
+  if (!viewerLive) return;
+  if (tiles.size) {
+    $("viewOverlay").hidden = true;
+    return;
+  }
+  $("viewOverlay").hidden = false;
+  setT($("viewOverlay"), sharerIds.size ? "connecting" : "waiting");
+}
+
+function toggleBig(el) {
+  if (tiles.size < 2 || !activeGrid) return;
+  const was = el.classList.contains("big");
+  activeGrid.querySelectorAll(".tile.big").forEach((x) => x.classList.remove("big"));
+  if (!was) el.classList.add("big");
+  layoutTiles();
+}
+
+function addTile(id, nick, mediaStream, local) {
+  if (!activeGrid) return;
+  let t = tiles.get(id);
+  if (!t) {
+    const el = document.createElement("div");
+    el.className = "tile";
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.playsInline = true;
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    el.append(video, tag);
+    el.addEventListener("click", () => toggleBig(el));
+    activeGrid.appendChild(el);
+    t = { el, video, tag, local };
+    tiles.set(id, t);
+  }
+  t.local = local;
+  if (local) {
+    setT(t.tag, "youTag", { name: nick });
+  } else {
+    delete t.tag.dataset.i18n;
+    delete t.tag.dataset.vars;
+    t.tag.textContent = nick;
+  }
+  if (t.video.srcObject !== mediaStream) t.video.srcObject = mediaStream;
+  applyAudio();
+  const started = t.video.play();
+  if (started && started.catch) {
+    started.catch(() => {
+      viewMuted = true;
+      applyAudio();
+      updateMuteBtn();
+      const again = t.video.play();
+      if (again && again.catch) again.catch(() => {});
+    });
+  }
+  setupAutoPip(true);
+  layoutTiles();
+  refreshOverlays();
+}
+
+function removeTile(id) {
+  const t = tiles.get(id);
+  if (!t) return;
+  t.video.srcObject = null;
+  t.el.remove();
+  tiles.delete(id);
+  layoutTiles();
+  refreshOverlays();
+}
+
+function clearTiles() {
+  tiles.forEach((t) => {
+    t.video.srcObject = null;
+    t.el.remove();
+  });
+  tiles.clear();
+  layoutTiles();
+  refreshOverlays();
+}
+
+function acceptCall(call) {
+  const id = call.peer;
+  const old = inCalls.get(id);
+  inCalls.set(id, call);
+  if (old) old.close();
+  call.answer();
+  call.on("stream", (remote) => {
+    if (inCalls.get(id) !== call) return;
+    clearTimeout(viewerTimeout);
+    addTile(id, sharerNames.get(id) || "", remote, false);
+  });
+  call.on("close", () => {
+    if (inCalls.get(id) === call) {
+      inCalls.delete(id);
+      removeTile(id);
+    }
+  });
+}
+
+function handleIncomingCall(call) {
+  if (sharerIds.has(call.peer)) {
+    acceptCall(call);
+    return;
+  }
+  const prev = stashed.get(call.peer);
+  if (prev) prev.close();
+  stashed.set(call.peer, call);
+  setTimeout(() => {
+    if (stashed.get(call.peer) === call) {
+      stashed.delete(call.peer);
+      call.close();
+    }
+  }, 10000);
+}
+
+function syncRoster(list) {
+  const next = new Map();
+  list.forEach((s) => {
+    if (s && typeof s.id === "string" && typeof s.nick === "string") next.set(s.id, cleanNick(s.nick));
+  });
+  sharerNames = next;
+  sharerIds = new Set(next.keys());
+  inCalls.forEach((call, id) => {
+    if (!next.has(id)) {
+      inCalls.delete(id);
+      call.close();
+      removeTile(id);
+    }
+  });
+  tiles.forEach((t, id) => {
+    if (!t.local && !next.has(id)) removeTile(id);
+  });
+  next.forEach((nick, id) => {
+    const t = tiles.get(id);
+    if (t && !t.local) t.tag.textContent = nick;
+    const st = stashed.get(id);
+    if (st) {
+      stashed.delete(id);
+      acceptCall(st);
+    }
+  });
+  refreshOverlays();
+}
 
 function openViewPanel() {
   closeChat();
@@ -811,6 +1102,123 @@ function kickViewer(id) {
   dropViewer(id);
 }
 
+function hostId() {
+  return PREFIX + currentCode;
+}
+
+function sharerList() {
+  const list = [];
+  if (stream) list.push({ id: hostId(), nick: myNick });
+  viewers.forEach((v, id) => {
+    if (v.sharing) list.push({ id, nick: v.nick });
+  });
+  return list;
+}
+
+function broadcastSharers() {
+  const list = sharerList();
+  syncRoster(list);
+  viewers.forEach((v) => {
+    if (v.conn.open) v.conn.send({ sharers: list });
+  });
+}
+
+function dropSharerMedia(id) {
+  const c = inCalls.get(id);
+  if (c) {
+    inCalls.delete(id);
+    c.close();
+  }
+  removeTile(id);
+}
+
+function approveShare(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  v.canShare = true;
+  v.wantsShare = false;
+  if (v.vid) grants.add(v.vid);
+  if (v.conn.open) v.conn.send({ canShare: true });
+  updateHostCount();
+}
+
+function denyShare(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  v.wantsShare = false;
+  if (v.conn.open) v.conn.send({ shareDenied: "denied" });
+  updateHostCount();
+}
+
+function revokeShare(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  const was = v.sharing;
+  v.canShare = false;
+  v.wantsShare = false;
+  v.sharing = false;
+  if (v.vid) grants.delete(v.vid);
+  if (was) dropSharerMedia(id);
+  if (v.conn.open) v.conn.send({ canShare: false });
+  if (was) broadcastSharers();
+  updateHostCount();
+}
+
+function onShareRequest(v) {
+  if (v.canShare || v.wantsShare) return;
+  v.wantsShare = true;
+  renderRequests();
+}
+
+function onShareStart(id, v) {
+  if (!v.canShare) {
+    if (v.conn.open) v.conn.send({ shareDenied: "noperm" });
+    return;
+  }
+  if (v.sharing) return;
+  if (sharerList().length >= MAX_SHARERS) {
+    if (v.conn.open) v.conn.send({ shareDenied: "limit" });
+    return;
+  }
+  v.sharing = true;
+  broadcastSharers();
+  const targets = [hostId()];
+  viewers.forEach((o, oid) => {
+    if (oid !== id) targets.push(oid);
+  });
+  if (v.conn.open) v.conn.send({ targets: targets });
+  updateHostCount();
+}
+
+function onShareStop(id, v) {
+  if (!v.sharing) return;
+  v.sharing = false;
+  dropSharerMedia(id);
+  broadcastSharers();
+  updateHostCount();
+}
+
+function renderRequests() {
+  const box = $("shareRequests");
+  box.innerHTML = "";
+  viewers.forEach((v, id) => {
+    if (!v.wantsShare) return;
+    const row = document.createElement("div");
+    row.className = "request";
+    const text = document.createElement("span");
+    setT(text, "requestText", { name: v.nick });
+    const yes = document.createElement("button");
+    yes.className = "primary";
+    setT(yes, "allow");
+    yes.addEventListener("click", () => approveShare(id));
+    const no = document.createElement("button");
+    setT(no, "deny");
+    no.addEventListener("click", () => denyShare(id));
+    row.append(text, yes, no);
+    box.appendChild(row);
+  });
+}
+
 function renderPeople() {
   const box = $("people");
   if (box.hidden) return;
@@ -828,6 +1236,14 @@ function renderPeople() {
     const name = document.createElement("span");
     name.className = "name";
     name.textContent = v.nick;
+    row.appendChild(name);
+    if (v.canShare) {
+      const rev = document.createElement("button");
+      rev.className = "mini";
+      setT(rev, "revokeShare");
+      rev.addEventListener("click", () => revokeShare(id));
+      row.appendChild(rev);
+    }
     const mute = document.createElement("button");
     mute.className = "mini";
     setT(mute, v.muted ? "unmuteUser" : "muteUser");
@@ -836,7 +1252,7 @@ function renderPeople() {
     kick.className = "mini stop";
     setT(kick, "kickUser");
     kick.addEventListener("click", () => kickViewer(id));
-    row.append(name, mute, kick);
+    row.append(mute, kick);
     box.appendChild(row);
   });
 }
@@ -940,7 +1356,7 @@ function sendChat() {
   const input = $("chatInput");
   const text = input.value.trim().slice(0, CHAT_MAX);
   if (!text) return;
-  if (!hostView.hidden) {
+  if (hosting) {
     broadcastChat(myNick, text);
   } else if (viewerConn && viewerConn.open) {
     viewerConn.send({ msg: text });
@@ -951,12 +1367,14 @@ function sendChat() {
 }
 
 function pipSupported() {
-  return !!document.pictureInPictureEnabled || typeof $("viewVideo").webkitSetPresentationMode === "function";
+  return !!document.pictureInPictureEnabled || typeof document.createElement("video").webkitSetPresentationMode === "function";
 }
 
-async function togglePip(video, statusEl) {
+async function togglePip(statusEl) {
+  const video = pickVideo();
   try {
-    if (document.pictureInPictureElement === video) {
+    if (!video) throw new Error("none");
+    if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
     } else if (document.pictureInPictureEnabled && video.requestPictureInPicture) {
       if (video.readyState === 0) throw new Error("not ready");
@@ -969,18 +1387,21 @@ async function togglePip(video, statusEl) {
   }
 }
 
-function setupAutoPip(video, active) {
+function setupAutoPip(active) {
   if (!("mediaSession" in navigator)) return;
   try {
     navigator.mediaSession.setActionHandler(
       "enterpictureinpicture",
-      active ? () => { video.requestPictureInPicture().catch(() => {}); } : null
+      active ? () => {
+        const v = pickVideo();
+        if (v) v.requestPictureInPicture().catch(() => {});
+      } : null
     );
   } catch (e) {}
 }
 
 function leavePip() {
-  setupAutoPip(null, false);
+  setupAutoPip(false);
   if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
 }
 
@@ -1017,7 +1438,7 @@ function setT(el, key, vars) {
 }
 
 function fillQuality() {
-  [$("quality"), $("liveQuality")].forEach((sel) => {
+  [$("quality"), $("liveQuality"), $("viewQuality")].forEach((sel) => {
     const keep = sel.value || "eco";
     sel.innerHTML = "";
     ORDER.forEach((k) => {
@@ -1092,20 +1513,20 @@ function closePanel() {
 }
 
 function isDetail(key) {
-  return key === "extreme" || key === "uhd";
+  return key === "extreme";
 }
 
-async function captureScreen() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) return null;
+async function captureScreen(q, withAudio) {
+  if (!canCapture) return null;
   try {
     return await navigator.mediaDevices.getDisplayMedia({
       video: {
         displaySurface: "browser",
-        width: { max: quality.width },
-        height: { max: quality.height },
-        frameRate: { max: quality.fps }
+        width: { max: q.width },
+        height: { max: q.height },
+        frameRate: { max: q.fps }
       },
-      audio: $("audio").checked,
+      audio: withAudio,
       systemAudio: "include"
     });
   } catch (err) {
@@ -1114,7 +1535,6 @@ async function captureScreen() {
 }
 
 function setSharingUI(on) {
-  $("hostOverlay").hidden = on;
   $("stopShare").disabled = !on;
   setT($("shareBtn"), on ? "switchSurface" : "shareAgain");
   $("hostMute").disabled = !on || !stream || !stream.getAudioTracks().length;
@@ -1123,7 +1543,6 @@ function setSharingUI(on) {
 
 function sendStream(id, v) {
   if (v.call) v.call.close();
-  if (v.conn.open) v.conn.send({ sharing: true, count: viewers.size });
   v.call = peer.call(id, stream);
   limitBitrate(v.call, quality.kbps);
 }
@@ -1136,35 +1555,48 @@ function applyStream(newStream) {
   track.addEventListener("ended", () => {
     if (stream === newStream) stopShare();
   });
-  $("hostVideo").srcObject = newStream;
-  setupAutoPip($("hostVideo"), true);
+  addTile("me", myNick, newStream, true);
   if (old) old.getTracks().forEach((tr) => tr.stop());
   setSharingUI(true);
+  broadcastSharers();
   viewers.forEach((v, id) => sendStream(id, v));
   updateHostCount();
   $("audioNote").hidden = !($("audio").checked && !newStream.getAudioTracks().length);
 }
 
-async function startHost() {
+async function startHost(share) {
   if (!requireNick()) return;
   qualityKey = $("quality").value;
   quality = QUALITIES[qualityKey];
-  const s = await captureScreen();
-  if (!s) {
-    setStatus($("homeStatus"), "shareFailed", true);
-    return;
+  let s = null;
+  if (share) {
+    s = await captureScreen(quality, $("audio").checked);
+    if (!s) {
+      setStatus($("homeStatus"), "shareFailed", true);
+      return;
+    }
   }
+  if (hosting) closeRoom();
+  hosting = true;
+  activeGrid = $("hostGrid");
   show(hostView);
   $("people").hidden = false;
   $("liveQuality").value = qualityKey;
+  $("viewQuality").value = qualityKey;
   $("hostWarn").hidden = true;
+  setSharingUI(false);
+  refreshOverlays();
   startMonitor();
   startPeerHost(0);
-  applyStream(s);
+  if (s) applyStream(s);
 }
 
 async function reshare() {
-  const s = await captureScreen();
+  if (!stream && sharerList().length >= MAX_SHARERS) {
+    setStatus($("hostStatus"), "shareLimit", true, { n: MAX_SHARERS });
+    return;
+  }
+  const s = await captureScreen(quality, $("audio").checked);
   if (s) applyStream(s);
 }
 
@@ -1174,9 +1606,8 @@ function stopShare() {
   stream.getTracks().forEach((tr) => tr.stop());
   stream = null;
   $("audioNote").hidden = true;
-  $("hostVideo").srcObject = null;
+  removeTile("me");
   viewers.forEach((v) => {
-    if (v.conn.open) v.conn.send({ sharing: false });
     if (v.call) {
       v.call.close();
       v.call = null;
@@ -1184,37 +1615,93 @@ function stopShare() {
   });
   $("hostWarn").hidden = true;
   setSharingUI(false);
+  broadcastSharers();
   updateHostCount();
+}
+
+function broadcastAway() {
+  const ms = away ? Math.max(0, away.deadline - Date.now()) : null;
+  viewers.forEach((v) => {
+    if (v.conn.open) v.conn.send({ away: ms });
+  });
+}
+
+function tickAway() {
+  if (!away) return;
+  const left = away.deadline - Date.now();
+  if (left <= 0) {
+    closeRoom();
+    setStatus($("homeStatus"), "roomExpired");
+    return;
+  }
+  $("awayHome").hidden = false;
+  setT($("awayHomeText"), "awayHome", { code: currentCode, time: fmtTime(left) });
+}
+
+function stopAway() {
+  if (away) clearInterval(away.tick);
+  away = null;
+  $("awayHome").hidden = true;
+}
+
+function goAway() {
+  if (!hosting || away) return;
+  closePanel();
+  closeChat();
+  away = { deadline: Date.now() + AWAY_MS, tick: null };
+  show(home);
+  setStatus($("homeStatus"), "");
+  broadcastAway();
+  away.tick = setInterval(tickAway, 1000);
+  tickAway();
+}
+
+function backToRoom() {
+  if (!away) return;
+  stopAway();
+  show(hostView);
+  broadcastAway();
 }
 
 function closeRoom() {
   leavePip();
+  stopAway();
   bans.clear();
+  grants.clear();
   clearChat();
   stopMonitor();
   $("audioNote").hidden = true;
   $("hostWarn").hidden = true;
+  $("shareRequests").innerHTML = "";
   if (stream) {
     stream.getTracks().forEach((tr) => tr.stop());
     stream = null;
   }
-  viewers.forEach((v) => {
-    if (v.conn.open) v.conn.send({ closed: true });
-    if (v.call) v.call.close();
-    v.conn.close();
-  });
   pending.forEach((p) => {
     clearTimeout(p.timer);
     if (p.conn.open) p.conn.send({ closed: true });
     p.conn.close();
   });
   pending.clear();
+  viewers.forEach((v) => {
+    if (v.conn.open) v.conn.send({ closed: true });
+    if (v.call) v.call.close();
+    v.conn.close();
+  });
   viewers.clear();
+  inCalls.forEach((c) => c.close());
+  inCalls.clear();
+  stashed.forEach((c) => c.close());
+  stashed.clear();
+  sharerIds = new Set();
+  sharerNames = new Map();
   if (peer) {
     peer.destroy();
     peer = null;
   }
-  $("hostVideo").srcObject = null;
+  hosting = false;
+  clearTiles();
+  activeGrid = null;
   if (document.fullscreenElement) document.exitFullscreen();
   show(home);
   setStatus($("homeStatus"), "roomEndedHome");
@@ -1261,6 +1748,7 @@ function setQuality(key) {
   qualityKey = key;
   quality = QUALITIES[key];
   $("liveQuality").value = key;
+  $("viewQuality").value = key;
   const track = stream && stream.getVideoTracks()[0];
   if (track) {
     track.contentHint = isDetail(key) ? "detail" : "";
@@ -1273,8 +1761,13 @@ function setQuality(key) {
   viewers.forEach((v) => {
     if (v.call) limitBitrate(v.call, quality.kbps);
   });
-  updateHostCount();
-  checkLoad();
+  outCalls.forEach((c) => limitBitrate(c, quality.kbps));
+  if (hosting) {
+    updateHostCount();
+    checkLoad();
+  } else {
+    updateViewerUpload();
+  }
 }
 
 async function checkLoad() {
@@ -1336,6 +1829,7 @@ function updateHostCount() {
     if (v.conn.open) v.conn.send({ count: n });
   });
   renderPeople();
+  renderRequests();
 }
 
 function dropViewer(id) {
@@ -1343,6 +1837,12 @@ function dropViewer(id) {
   if (!v) return;
   viewers.delete(id);
   if (v.call) v.call.close();
+  const was = v.sharing;
+  if (was) dropSharerMedia(id);
+  viewers.forEach((o) => {
+    if (o.sharing && o.conn.open) o.conn.send({ left: id });
+  });
+  if (was) broadcastSharers();
   updateHostCount();
 }
 
@@ -1376,14 +1876,31 @@ function askNick(conn, ctx, tries) {
 
 function admit(conn, ctx) {
   if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
-  const v = { conn, call: null, vid: ctx.vid, tab: ctx.tab, ip: ctx.ip, nick: ctx.nick, muted: false, lastMsg: 0 };
+  const v = {
+    conn,
+    call: null,
+    vid: ctx.vid,
+    tab: ctx.tab,
+    ip: ctx.ip,
+    nick: ctx.nick,
+    muted: false,
+    lastMsg: 0,
+    canShare: !!(ctx.vid && grants.has(ctx.vid)),
+    wantsShare: false,
+    sharing: false
+  };
   viewers.set(conn.peer, v);
-  conn.send({ hostNick: myNick, yourNick: ctx.nick });
-  if (stream) {
-    sendStream(conn.peer, v);
-  } else {
-    conn.send({ sharing: false });
-  }
+  conn.send({
+    hostNick: myNick,
+    yourNick: ctx.nick,
+    sharers: sharerList(),
+    canShare: v.canShare,
+    away: away ? Math.max(0, away.deadline - Date.now()) : null
+  });
+  if (stream) sendStream(conn.peer, v);
+  viewers.forEach((o, oid) => {
+    if (oid !== conn.peer && o.sharing && o.conn.open) o.conn.send({ callNew: conn.peer });
+  });
   updateHostCount();
 }
 
@@ -1395,6 +1912,8 @@ function startPeerHost(attempt) {
     $("hostCode").textContent = currentCode;
     updateHostCount();
   });
+
+peer.on("call", handleIncomingCall);
 
 peer.on("connection", (conn) => {
   conn.on("open", async () => {
@@ -1434,7 +1953,11 @@ peer.on("connection", (conn) => {
       return admit(conn, { ...p.ctx, nick: n });
     }
     const v = viewers.get(conn.peer);
-    if (!v || v.muted || !d || typeof d !== "object" || typeof d.msg !== "string") return;
+    if (!v || !d || typeof d !== "object") return;
+    if (d.reqShare === true) return onShareRequest(v);
+    if (d.shareStart === true) return onShareStart(conn.peer, v);
+    if (d.shareStop === true) return onShareStop(conn.peer, v);
+    if (v.muted || typeof d.msg !== "string") return;
     const now = Date.now();
     if (now - v.lastMsg < 700) return;
     v.lastMsg = now;
@@ -1475,33 +1998,166 @@ function copyText(text, el) {
   }
 }
 
+function startAwayView(ms) {
+  stopAwayView();
+  if (typeof ms !== "number" || !isFinite(ms)) return;
+  awayView = { deadline: Date.now() + ms, tick: setInterval(renderAwayView, 1000) };
+  renderAwayView();
+}
+
+function renderAwayView() {
+  if (!awayView) return;
+  $("awayBanner").hidden = false;
+  setT($("awayText"), "awayViewer", { time: fmtTime(awayView.deadline - Date.now()) });
+}
+
+function stopAwayView() {
+  if (awayView) clearInterval(awayView.tick);
+  awayView = null;
+  $("awayBanner").hidden = true;
+}
+
+function updateViewerUpload() {
+  if (hosting) return;
+  if (shareState === "sharing") {
+    setStatus($("viewStatus"), "hostUpload", false, { m: ((outCalls.size * quality.kbps) / 1000).toFixed(1) });
+  } else if ($("viewStatus").dataset.i18n === "hostUpload") {
+    setStatus($("viewStatus"), "");
+  }
+}
+
+function updateShareUI() {
+  const btn = $("shareAction");
+  btn.hidden = !canCapture;
+  btn.disabled = false;
+  if (shareState === "none") {
+    setT(btn, "reqShare");
+  } else if (shareState === "requested") {
+    setT(btn, "reqSent");
+    btn.disabled = true;
+  } else if (shareState === "allowed") {
+    setT(btn, "shareNow");
+  } else {
+    setT(btn, "stopShare");
+  }
+  btn.classList.toggle("primary", shareState === "allowed");
+  btn.classList.toggle("stop", shareState === "sharing");
+  $("viewSwitch").hidden = shareState !== "sharing";
+  updateViewerUpload();
+}
+
+function resetShare() {
+  if (pendingStream) {
+    pendingStream.getTracks().forEach((tr) => tr.stop());
+    pendingStream = null;
+  }
+  if (!hosting && stream) {
+    stream.getTracks().forEach((tr) => tr.stop());
+    stream = null;
+  }
+  outCalls.forEach((c) => c.close());
+  outCalls.clear();
+  shareState = "none";
+  updateShareUI();
+}
+
+function watchEnd(s) {
+  const track = s.getVideoTracks()[0];
+  track.contentHint = isDetail(qualityKey) ? "detail" : "";
+  track.addEventListener("ended", () => {
+    if (stream === s) viewerStopShare(true);
+  });
+}
+
+function callTarget(id) {
+  if (!stream || !peer || id === peer.id) return;
+  const old = outCalls.get(id);
+  if (old) old.close();
+  const call = peer.call(id, stream);
+  outCalls.set(id, call);
+  limitBitrate(call, quality.kbps);
+  call.on("close", () => {
+    if (outCalls.get(id) === call) {
+      outCalls.delete(id);
+      updateViewerUpload();
+    }
+  });
+  updateViewerUpload();
+}
+
+async function viewerShare() {
+  qualityKey = $("viewQuality").value;
+  quality = QUALITIES[qualityKey];
+  const s = await captureScreen(quality, $("viewAudio").checked);
+  if (!s) {
+    setStatus($("viewStatus"), "shareFailed", true);
+    return;
+  }
+  if (shareState !== "allowed" || !viewerConn || !viewerConn.open) {
+    s.getTracks().forEach((tr) => tr.stop());
+    return;
+  }
+  pendingStream = s;
+  viewerConn.send({ shareStart: true });
+}
+
+function beginViewerShare(targets) {
+  const s = pendingStream;
+  pendingStream = null;
+  if (!s) return;
+  stream = s;
+  watchEnd(s);
+  addTile("me", myNick, s, true);
+  shareState = "sharing";
+  targets.forEach(callTarget);
+  updateShareUI();
+}
+
+async function viewerReshare() {
+  const s = await captureScreen(quality, $("viewAudio").checked);
+  if (!s) return;
+  if (shareState !== "sharing") {
+    s.getTracks().forEach((tr) => tr.stop());
+    return;
+  }
+  const old = stream;
+  stream = s;
+  watchEnd(s);
+  addTile("me", myNick, s, true);
+  if (old) old.getTracks().forEach((tr) => tr.stop());
+  [...outCalls.keys()].forEach(callTarget);
+}
+
+function viewerStopShare(notify) {
+  if (shareState !== "sharing" && !stream) return;
+  if (stream) {
+    stream.getTracks().forEach((tr) => tr.stop());
+    stream = null;
+  }
+  outCalls.forEach((c) => c.close());
+  outCalls.clear();
+  removeTile("me");
+  if (notify && viewerConn && viewerConn.open) viewerConn.send({ shareStop: true });
+  shareState = "allowed";
+  updateShareUI();
+}
+
 function viewerEnded(key, vars) {
-  closeNickDialog();
   intentionalEnd = true;
   retryPending = false;
   clearTimeout(retryTimer);
-  currentCall = null;
   clearTimeout(viewerTimeout);
-  $("viewVideo").srcObject = null;
+  stopAwayView();
+  dropMedia();
   $("viewOverlay").hidden = false;
   setT($("viewOverlay"), key, vars);
 }
 
-function showWaiting() {
-  if (currentCall) {
-    currentCall.close();
-    currentCall = null;
-  }
-  $("viewVideo").srcObject = null;
-  $("viewOverlay").hidden = false;
-  setT($("viewOverlay"), "waiting");
-}
-
-function openNickDialog(retry) {
+function openNickDialog(retryAsk) {
   closeViewPanel();
   closeChat();
   clearTimeout(viewerTimeout);
-  $("nickDialogError").hidden = !retry;
+  $("nickDialogError").hidden = !retryAsk;
   $("nickBackdrop").hidden = false;
   $("nickDialog").hidden = false;
   $("nickNew").value = lastNickTry || myNick;
@@ -1518,7 +2174,7 @@ function armNoVideo(p) {
   clearTimeout(viewerTimeout);
   viewerTimeout = setTimeout(() => {
     if (peer !== p || !$("nickDialog").hidden) return;
-    if (!$("viewVideo").srcObject && $("viewOverlay").dataset.i18n === "connecting") {
+    if (!tiles.size && $("viewOverlay").dataset.i18n === "connecting") {
       viewerEnded("noVideo");
     }
   }, 15000);
@@ -1545,11 +2201,15 @@ function submitNick() {
 
 function dropMedia() {
   closeNickDialog();
-  if (currentCall) {
-    currentCall.close();
-    currentCall = null;
-  }
-  $("viewVideo").srcObject = null;
+  viewerLive = false;
+  inCalls.forEach((c) => c.close());
+  inCalls.clear();
+  stashed.forEach((c) => c.close());
+  stashed.clear();
+  sharerIds = new Set();
+  sharerNames = new Map();
+  clearTiles();
+  resetShare();
 }
 
 function scheduleRetry() {
@@ -1574,8 +2234,7 @@ function scheduleRetry() {
 }
 
 function updateMuteBtn() {
-  const v = $("viewVideo");
-  setT($("muteBtn"), v.muted || v.volume === 0 ? "unmute" : "mute");
+  setT($("muteBtn"), viewMuted || viewVolume === 0 ? "unmute" : "mute");
 }
 
 function joinRoom(code) {
@@ -1585,11 +2244,17 @@ function joinRoom(code) {
     return;
   }
   if (!requireNick()) return;
+  if (hosting) closeRoom();
+  activeGrid = $("viewGrid");
+  clearTiles();
   show(viewerView);
   $("viewOverlay").hidden = false;
   setT($("viewOverlay"), "connecting");
   $("viewCount").hidden = true;
   setStatus($("viewStatus"), "");
+  stopAwayView();
+  shareState = "none";
+  updateShareUI();
   updateMuteBtn();
   blockedTab = false;
   intentionalEnd = false;
@@ -1631,8 +2296,12 @@ function connectToRoom(code) {
             try { localStorage.setItem("nick", accepted); } catch (e) {}
           }
         }
-        if (retry > 0) setT($("viewOverlay"), "connecting");
         retry = 0;
+        viewerLive = true;
+        shareState = d.canShare === true ? "allowed" : "none";
+        updateShareUI();
+        if ("away" in d) startAwayView(d.away);
+        syncRoster(Array.isArray(d.sharers) ? d.sharers : []);
         return;
       }
       if (d.askNick === true) {
@@ -1674,11 +2343,63 @@ function connectToRoom(code) {
         viewerEnded("roomFull");
         return;
       }
+      if (Array.isArray(d.sharers)) {
+        syncRoster(d.sharers);
+        return;
+      }
+      if (typeof d.canShare === "boolean") {
+        if (d.canShare) {
+          if (shareState !== "sharing") shareState = "allowed";
+          setStatus($("viewStatus"), "shareAllowed");
+        } else {
+          viewerStopShare(false);
+          shareState = "none";
+          setStatus($("viewStatus"), "shareRevoked", true);
+        }
+        updateShareUI();
+        return;
+      }
+      if (typeof d.shareDenied === "string") {
+        if (pendingStream) {
+          pendingStream.getTracks().forEach((tr) => tr.stop());
+          pendingStream = null;
+        }
+        if (d.shareDenied === "limit") {
+          shareState = "allowed";
+          setStatus($("viewStatus"), "shareLimit", true, { n: MAX_SHARERS });
+        } else {
+          shareState = "none";
+          if (d.shareDenied === "denied") setStatus($("viewStatus"), "shareReqDenied", true);
+        }
+        updateShareUI();
+        return;
+      }
+      if (Array.isArray(d.targets)) {
+        beginViewerShare(d.targets.filter((x) => typeof x === "string"));
+        return;
+      }
+      if (typeof d.callNew === "string") {
+        callTarget(d.callNew);
+        return;
+      }
+      if (typeof d.left === "string") {
+        const c = outCalls.get(d.left);
+        if (c) {
+          outCalls.delete(d.left);
+          c.close();
+          updateViewerUpload();
+        }
+        return;
+      }
+      if ("away" in d) {
+        startAwayView(d.away);
+        return;
+      }
       if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
         $("viewCount").hidden = false;
         setT($("viewCount"), "eyeCount", { n: d.count });
+        return;
       }
-      if (d.sharing === false) showWaiting();
       if (d.closed === true) viewerEnded("roomEndedByHost");
     });
     conn.on("open", () => {
@@ -1703,26 +2424,7 @@ function connectToRoom(code) {
 
   p.on("call", (call) => {
     if (peer !== p) return;
-    if (call.peer !== PREFIX + code) {
-      call.close();
-      return;
-    }
-    if (currentCall) currentCall.close();
-    currentCall = call;
-    call.answer();
-    call.on("stream", (remote) => {
-      clearTimeout(viewerTimeout);
-      const v = $("viewVideo");
-      v.srcObject = remote;
-      setupAutoPip(v, true);
-      $("viewOverlay").hidden = true;
-      v.play().catch(() => {
-        v.muted = true;
-        updateMuteBtn();
-        v.play().catch(() => {});
-      });
-    });
-    call.on("close", () => {});
+    handleIncomingCall(call);
   });
 
   p.on("error", (err) => {
@@ -1752,21 +2454,23 @@ function leaveRoom() {
   clearChat();
   clearTimeout(viewerTimeout);
   viewerConn = null;
-  currentCall = null;
   blockedTab = false;
+  stopAwayView();
+  dropMedia();
   if (peer) {
     const old = peer;
     peer = null;
     old.destroy();
   }
+  activeGrid = null;
   closeViewPanel();
   $("hostName").hidden = true;
   delete $("hostName").dataset.i18n;
   delete $("hostName").dataset.vars;
   $("hostName").textContent = "";
-  $("viewVideo").srcObject = null;
-  $("viewVideo").muted = false;
-  $("viewVideo").volume = 1;
+  setStatus($("viewStatus"), "");
+  viewMuted = false;
+  viewVolume = 1;
   $("volume").value = 1;
   updateMuteBtn();
   if (document.fullscreenElement) document.exitFullscreen();
@@ -1788,14 +2492,17 @@ $("chatInput").addEventListener("keydown", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeChat();
 });
-$("startHost").addEventListener("click", startHost);
+$("startHost").addEventListener("click", () => startHost(true));
+$("createRoom").addEventListener("click", () => startHost(false));
+$("backToRoom").addEventListener("click", backToRoom);
+$("awayBtn").addEventListener("click", goAway);
 $("pipView").addEventListener("click", () => {
   closeViewPanel();
-  togglePip($("viewVideo"), $("viewStatus"));
+  togglePip($("viewStatus"));
 });
 $("pipHost").addEventListener("click", () => {
   closePanel();
-  togglePip($("hostVideo"), $("hostStatus"));
+  togglePip($("hostStatus"));
 });
 window.addEventListener("pagehide", () => {
   if (peer) peer.destroy();
@@ -1825,6 +2532,7 @@ $("confirmClose").addEventListener("click", () => {
   closeRoom();
 });
 $("liveQuality").addEventListener("change", (e) => setQuality(e.target.value));
+$("viewQuality").addEventListener("change", (e) => setQuality(e.target.value));
 $("lowerQ").addEventListener("click", () => {
   const i = ORDER.indexOf(qualityKey);
   if (i > 0) setQuality(ORDER[i - 1]);
@@ -1850,23 +2558,41 @@ $("nickCancel").addEventListener("click", leaveRoom);
 $("nickNew").addEventListener("keydown", (e) => {
   if (e.key === "Enter") submitNick();
 });
+$("shareAction").addEventListener("click", () => {
+  if (shareState === "none") {
+    if (viewerConn && viewerConn.open) {
+      viewerConn.send({ reqShare: true });
+      shareState = "requested";
+      setStatus($("viewStatus"), "");
+      updateShareUI();
+    }
+  } else if (shareState === "allowed") {
+    viewerShare();
+  } else if (shareState === "sharing") {
+    viewerStopShare(true);
+  }
+});
+$("viewSwitch").addEventListener("click", () => {
+  closeViewPanel();
+  viewerReshare();
+});
 $("viewFs").addEventListener("click", () => {
   closeViewPanel();
   toggleFullscreen($("viewStage"));
 });
 $("muteBtn").addEventListener("click", () => {
-  const v = $("viewVideo");
-  v.muted = !v.muted;
-  if (!v.muted && v.volume === 0) {
-    v.volume = 1;
+  viewMuted = !viewMuted;
+  if (!viewMuted && viewVolume === 0) {
+    viewVolume = 1;
     $("volume").value = 1;
   }
+  applyAudio();
   updateMuteBtn();
 });
 $("volume").addEventListener("input", (e) => {
-  const v = $("viewVideo");
-  v.volume = Number(e.target.value);
-  v.muted = v.volume === 0;
+  viewVolume = Number(e.target.value);
+  viewMuted = viewVolume === 0;
+  applyAudio();
   updateMuteBtn();
 });
 $("langPt").addEventListener("click", () => setLang("pt"));
@@ -1876,10 +2602,12 @@ lang = detectLang();
 applyLang();
   try { $("nick").value = localStorage.getItem("nick") || ""; } catch (e) {}
   checkOfficial();
-  if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) {
+  updateShareUI();
+  if (!canCapture) {
   $("shareCard").hidden = true;
   $("shareNotice").hidden = false;
   $("watchCard").classList.add("highlight");
+  $("viewShareOpts").hidden = true;
 }
   if (pipSupported()) {
   $("pipView").hidden = false;
