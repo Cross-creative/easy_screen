@@ -911,7 +911,7 @@ const grants = new Set();
 let chatSeq = 0;
 let chatMuted = false;
 let blockedTab = false;
-const MAX_RETRY = 6;
+const MAX_RETRY = 8;
 const tabId = makeCode() + makeCode();
 let retry = 0;
 let retryTimer = null;
@@ -943,10 +943,16 @@ let takeoverTimer = null;
 let iAmSucc = false;
 let succState = null;
 let succSig = "";
+let hostGen = 0;
+let hostPeerId = "";
+let roomGen = 0;
+let leavingPage = false;
+let takeoverMode = false;
 let pendingResume = null;
 let lostView = null;
 const TAKEOVER_MS = 10000;
-const RESUME_MS = 10000;
+const RESUME_MS = 8000;
+const ROOM_GENS = 4;
 const HS_KEY = "hostSession";
 
 function fmtTime(ms) {
@@ -1284,8 +1290,12 @@ function kickViewer(id) {
   dropViewer(id);
 }
 
+function peerIdFor(code, g) {
+  return PREFIX + code + (g ? "-" + g : "");
+}
+
 function hostId() {
-  return PREFIX + currentCode;
+  return hostPeerId;
 }
 
 function sharerList() {
@@ -2153,6 +2163,7 @@ function saveHostSession(closing) {
   try {
     localStorage.setItem(HS_KEY, JSON.stringify({
       code: currentCode,
+      gen: hostGen,
       priv: roomPrivate,
       nick: myNick,
       q: qualityKey,
@@ -2169,6 +2180,7 @@ function clearHostSession() {
 }
 
 function syncSuccessor() {
+  if (leavingPage) return;
   let first = null;
   viewers.forEach((v, id) => {
     if (!first && v.conn.open) first = id;
@@ -2261,9 +2273,11 @@ function admit(conn, ctx) {
   updateHostCount();
 }
 
-function startPeerHost(attempt, fixed) {
+function startPeerHost(attempt, fixed, gen) {
   currentCode = fixed || makeCode();
-  peer = new Peer(PREFIX + currentCode);
+  hostGen = gen || 0;
+  hostPeerId = peerIdFor(currentCode, hostGen);
+  peer = new Peer(hostPeerId);
   const me = peer;
 
   peer.on("open", () => {
@@ -2347,10 +2361,10 @@ peer.on("disconnected", () => {
   peer.on("error", (err) => {
     if (peer !== me) return;
     if (err.type === "unavailable-id" && fixed) {
-      if (attempt < 8) {
+      if (attempt < (takeoverMode ? 2 : 8)) {
         me.destroy();
         setTimeout(() => {
-          if (hosting && peer === me) startPeerHost(attempt + 1, fixed);
+          if (hosting && peer === me) startPeerHost(attempt + 1, fixed, gen);
         }, 1500);
       } else {
         closeRoom();
@@ -2366,8 +2380,9 @@ peer.on("disconnected", () => {
   });
 }
 
-function enterHost(code, priv, allowedList, grantList, noteKey) {
+function enterHost(code, priv, allowedList, grantList, noteKey, gen) {
   roomPrivate = priv;
+  takeoverMode = noteKey === "nowHost";
   allowed.clear();
   allowedList.forEach((x) => allowed.add(x));
   grants.clear();
@@ -2387,7 +2402,7 @@ function enterHost(code, priv, allowedList, grantList, noteKey) {
   succSig = "";
   setT($("hostNote"), noteKey);
   $("hostNote").hidden = false;
-  startPeerHost(0, code);
+  startPeerHost(0, code, gen);
 }
 
 function stopPendingResume(clear) {
@@ -2420,7 +2435,8 @@ function resumeNow() {
     qualityKey = sess.q;
     quality = QUALITIES[sess.q];
   }
-  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost");
+  const g = Number(sess.gen);
+  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0);
 }
 
 function tryResumeHost(urlCode) {
@@ -2464,7 +2480,7 @@ function becomeHost() {
   closeViewPanel();
   $("hostName").hidden = true;
   setStatus($("viewStatus"), "");
-  enterHost(code, st.priv, st.allowed, st.grants, "nowHost");
+  enterHost(code, st.priv, st.allowed, st.grants, "nowHost", (roomGen + 1) % ROOM_GENS);
 }
 
 function maybeStartTakeover() {
@@ -2794,166 +2810,180 @@ function connectToRoom(code) {
 
   p.on("open", () => {
     if (peer !== p) return;
-    const conn = p.connect(PREFIX + code, { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } });
-    viewerConn = conn;
-    conn.on("data", (d) => {
-      if (peer !== p || !d || typeof d !== "object") return;
-      if (typeof d.hostNick === "string") {
-        setT($("hostName"), "hostLabel", { name: cleanNick(d.hostNick) });
-        $("hostName").hidden = false;
-        if (typeof d.yourNick === "string") {
-          const accepted = cleanNick(d.yourNick);
-          if (accepted) {
-            myNick = accepted;
-            lastNickTry = "";
-            $("nick").value = accepted;
-            saveNick(accepted);
+    viewerConn = null;
+    const conns = [];
+    for (let g = 0; g < ROOM_GENS; g++) {
+      conns.push(p.connect(peerIdFor(code, g), { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } }));
+    }
+    conns.forEach((conn, g) => {
+      conn.on("data", (d) => {
+        if (peer !== p || viewerConn !== conn || !d || typeof d !== "object") return;
+        if (typeof d.hostNick === "string") {
+          setT($("hostName"), "hostLabel", { name: cleanNick(d.hostNick) });
+          $("hostName").hidden = false;
+          if (typeof d.yourNick === "string") {
+            const accepted = cleanNick(d.yourNick);
+            if (accepted) {
+              myNick = accepted;
+              lastNickTry = "";
+              $("nick").value = accepted;
+              saveNick(accepted);
+            }
           }
+          retry = 0;
+          clearTimeout(takeoverTimer);
+          takeoverTimer = null;
+          iAmSucc = false;
+          succState = null;
+          viewerLive = true;
+          shareState = d.canShare === true ? "allowed" : "none";
+          updateShareUI();
+          if ("away" in d) startAwayView(d.away);
+          syncRoster(Array.isArray(d.sharers) ? d.sharers : []);
+          return;
         }
-        retry = 0;
-        clearTimeout(takeoverTimer);
-        takeoverTimer = null;
-        iAmSucc = false;
-        succState = null;
-        viewerLive = true;
-        shareState = d.canShare === true ? "allowed" : "none";
-        updateShareUI();
-        if ("away" in d) startAwayView(d.away);
-        syncRoster(Array.isArray(d.sharers) ? d.sharers : []);
-        return;
-      }
-      if (typeof d.succ === "boolean") {
-        iAmSucc = d.succ;
-        if (!d.succ) succState = null;
-        return;
-      }
-      if (d.succState && typeof d.succState === "object") {
-        succState = { priv: d.succState.priv === true, allowed: strList(d.succState.allowed), grants: strList(d.succState.grants) };
-        return;
-      }
-      if (d.waiting === true) {
-        clearTimeout(viewerTimeout);
-        setT($("viewOverlay"), "joinWaiting");
-        return;
-      }
-      if (d.denied === true) {
-        leaveRoom();
-        setStatus($("homeStatus"), "joinDenied", true);
-        return;
-      }
-      if (d.askNick === true) {
-        openNickDialog(d.retry === true);
-        return;
-      }
-      if (d.chat && typeof d.chat === "object") {
-        addChat(d.chat);
-        return;
-      }
-      if (Number.isInteger(d.del)) {
-        removeMessage(d.del);
-        return;
-      }
-      if (typeof d.muted === "boolean") {
-        chatMuted = d.muted;
-        updateChatInput();
-        return;
-      }
-      if (d.nickTaken === true) {
-        leaveRoom();
-        setStatus($("homeStatus"), "nickTaken", true);
-        $("nick").focus();
-        return;
-      }
-      if (d.kicked === true) {
-        const mins = Math.max(1, Math.ceil((Number(d.wait) || 300) / 60));
-        leaveRoom();
-        setStatus($("homeStatus"), "kicked", true, { min: mins });
-        return;
-      }
-      if (d.duplicate === true) {
-        blockedTab = true;
-        viewerEnded("duplicateTab");
-        return;
-      }
-      if (d.full === true) {
-        blockedTab = true;
-        viewerEnded("roomFull");
-        return;
-      }
-      if (Array.isArray(d.sharers)) {
-        syncRoster(d.sharers);
-        return;
-      }
-      if (typeof d.canShare === "boolean") {
-        if (d.canShare) {
-          if (shareState !== "sharing") shareState = "allowed";
-          setStatus($("viewStatus"), "shareAllowed");
-        } else {
-          viewerStopShare(false);
-          shareState = "none";
-          setStatus($("viewStatus"), "shareRevoked", true);
+        if (typeof d.succ === "boolean") {
+          iAmSucc = d.succ;
+          if (!d.succ) succState = null;
+          return;
         }
-        updateShareUI();
-        return;
-      }
-      if (typeof d.shareDenied === "string") {
-        if (pendingStream) {
-          pendingStream.getTracks().forEach((tr) => tr.stop());
-          pendingStream = null;
+        if (d.succState && typeof d.succState === "object") {
+          succState = { priv: d.succState.priv === true, allowed: strList(d.succState.allowed), grants: strList(d.succState.grants) };
+          return;
         }
-        if (d.shareDenied === "limit") {
-          shareState = "allowed";
-          setStatus($("viewStatus"), "shareLimit", true, { n: MAX_SHARERS });
-        } else {
-          shareState = "none";
-          if (d.shareDenied === "denied") setStatus($("viewStatus"), "shareReqDenied", true);
+        if (d.waiting === true) {
+          clearTimeout(viewerTimeout);
+          setT($("viewOverlay"), "joinWaiting");
+          return;
         }
-        updateShareUI();
-        return;
-      }
-      if (Array.isArray(d.targets)) {
-        beginViewerShare(d.targets.filter((x) => typeof x === "string"));
-        return;
-      }
-      if (typeof d.callNew === "string") {
-        callTarget(d.callNew);
-        return;
-      }
-      if (typeof d.left === "string") {
-        const c = outCalls.get(d.left);
-        if (c) {
-          outCalls.delete(d.left);
-          c.close();
-          updateViewerUpload();
+        if (d.denied === true) {
+          leaveRoom();
+          setStatus($("homeStatus"), "joinDenied", true);
+          return;
         }
-        return;
-      }
-      if ("away" in d) {
-        startAwayView(d.away);
-        return;
-      }
-      if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
-        $("viewCount").hidden = false;
-        setT($("viewCount"), "eyeCount", { n: d.count });
-        return;
-      }
-      if (d.closed === true) viewerEnded("roomEndedByHost");
-    });
-    conn.on("open", () => {
-      if (peer !== p) return;
-      armNoVideo(p);
-    });
-    conn.on("close", () => {
-      if (peer !== p || blockedTab) return;
-      maybeStartTakeover();
-      startLostView();
-      scheduleRetry();
-    });
-    conn.on("error", () => {
-      if (peer !== p || blockedTab) return;
-      maybeStartTakeover();
-      startLostView();
-      scheduleRetry();
+        if (d.askNick === true) {
+          openNickDialog(d.retry === true);
+          return;
+        }
+        if (d.chat && typeof d.chat === "object") {
+          addChat(d.chat);
+          return;
+        }
+        if (Number.isInteger(d.del)) {
+          removeMessage(d.del);
+          return;
+        }
+        if (typeof d.muted === "boolean") {
+          chatMuted = d.muted;
+          updateChatInput();
+          return;
+        }
+        if (d.nickTaken === true) {
+          leaveRoom();
+          setStatus($("homeStatus"), "nickTaken", true);
+          $("nick").focus();
+          return;
+        }
+        if (d.kicked === true) {
+          const mins = Math.max(1, Math.ceil((Number(d.wait) || 300) / 60));
+          leaveRoom();
+          setStatus($("homeStatus"), "kicked", true, { min: mins });
+          return;
+        }
+        if (d.duplicate === true) {
+          blockedTab = true;
+          viewerEnded("duplicateTab");
+          return;
+        }
+        if (d.full === true) {
+          blockedTab = true;
+          viewerEnded("roomFull");
+          return;
+        }
+        if (Array.isArray(d.sharers)) {
+          syncRoster(d.sharers);
+          return;
+        }
+        if (typeof d.canShare === "boolean") {
+          if (d.canShare) {
+            if (shareState !== "sharing") shareState = "allowed";
+            setStatus($("viewStatus"), "shareAllowed");
+          } else {
+            viewerStopShare(false);
+            shareState = "none";
+            setStatus($("viewStatus"), "shareRevoked", true);
+          }
+          updateShareUI();
+          return;
+        }
+        if (typeof d.shareDenied === "string") {
+          if (pendingStream) {
+            pendingStream.getTracks().forEach((tr) => tr.stop());
+            pendingStream = null;
+          }
+          if (d.shareDenied === "limit") {
+            shareState = "allowed";
+            setStatus($("viewStatus"), "shareLimit", true, { n: MAX_SHARERS });
+          } else {
+            shareState = "none";
+            if (d.shareDenied === "denied") setStatus($("viewStatus"), "shareReqDenied", true);
+          }
+          updateShareUI();
+          return;
+        }
+        if (Array.isArray(d.targets)) {
+          beginViewerShare(d.targets.filter((x) => typeof x === "string"));
+          return;
+        }
+        if (typeof d.callNew === "string") {
+          callTarget(d.callNew);
+          return;
+        }
+        if (typeof d.left === "string") {
+          const c = outCalls.get(d.left);
+          if (c) {
+            outCalls.delete(d.left);
+            c.close();
+            updateViewerUpload();
+          }
+          return;
+        }
+        if ("away" in d) {
+          startAwayView(d.away);
+          return;
+        }
+        if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
+          $("viewCount").hidden = false;
+          setT($("viewCount"), "eyeCount", { n: d.count });
+          return;
+        }
+        if (d.closed === true) viewerEnded("roomEndedByHost");
+      });
+      conn.on("open", () => {
+        if (peer !== p) return;
+        if (viewerConn && viewerConn !== conn) {
+          conn.close();
+          return;
+        }
+        viewerConn = conn;
+        roomGen = g;
+        conns.forEach((o) => {
+          if (o !== conn) o.close();
+        });
+        armNoVideo(p);
+      });
+      conn.on("close", () => {
+        if (peer !== p || blockedTab || viewerConn !== conn) return;
+        maybeStartTakeover();
+        startLostView();
+        scheduleRetry();
+      });
+      conn.on("error", () => {
+        if (peer !== p || blockedTab || viewerConn !== conn) return;
+        maybeStartTakeover();
+        startLostView();
+        scheduleRetry();
+      });
     });
     viewerTimeout = setTimeout(() => {
       if (peer !== p) return;
@@ -2970,9 +3000,13 @@ function connectToRoom(code) {
     handleIncomingCall(call);
   });
 
+  let unavailable = 0;
   p.on("error", (err) => {
     if (peer !== p) return;
     if (err.type === "peer-unavailable") {
+      if (viewerConn && viewerConn.open) return;
+      unavailable++;
+      if (unavailable < ROOM_GENS) return;
       if (retry === 0) {
         viewerEnded("roomNotFound");
       } else {
@@ -3052,7 +3086,11 @@ $("pipHost").addEventListener("click", () => {
   closePanel();
   togglePip($("hostStatus"));
 });
+window.addEventListener("pageshow", () => {
+  leavingPage = false;
+});
 window.addEventListener("pagehide", () => {
+  leavingPage = true;
   if (hosting) saveHostSession(true);
   if (peer) peer.destroy();
 });
