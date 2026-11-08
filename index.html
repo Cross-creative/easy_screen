@@ -223,6 +223,7 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   cursor: pointer;
 }
 .tile.big { grid-column: 1 / -1; order: -1; }
+.tile:fullscreen { border-radius: 0; }
 .tile .tag {
   position: absolute;
   left: 8px;
@@ -1715,6 +1716,11 @@ function makeCode() {
   return c;
 }
 
+function fsTarget(stage) {
+  const big = stage.querySelector(".tile.big");
+  return big || stage;
+}
+
 function toggleFullscreen(el) {
   if (document.fullscreenElement) {
     document.exitFullscreen();
@@ -2517,7 +2523,7 @@ document.addEventListener("keydown", (e) => {
 });
 $("hostFs").addEventListener("click", () => {
   closePanel();
-  toggleFullscreen($("hostStage"));
+  toggleFullscreen(fsTarget($("hostStage")));
 });
 $("closeRoom").addEventListener("click", () => {
   $("confirmBox").hidden = false;
@@ -2578,7 +2584,7 @@ $("viewSwitch").addEventListener("click", () => {
 });
 $("viewFs").addEventListener("click", () => {
   closeViewPanel();
-  toggleFullscreen($("viewStage"));
+  toggleFullscreen(fsTarget($("viewStage")));
 });
 $("muteBtn").addEventListener("click", () => {
   viewMuted = !viewMuted;
