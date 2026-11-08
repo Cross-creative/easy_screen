@@ -373,6 +373,14 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .dialog .status { margin-top: 0; min-height: 0; }
 .dialog .row { margin-bottom: 0; }
 #nickNew { width: 100%; }
+.audiotab { border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.audiotab summary { cursor: pointer; font-weight: 600; }
+.audiolist { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.audiorow { display: flex; flex-direction: column; gap: 6px; }
+.audiorow .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.audiorow .ctl { display: flex; gap: 8px; align-items: center; }
+.audiorow input[type="range"] { flex: 1; min-width: 0; }
+#joinRequests:empty { display: none; }
 .lang {
   position: fixed;
   right: 16px;
@@ -394,6 +402,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <span data-i18n="unofficial">Atenção: este não é o site oficial. Use apenas o endereço oficial:</span>
   <a id="officialLink" rel="noopener noreferrer"></a>
 </div>
+  <div id="joinRequests"></div>
   <h1 data-i18n="heading">Tela Fácil</h1>
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
@@ -418,7 +427,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       </div>
       <div class="row">
         <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
-        <button id="createRoom" data-i18n="createRoomOnly">Criar sala sem compartilhar</button>
+        <button id="createRoom" data-i18n="createRoomOnly">Criar sala sem compartilhar (BETA)</button>
       </div>
     </div>
 
@@ -446,6 +455,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
     <div class="row">
       <span class="badge" id="count" data-i18n="viewersMany" data-vars='{"n":0}'>0 👁</span>
+      <span class="badge" id="roomType"></span>
       <button id="openOptions" data-i18n="options">Opções</button>
       <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
     </div>
@@ -475,6 +485,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
           <select id="liveQuality"></select>
         </label>
         <button id="hostMute" data-i18n="muteAudio" disabled>Desativar áudio</button>
+        <details class="audiotab" id="audioTabHost" hidden>
+          <summary data-i18n="audioTab">Áudio das telas</summary>
+          <div class="audiolist" id="audioListHost"></div>
+        </details>
         <button id="hostFs" data-i18n="fullscreen">Tela cheia</button>
         <button id="pipHost" data-i18n="pip" hidden>Janelinha flutuante</button>
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
@@ -525,6 +539,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
     </label>
     <button id="muteBtn" data-i18n="mute">Silenciar</button>
+    <details class="audiotab" id="audioTabView" hidden>
+      <summary data-i18n="audioTab">Áudio das telas</summary>
+      <div class="audiolist" id="audioListView"></div>
+    </details>
     <button id="viewFs" data-i18n="fullscreen">Tela cheia</button>
     <button id="pipView" data-i18n="pip" hidden>Janelinha flutuante</button>
   </div>
@@ -553,6 +571,17 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <div class="row">
       <button id="nickConfirm" class="primary" data-i18n="join">Entrar</button>
       <button id="nickCancel" data-i18n="leave">Sair</button>
+    </div>
+  </div>
+
+  <div class="backdrop" id="visBackdrop" hidden></div>
+  <div class="dialog" id="visDialog" role="dialog" aria-modal="true" aria-labelledby="visTitle" hidden>
+    <h2 id="visTitle" data-i18n="visTitle">Tipo de sala</h2>
+    <label class="check"><input type="radio" name="vis" value="public" checked> <span data-i18n="visPublic">Pública: qualquer pessoa com o link ou código entra</span></label>
+    <label class="check"><input type="radio" name="vis" value="private"> <span data-i18n="visPrivate">Privada: você aceita ou recusa cada pessoa</span></label>
+    <div class="row">
+      <button id="visConfirm" class="primary" data-i18n="createRoomBtn">Criar sala</button>
+      <button id="visCancel" data-i18n="cancel">Cancelar</button>
     </div>
   </div>
 
@@ -598,7 +627,7 @@ const I18N = {
     shareMyScreen: "Compartilhar minha tela",
     shareAudio: "Compartilhar áudio",
     pickSurface: "Escolher aba ou janela",
-    createRoomOnly: "Criar sala sem compartilhar",
+    createRoomOnly: "Criar sala sem compartilhar (BETA)",
     watchWithCode: "Assistir com um código",
     codePlaceholder: "CÓDIGO",
     join: "Entrar",
@@ -625,6 +654,16 @@ const I18N = {
     mute: "Silenciar",
     unmute: "Ativar som",
     backToGrid: "✕ Ver todas as telas",
+    audioTab: "Áudio das telas",
+    visTitle: "Tipo de sala",
+    visPublic: "Pública: qualquer pessoa com o link ou código entra",
+    visPrivate: "Privada: você aceita ou recusa cada pessoa",
+    createRoomBtn: "Criar sala",
+    roomPublicBadge: "Pública",
+    roomPrivateBadge: "🔒 Privada",
+    joinWaiting: "Aguardando o dono da sala aceitar a sua entrada...",
+    joinDenied: "O dono da sala não aceitou a sua entrada.",
+    joinRequestText: "{name} quer entrar na sala.",
     hostLabel: "Host: {name}",
     viewersMany: "{n} 👁",
     connecting: "Conectando...",
@@ -706,7 +745,7 @@ const I18N = {
     shareMyScreen: "Share my screen",
     shareAudio: "Share audio",
     pickSurface: "Choose a tab or window",
-    createRoomOnly: "Create room without sharing",
+    createRoomOnly: "Create room without sharing (BETA)",
     watchWithCode: "Watch with a code",
     codePlaceholder: "CODE",
     join: "Join",
@@ -733,6 +772,16 @@ const I18N = {
     mute: "Mute",
     unmute: "Unmute",
     backToGrid: "✕ View all screens",
+    audioTab: "Audio per screen",
+    visTitle: "Room type",
+    visPublic: "Public: anyone with the link or code can join",
+    visPrivate: "Private: you accept or decline each person",
+    createRoomBtn: "Create room",
+    roomPublicBadge: "Public",
+    roomPrivateBadge: "🔒 Private",
+    joinWaiting: "Waiting for the room owner to accept you...",
+    joinDenied: "The room owner did not accept your entry.",
+    joinRequestText: "{name} wants to join the room.",
     hostLabel: "Host: {name}",
     viewersMany: "{n} 👁",
     connecting: "Connecting...",
@@ -860,6 +909,12 @@ let shareState = "none";
 let pendingStream = null;
 let viewMuted = false;
 let viewVolume = 1;
+let roomPrivate = false;
+const approvals = new Map();
+const allowed = new Set();
+const audioPrefs = new Map();
+let audioSig = "";
+let visResolve = null;
 
 function fmtTime(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -878,14 +933,75 @@ function layoutTiles() {
   g.classList.toggle("has-big", !!g.querySelector(".tile.big"));
 }
 
+function prefOf(id) {
+  let p = audioPrefs.get(id);
+  if (!p) {
+    p = { vol: 1, muted: false };
+    audioPrefs.set(id, p);
+  }
+  return p;
+}
+
 function applyAudio() {
-  tiles.forEach((t) => {
-    t.video.muted = t.local || viewMuted;
-    t.video.volume = viewVolume;
+  tiles.forEach((t, id) => {
+    const pr = audioPrefs.get(id) || { vol: 1, muted: false };
+    t.video.muted = t.local || viewMuted || pr.muted;
+    t.video.volume = viewVolume * pr.vol;
+  });
+}
+
+function renderAudioTabs() {
+  const me = hosting ? hostId() : peer ? peer.id : "";
+  const list = [];
+  sharerNames.forEach((nick, id) => {
+    if (id !== me) list.push([id, nick]);
+  });
+  const show = sharerIds.size > 1 && list.length > 0;
+  const sig = show ? list.map((x) => x[0] + "|" + x[1]).join(";") : "";
+  $("audioTabHost").hidden = !show;
+  $("audioTabView").hidden = !show;
+  if (sig === audioSig) return;
+  audioSig = sig;
+  ["audioListHost", "audioListView"].forEach((boxId) => {
+    const box = $(boxId);
+    box.innerHTML = "";
+    if (!show) return;
+    list.forEach(([id, nick]) => {
+      const pr = prefOf(id);
+      const row = document.createElement("div");
+      row.className = "audiorow";
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = nick;
+      const ctl = document.createElement("div");
+      ctl.className = "ctl";
+      const range = document.createElement("input");
+      range.type = "range";
+      range.min = "0";
+      range.max = "1";
+      range.step = "0.05";
+      range.value = String(pr.vol);
+      const btn = document.createElement("button");
+      btn.className = "mini";
+      setT(btn, pr.muted ? "unmute" : "mute");
+      range.addEventListener("input", () => {
+        pr.vol = Number(range.value);
+        applyAudio();
+      });
+      btn.addEventListener("click", () => {
+        pr.muted = !pr.muted;
+        setT(btn, pr.muted ? "unmute" : "mute");
+        applyAudio();
+      });
+      ctl.append(range, btn);
+      row.append(name, ctl);
+      box.appendChild(row);
+    });
   });
 }
 
 function refreshOverlays() {
+  renderAudioTabs();
   if (hosting) {
     $("hostOverlay").hidden = tiles.size > 0;
     return;
@@ -975,6 +1091,8 @@ function clearTiles() {
     t.el.remove();
   });
   tiles.clear();
+  audioPrefs.clear();
+  audioSig = "";
   layoutTiles();
   refreshOverlays();
 }
@@ -1123,7 +1241,10 @@ function toggleMuteUser(id) {
 function kickViewer(id) {
   const v = viewers.get(id);
   if (!v) return;
-  if (v.vid) bans.set("vid:" + v.vid, Date.now() + BAN_MS);
+  if (v.vid) {
+    bans.set("vid:" + v.vid, Date.now() + BAN_MS);
+    allowed.delete(v.vid);
+  }
   if (v.ip) bans.set("ip:" + v.ip, Date.now() + BAN_IP_MS);
   if (v.conn.open) v.conn.send({ kicked: true, wait: BAN_MS / 1000 });
   setTimeout(() => v.conn.close(), 500);
@@ -1592,6 +1713,25 @@ function applyStream(newStream) {
   $("audioNote").hidden = !($("audio").checked && !newStream.getAudioTracks().length);
 }
 
+function askVisibility() {
+  return new Promise((res) => {
+    if (visResolve) visResolve(null);
+    visResolve = res;
+    document.querySelector('input[name="vis"][value="public"]').checked = true;
+    $("visBackdrop").hidden = false;
+    $("visDialog").hidden = false;
+    $("visConfirm").focus();
+  });
+}
+
+function closeVis(val) {
+  $("visDialog").hidden = true;
+  $("visBackdrop").hidden = true;
+  const r = visResolve;
+  visResolve = null;
+  if (r) r(val);
+}
+
 async function startHost(share) {
   if (!requireNick()) return;
   qualityKey = $("quality").value;
@@ -1604,7 +1744,14 @@ async function startHost(share) {
       return;
     }
   }
+  const vis = await askVisibility();
+  if (!vis) {
+    if (s) s.getTracks().forEach((tr) => tr.stop());
+    return;
+  }
   if (hosting) closeRoom();
+  roomPrivate = vis === "private";
+  setT($("roomType"), roomPrivate ? "roomPrivateBadge" : "roomPublicBadge");
   hosting = true;
   activeGrid = $("hostGrid");
   show(hostView);
@@ -1696,6 +1843,15 @@ function closeRoom() {
   stopAway();
   bans.clear();
   grants.clear();
+  approvals.forEach((a) => {
+    clearTimeout(a.timer);
+    if (a.conn.open) a.conn.send({ closed: true });
+    a.conn.close();
+  });
+  approvals.clear();
+  allowed.clear();
+  roomPrivate = false;
+  $("joinRequests").innerHTML = "";
   clearChat();
   stopMonitor();
   $("audioNote").hidden = true;
@@ -1907,8 +2063,56 @@ function askNick(conn, ctx, tries) {
   conn.send({ askNick: true, retry: tries > 0 });
 }
 
+function renderJoinRequests() {
+  const box = $("joinRequests");
+  box.innerHTML = "";
+  approvals.forEach((a, id) => {
+    const row = document.createElement("div");
+    row.className = "request";
+    const text = document.createElement("span");
+    setT(text, "joinRequestText", { name: a.ctx.nick });
+    const yes = document.createElement("button");
+    yes.className = "primary";
+    setT(yes, "allow");
+    yes.addEventListener("click", () => resolveEntry(id, true));
+    const no = document.createElement("button");
+    setT(no, "deny");
+    no.addEventListener("click", () => resolveEntry(id, false));
+    row.append(text, yes, no);
+    box.appendChild(row);
+  });
+}
+
+function dropApproval(id) {
+  const a = approvals.get(id);
+  if (!a) return null;
+  clearTimeout(a.timer);
+  approvals.delete(id);
+  renderJoinRequests();
+  return a;
+}
+
+function resolveEntry(id, ok) {
+  const a = dropApproval(id);
+  if (!a || !a.conn.open) return;
+  if (!ok) return refuse(a.conn, { denied: true });
+  const ctx = { ...a.ctx, approved: true };
+  if (nickInUse(ctx.nick)) return askNick(a.conn, ctx, 0);
+  admit(a.conn, ctx);
+}
+
+function requestEntry(conn, ctx) {
+  if (approvals.size >= 8) return refuse(conn, { denied: true });
+  const timer = setTimeout(() => resolveEntry(conn.peer, false), 90000);
+  approvals.set(conn.peer, { conn, ctx, timer });
+  conn.send({ waiting: true });
+  renderJoinRequests();
+}
+
 function admit(conn, ctx) {
   if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+  if (roomPrivate && !ctx.approved && !(ctx.vid && allowed.has(ctx.vid))) return requestEntry(conn, ctx);
+  if (ctx.vid) allowed.add(ctx.vid);
   const v = {
     conn,
     call: null,
@@ -1970,6 +2174,12 @@ peer.on("connection", (conn) => {
         }
       }
     }
+    for (const [aid, a] of [...approvals]) {
+      if (vid && a.ctx.vid === vid) {
+        dropApproval(aid);
+        a.conn.close();
+      }
+    }
     if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
     const ctx = { vid, tab, ip, nick, deadline: 0 };
     if (!nick || nickInUse(nick)) return askNick(conn, ctx, 0);
@@ -1999,10 +2209,12 @@ peer.on("connection", (conn) => {
   });
   conn.on("close", () => {
     dropPending(conn.peer);
+    dropApproval(conn.peer);
     dropViewer(conn.peer);
   });
   conn.on("error", () => {
     dropPending(conn.peer);
+    dropApproval(conn.peer);
     dropViewer(conn.peer);
   });
 });
@@ -2337,6 +2549,16 @@ function connectToRoom(code) {
         syncRoster(Array.isArray(d.sharers) ? d.sharers : []);
         return;
       }
+      if (d.waiting === true) {
+        clearTimeout(viewerTimeout);
+        setT($("viewOverlay"), "joinWaiting");
+        return;
+      }
+      if (d.denied === true) {
+        leaveRoom();
+        setStatus($("homeStatus"), "joinDenied", true);
+        return;
+      }
       if (d.askNick === true) {
         openNickDialog(d.retry === true);
         return;
@@ -2586,6 +2808,15 @@ $("codeInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") joinRoom($("codeInput").value);
 });
 $("leave").addEventListener("click", leaveRoom);
+$("visConfirm").addEventListener("click", () => {
+  const sel = document.querySelector('input[name="vis"]:checked');
+  closeVis(sel ? sel.value : "public");
+});
+$("visCancel").addEventListener("click", () => closeVis(null));
+$("visBackdrop").addEventListener("click", () => closeVis(null));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && visResolve) closeVis(null);
+});
 $("nickConfirm").addEventListener("click", submitNick);
 $("nickCancel").addEventListener("click", leaveRoom);
 $("nickNew").addEventListener("keydown", (e) => {
