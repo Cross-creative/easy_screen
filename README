@@ -76,7 +76,7 @@ Volume and mute controls for viewers, audio toggle for the host.
 
 Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
 
-Host recovery: if the host closes the tab, the room waits 10 seconds. If the host reopens the site in the same browser within that time, the room resumes with the same code. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
+Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within that time, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
 
 English and Portuguese (Brazil), detected from the browser and remembered.
 
