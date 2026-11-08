@@ -34,7 +34,7 @@ Features
 
 Room codes: each host gets a random 6-character code, plus a shareable link that joins the room directly.
 
-Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room. The nickname is saved as you type and shown again after you leave a room. Opening a room link does not join automatically: you confirm the nickname and click Join.
+Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room. The nickname is saved as you type and shown again after you leave a room. Opening a room link joins the room right away when a nickname is saved. Without one, you type the nickname and press Enter or click Join, and the code is already filled in.
 
 The viewer sees "Host: name" at the top, and the host sees a viewer counter like "3 👁".
 
