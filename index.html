@@ -3115,6 +3115,9 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && visResolve) closeVis(null);
 });
 $("nick").addEventListener("input", () => saveNick(cleanNick($("nick").value)));
+$("nick").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && $("codeInput").value.trim().length === 6) joinRoom($("codeInput").value);
+});
 $("pipCancel").addEventListener("click", closePipDialog);
 $("pipBackdrop").addEventListener("click", closePipDialog);
 document.addEventListener("keydown", (e) => {
@@ -3193,8 +3196,14 @@ const params = new URLSearchParams(location.search);
 const roomParam = params.get("sala");
 const resumed = tryResumeHost(roomParam ? roomParam.toUpperCase().slice(0, 6) : "");
 if (roomParam && !resumed) {
-  $("codeInput").value = roomParam.toUpperCase().slice(0, 6);
-  setStatus($("homeStatus"), "nickToJoin");
+  const linkCode = roomParam.toUpperCase().slice(0, 6);
+  $("codeInput").value = linkCode;
+  if ($("nick").value.trim()) {
+    joinRoom(linkCode);
+  } else {
+    setStatus($("homeStatus"), "nickToJoin");
+    $("nick").focus();
+  }
 }
 </script>
 </body>
