@@ -1,6 +1,6 @@
 Easy Screen
 
-Share a browser tab or window directly with other people, with no account, no install and no server of your own. Several people can share in the same room, with the host's permission. The whole app is a single HTML file.
+Share a browser tab or window directly with other people, with no account, no install and no server of your own. In rooms created with "Create room (BETA)", several people can share in the same room, with the host's permission. The whole app is a single HTML file.
 
 Live site: https://cross-creative.github.io/easy_screen/
 
@@ -19,15 +19,15 @@ Sharing
 3. Click "Choose a tab or window" and select what to share.
 4. Send the 6-character room code, or the link, to your viewers.
 
-You can also click "Create room without sharing (BETA)" to open the room first and share later.
+You can also click "Create room (BETA)" to open a room where several people can share their screens, with the host's permission. In rooms created with "Choose a tab or window", only the host shares.
 
-When you click to create a room, you first pick the room type and then choose the tab or window (no window is asked for when creating a room without sharing). Public is the default: anyone with the link or code can join. Private: you get a notice with the person's nickname and accept or decline each one.
+When you click to create a room, you first pick the room type and then choose the tab or window (no window is asked for when using "Create room (BETA)"). Public is the default: anyone with the link or code can join. Private: you get a notice with the person's nickname and accept or decline each one.
 
 Watching
 
 1. Open the link, or choose a nickname, type the room code on the home page and click "Join".
 2. If the video starts muted because of browser autoplay rules, click the audio icon in the bar under the video and click "Unmute".
-3. To share your own screen, click "Ask to share". When the host allows it, click "Share".
+3. In rooms created with "Create room (BETA)", you can share your own screen: click "Ask to share" and, when the host allows it, click "Share". In the other rooms only the host shares.
 
 
 Features
@@ -48,7 +48,7 @@ Automatic reconnection: if a viewer's connection drops, the site retries up to 6
 
 Tab or window sharing with optional audio.
 
-Multi-sharing: viewers ask to share and the host allows, denies or revokes. Up to 4 people share at the same time, host included.
+Multi-sharing (only in rooms created with "Create room (BETA)"): viewers ask to share and the host allows, denies or revokes. Up to 4 people share at the same time, host included.
 
 Grid with every shared screen. Click a screen to see only that one, and use the button in its top right corner to go back to all screens. Fullscreen then shows only that screen.
 
@@ -70,6 +70,8 @@ Leave to menu: the host can go to the menu while the room stays open for 8 minut
 
 Warning for the host when upload bandwidth or CPU is overloaded, with a one-click option to lower the quality.
 
+Update notice: every 5 minutes (and when you come back to the tab) the site checks whether a new version was published. If so, a notice asks everyone to restart the page. On the home page there is a "Restart now" button. Inside a room the notice asks you to close the room and reload the page, and can be dismissed. Nothing is sent during this check: the page only downloads its own file again and compares it.
+
 Floating alerts: requests to join or share, upload or CPU warnings and automatic quality changes appear as a notice fixed at the top of the window. It follows the screen when you scroll, so it stays visible on small screens.
 
 System notifications: when the room tab is in the background or the window is not focused, the same alerts also appear as a notification on your computer. Clicking one takes you back to the room tab. The browser asks for permission the first time you create a room or start sharing from inside a room. They can be turned off in Settings.
@@ -86,7 +88,7 @@ One tab per viewer per room: duplicate tabs from the same browser are blocked.
 
 Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, from the bar under the video, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
 
-Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
+Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type, sharing mode and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
 
 English and Portuguese (Brazil), detected from the browser, remembered and changeable in Settings.
 
@@ -150,13 +152,15 @@ Automatic quality reduction depends on what the browser reports about bandwidth 
 
 Floating alerts are not shown while a screen is in fullscreen. System notifications still work if the browser allows them.
 
+The update notice can take up to 5 minutes to appear after a new version is published. A host who reloads the page can resume the room by clicking "Back to the room" within 8 seconds, and viewers who joined by link can reopen it. Viewers who typed the code need to type it again.
+
 Depends on the free public PeerJS server, which can be slow or unavailable.
 
 Viewers behind very restrictive networks, such as some school or company networks, may fail to connect.
 
 If the host loses internet or the computer freezes instead of closing the tab, the handover can take longer than 10 seconds.
 
-The room type cannot be changed after the room is created. Creating a room without sharing is a beta feature.
+The room type and the sharing mode cannot be changed after the room is created. Multi-sharing rooms ("Create room (BETA)") are a beta feature.
 
 Duplicate-tab detection only works within the same browser profile. Another browser, a private window or another device counts as a different viewer.
 
