@@ -34,7 +34,7 @@ Features
 
 Room codes: each host gets a random 6-character code, plus a shareable link that joins the room directly.
 
-Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room.
+Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room. The nickname is saved as you type and shown again after you leave a room. Opening a room link does not join automatically: you confirm the nickname and click Join.
 
 The viewer sees "Host: name" at the top, and the host sees a viewer counter like "3 👁".
 
@@ -74,7 +74,9 @@ One tab per viewer per room: duplicate tabs from the same browser are blocked.
 
 Volume and mute controls for viewers, audio toggle for the host.
 
-Fullscreen and floating window (picture-in-picture) for both host and viewers, where the browser supports it.
+Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
+
+Host recovery: if the host closes the tab, the room waits 10 seconds. If the host reopens the site in the same browser within that time, the room resumes with the same code. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
 
 English and Portuguese (Brazil), detected from the browser and remembered.
 
@@ -128,6 +130,8 @@ Mesh topology: everyone who shares uploads one stream per person in the room. Th
 Depends on the free public PeerJS server, which can be slow or unavailable.
 
 Viewers behind very restrictive networks, such as some school or company networks, may fail to connect.
+
+If the host loses internet or the computer freezes instead of closing the tab, the handover can take longer than 10 seconds.
 
 The room type cannot be changed after the room is created. Creating a room without sharing is a beta feature.
 
