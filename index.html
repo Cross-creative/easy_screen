@@ -44,7 +44,7 @@ the copyright holder, subject to applicable law.
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob: mediastream:; connect-src https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob: mediastream:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tela Fácil</title>
@@ -729,6 +729,11 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   </div>
 
   <div class="alerts" id="alerts">
+    <div class="request" id="updateNotice" hidden>
+      <span id="updateText"></span>
+      <button class="primary" id="updateReload" data-i18n="updateRestart">Reiniciar agora</button>
+      <button id="updateDismiss" data-i18n="updateDismiss" hidden>Entendi</button>
+    </div>
     <div id="joinRequests"></div>
     <div id="shareRequests"></div>
     <div class="warn" id="hostWarn" hidden>
@@ -806,6 +811,55 @@ const AUTO_UP_MS = 60000;
 const SETTINGS_KEY = "settings";
 const NEWS_KEY = "newsSeen";
 const NEWS_ID = "settings1";
+const UPDATE_CHECK_MS = 5 * 60 * 1000;
+let pageBase = null;
+let updateReady = false;
+let updateDismissed = false;
+let lastUpdateCheck = 0;
+
+async function pageHash(mode) {
+  const res = await fetch(location.origin + location.pathname, { cache: mode });
+  if (!res.ok) throw new Error("status");
+  const digest = await crypto.subtle.digest("SHA-256", await res.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function updateNoticeView() {
+  const box = $("updateNotice");
+  const inRoom = hosting || !viewerView.hidden;
+  if (!inRoom) updateDismissed = false;
+  box.hidden = !updateReady || (inRoom && updateDismissed);
+  if (box.hidden) return;
+  setT($("updateText"), inRoom ? "updateRoom" : "updateHome");
+  $("updateReload").hidden = inRoom;
+  $("updateDismiss").hidden = !inRoom;
+}
+
+async function checkUpdate() {
+  if (updateReady || pageBase === null) return;
+  lastUpdateCheck = Date.now();
+  try {
+    const current = await pageHash("no-store");
+    if (current !== pageBase) {
+      updateReady = true;
+      updateNoticeView();
+    }
+  } catch (e) {}
+}
+
+async function startUpdateWatch() {
+  if (location.protocol !== "https:" && location.protocol !== "http:") return;
+  if (!(window.crypto && crypto.subtle)) return;
+  try {
+    pageBase = await pageHash("force-cache");
+  } catch (e) {
+    return;
+  }
+  setInterval(checkUpdate, UPDATE_CHECK_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && Date.now() - lastUpdateCheck > 60000) checkUpdate();
+  });
+}
 
 function loadSettings() {
   let s = {};
@@ -1097,7 +1151,11 @@ const I18N = {
     setNotify: "Notificações do sistema",
     setNotifyHint: "Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.",
     notifyDenied: "As notificações estão bloqueadas no navegador. Libere nas permissões do site para receber os avisos.",
-    notifyUnsupported: "Este navegador não suporta notificações do sistema."
+    notifyUnsupported: "Este navegador não suporta notificações do sistema.",
+    updateHome: "O site recebeu uma atualização e precisa ser reiniciado para que ela seja aplicada.",
+    updateRoom: "O site recebeu uma atualização. Feche a sala e reinicie a página para que ela seja aplicada.",
+    updateRestart: "Reiniciar agora",
+    updateDismiss: "Entendi"
   },
   en: {
     title: "Easy Screen",
@@ -1246,7 +1304,11 @@ const I18N = {
     setNotify: "System notifications",
     setNotifyHint: "Shows an alert in the corner of your computer screen (requests to join or share, and upload problems) when the room tab is in the background.",
     notifyDenied: "Notifications are blocked in the browser. Allow them in the site permissions to receive alerts.",
-    notifyUnsupported: "This browser does not support system notifications."
+    notifyUnsupported: "This browser does not support system notifications.",
+    updateHome: "The site received an update and needs to be restarted for it to be applied.",
+    updateRoom: "The site received an update. Close the room and reload the page for it to be applied.",
+    updateRestart: "Restart now",
+    updateDismiss: "Got it"
   }
 };
 
@@ -2134,6 +2196,7 @@ function show(section) {
   home.hidden = section !== home;
   hostView.hidden = section !== hostView;
   viewerView.hidden = section !== viewerView;
+  updateNoticeView();
 }
 
 function setStatus(el, key, isError, vars) {
@@ -3789,6 +3852,11 @@ $("settingsBtn").addEventListener("click", openSettings);
 $("closeSettings").addEventListener("click", closeSettings);
 $("settingsBackdrop").addEventListener("click", closeSettings);
 $("newsOk").addEventListener("click", markNewsSeen);
+$("updateReload").addEventListener("click", () => location.reload());
+$("updateDismiss").addEventListener("click", () => {
+  updateDismissed = true;
+  updateNoticeView();
+});
 $("setTheme").addEventListener("change", (e) => {
   settings.theme = e.target.value;
   saveSettings();
@@ -3821,6 +3889,7 @@ applyTheme();
 renderSettings();
 applyLang();
 if (!newsSeen()) $("newsBanner").hidden = false;
+startUpdateWatch();
   let savedNick = "";
   try { savedNick = localStorage.getItem("nick") || ""; } catch (e) {}
   if (!savedNick) {
