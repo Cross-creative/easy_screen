@@ -48,6 +48,12 @@ the copyright holder, subject to applicable law.
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tela Fácil</title>
+<script>
+try {
+  var s0 = JSON.parse(localStorage.getItem("settings") || "{}");
+  if (s0 && (s0.theme === "light" || s0.theme === "dark")) document.documentElement.dataset.theme = s0.theme;
+} catch (e) {}
+</script>
 <link rel="icon" type="image/png" href="icone.png">
 <style>
 :root {
@@ -62,7 +68,7 @@ the copyright holder, subject to applicable law.
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #121316;
     --surface: #1c1e23;
     --text: #eceef1;
@@ -73,6 +79,17 @@ the copyright holder, subject to applicable law.
     --danger: #ff6b6b;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #121316;
+  --surface: #1c1e23;
+  --text: #eceef1;
+  --muted: #9aa0a8;
+  --border: #2e3138;
+  --accent: #5b8cff;
+  --accent-text: #0b1020;
+  --danger: #ff6b6b;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -384,18 +401,29 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .piplist { display: flex; flex-direction: column; gap: 8px; }
 .piplist button { width: 100%; }
 .lang {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
   display: flex;
+  width: max-content;
   border: 1px solid var(--border);
   border-radius: 999px;
   overflow: hidden;
   background: var(--surface);
-  z-index: 10;
 }
 .lang button { border: 0; border-radius: 0; padding: 8px 14px; background: transparent; }
 .lang button.active { background: var(--accent); color: var(--accent-text); }
+.gear {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  line-height: 1;
+  z-index: 10;
+}
+.panel-body .check { align-items: flex-start; }
+.panel-body .hint { margin: -4px 0 4px 26px; }
 </style>
 </head>
 <body>
@@ -409,6 +437,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
+  <div class="card highlight" id="newsBanner" hidden>
+    <p class="away-text" data-i18n="newsText">Novidade: agora o Tela Fácil tem configurações! Toque no ⚙ no canto da tela para mudar idioma, tema e a qualidade automática.</p>
+    <button id="newsOk" class="primary" data-i18n="newsOk">Entendi</button>
+  </div>
   <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
   <div class="card highlight" id="awayHome" hidden>
     <p class="away-text" id="awayHomeText"></p>
@@ -598,10 +630,38 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
   </div>
 
-  <div class="lang" role="group" aria-label="Language">
-    <button id="langPt" type="button">PT</button>
-    <button id="langEn" type="button">EN</button>
-  </div>
+  <button class="gear" id="settingsBtn" type="button">⚙</button>
+
+  <div class="backdrop" id="settingsBackdrop" hidden></div>
+  <aside class="panel" id="settingsPanel" aria-hidden="true">
+    <div class="panel-head">
+      <h2 data-i18n="settings">Configurações</h2>
+      <button id="closeSettings" data-i18n="close">Fechar</button>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <span data-i18n="language">Idioma</span>
+        <div class="lang" role="group" aria-label="Language">
+          <button id="langPt" type="button">PT</button>
+          <button id="langEn" type="button">EN</button>
+        </div>
+      </div>
+      <label class="field"><span data-i18n="theme">Tema</span>
+        <select id="setTheme">
+          <option value="auto" data-i18n="themeAuto">Automático (do sistema)</option>
+          <option value="light" data-i18n="themeLight">Claro</option>
+          <option value="dark" data-i18n="themeDark">Escuro</option>
+        </select>
+      </label>
+      <hr>
+      <label class="check"><input type="checkbox" id="setAutoReduce"> <span data-i18n="setAutoReduce">Reduzir a qualidade automaticamente</span></label>
+      <p class="hint" data-i18n="setAutoReduceHint">Quando o upload ou o computador apertarem, o app desce um nível de qualidade sozinho.</p>
+      <label class="check"><input type="checkbox" id="setAutoRecover"> <span data-i18n="setAutoRecover">Subir a qualidade de volta automaticamente</span></label>
+      <p class="hint" data-i18n="setAutoRecoverHint">Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.</p>
+      <label class="check"><input type="checkbox" id="setCap"> <span data-i18n="setCap">Limitar a qualidade pelo número de espectadores</span></label>
+      <p class="hint" data-i18n="setCapHint">Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.</p>
+    </div>
+  </aside>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" integrity="sha256-rV2IcNHjiZFPnLqNNb4xPEMnxp7goiHkgum/diETb+U=" crossorigin="anonymous"></script>
@@ -630,6 +690,122 @@ const QUALITIES = {
   extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 }
 };
 const ORDER = ["light", "eco", "mid", "high", "extreme"];
+const MAX_UPLOAD_KBPS = 13000;
+const AUTO_DOWN_COOLDOWN = 8000;
+const AUTO_UP_MS = 60000;
+const SETTINGS_KEY = "settings";
+const NEWS_KEY = "newsSeen";
+const NEWS_ID = "settings1";
+
+function loadSettings() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch (e) {}
+  return {
+    theme: s.theme === "light" || s.theme === "dark" ? s.theme : "auto",
+    autoReduce: s.autoReduce !== false,
+    autoRecover: s.autoRecover !== false,
+    capByViewers: s.capByViewers !== false
+  };
+}
+
+let settings = loadSettings();
+
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+}
+
+function applyTheme() {
+  if (settings.theme === "auto") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.dataset.theme = settings.theme;
+  }
+}
+
+function newsSeen() {
+  try { return localStorage.getItem(NEWS_KEY) === NEWS_ID; } catch (e) { return false; }
+}
+
+function markNewsSeen() {
+  try { localStorage.setItem(NEWS_KEY, NEWS_ID); } catch (e) {}
+  $("newsBanner").hidden = true;
+}
+
+function renderSettings() {
+  $("setTheme").value = settings.theme;
+  $("setAutoReduce").checked = settings.autoReduce;
+  $("setAutoRecover").checked = settings.autoRecover;
+  $("setCap").checked = settings.capByViewers;
+}
+
+function openSettings() {
+  closeChat();
+  closePanel();
+  closeViewPanel();
+  renderSettings();
+  $("settingsPanel").classList.add("open");
+  $("settingsPanel").setAttribute("aria-hidden", "false");
+  $("settingsBackdrop").hidden = false;
+  markNewsSeen();
+}
+
+function closeSettings() {
+  $("settingsPanel").classList.remove("open");
+  $("settingsPanel").setAttribute("aria-hidden", "true");
+  $("settingsBackdrop").hidden = true;
+}
+
+function roomSize() {
+  if (hosting) return viewers.size;
+  return shareState === "sharing" ? outCalls.size : roomCount;
+}
+
+function qualityCap() {
+  const top = ORDER[ORDER.length - 1];
+  if (!settings.capByViewers) return top;
+  const n = roomSize();
+  if (n <= 0) return top;
+  for (let i = ORDER.length - 1; i >= 0; i--) {
+    if (n * QUALITIES[ORDER[i]].kbps <= MAX_UPLOAD_KBPS) return ORDER[i];
+  }
+  return ORDER[0];
+}
+
+function refreshQualityLimits() {
+  const cap = ORDER.indexOf(qualityCap());
+  [$("liveQuality"), $("viewQuality")].forEach((sel) => {
+    Array.from(sel.options).forEach((o) => {
+      const over = ORDER.indexOf(o.value) > cap;
+      o.disabled = over;
+      o.textContent = t("q_" + o.value) + (over ? " 🔒" : "");
+    });
+  });
+}
+
+function autoNote(key, q) {
+  autoNoteState = { key: key, q: q, until: Date.now() + 12000 };
+  showAutoNote();
+}
+
+function showAutoNote() {
+  if (!autoNoteState) return;
+  const box = hosting ? $("hostWarn") : $("viewWarn");
+  const text = hosting ? $("hostWarnText") : $("viewWarnText");
+  setT(text, autoNoteState.key, { q: t("q_" + autoNoteState.q) });
+  if (hosting) $("lowerQ").hidden = true;
+  box.hidden = false;
+}
+
+function enforceCap() {
+  refreshQualityLimits();
+  if (!stream) return;
+  const cap = qualityCap();
+  if (ORDER.indexOf(qualityKey) > ORDER.indexOf(cap)) {
+    lastAutoAt = Date.now();
+    setQuality(cap, true);
+    autoNote("capLowered", cap);
+  }
+}
 
 const I18N = {
   pt: {
@@ -755,7 +931,24 @@ const I18N = {
     q_eco: "Econômica (720p, 15 fps)",
     q_mid: "Equilibrada (720p, 24 fps)",
     q_high: "Alta (1080p, 30 fps)",
-    q_extreme: "QHD (1440p, 60 fps)"
+    q_extreme: "QHD (1440p, 60 fps)",
+    settings: "Configurações",
+    language: "Idioma",
+    theme: "Tema",
+    themeAuto: "Automático (do sistema)",
+    themeLight: "Claro",
+    themeDark: "Escuro",
+    setAutoReduce: "Reduzir a qualidade automaticamente",
+    setAutoReduceHint: "Quando o upload ou o computador apertarem, o app desce um nível de qualidade sozinho.",
+    setAutoRecover: "Subir a qualidade de volta automaticamente",
+    setAutoRecoverHint: "Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.",
+    setCap: "Limitar a qualidade pelo número de espectadores",
+    setCapHint: "Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.",
+    autoLowered: "Qualidade reduzida automaticamente para: {q}.",
+    autoRaised: "Qualidade aumentada automaticamente para: {q}.",
+    capLowered: "Qualidade limitada a {q} pelo número de espectadores.",
+    newsText: "Novidade: agora o Tela Fácil tem configurações! Toque no ⚙ no canto da tela para mudar idioma, tema e a qualidade automática.",
+    newsOk: "Entendi"
   },
   en: {
     title: "Easy Screen",
@@ -880,7 +1073,24 @@ const I18N = {
     q_eco: "Economy (720p, 15 fps)",
     q_mid: "Balanced (720p, 24 fps)",
     q_high: "High (1080p, 30 fps)",
-    q_extreme: "QHD (1440p, 60 fps)"
+    q_extreme: "QHD (1440p, 60 fps)",
+    settings: "Settings",
+    language: "Language",
+    theme: "Theme",
+    themeAuto: "Automatic (system)",
+    themeLight: "Light",
+    themeDark: "Dark",
+    setAutoReduce: "Lower quality automatically",
+    setAutoReduceHint: "When your upload or computer gets strained, the app drops one quality level by itself.",
+    setAutoRecover: "Raise quality back automatically",
+    setAutoRecoverHint: "After 1 minute without problems, it goes up one level at a time, never above the quality you picked.",
+    setCap: "Limit quality by number of viewers",
+    setCapHint: "With more people in the room, high qualities are locked (🔒) so your upload is not overloaded.",
+    autoLowered: "Quality lowered automatically to: {q}.",
+    autoRaised: "Quality raised automatically to: {q}.",
+    capLowered: "Quality limited to {q} because of the number of viewers.",
+    newsText: "New: Easy Screen now has settings! Tap the ⚙ in the corner of the screen to change language, theme and automatic quality.",
+    newsOk: "Got it"
   }
 };
 
@@ -894,6 +1104,11 @@ let peer = null;
 let stream = null;
 let qualityKey = "eco";
 let quality = QUALITIES.eco;
+let chosenQuality = "eco";
+let lastAutoAt = 0;
+let lastLimitedAt = 0;
+let autoNoteState = null;
+let roomCount = 0;
 let viewers = new Map();
 let currentCode = "";
 let viewerTimeout = null;
@@ -1207,6 +1422,7 @@ function syncRoster(list) {
 
 function openViewPanel() {
   closeChat();
+  closeSettings();
   $("viewPanel").classList.add("open");
   $("viewPanel").setAttribute("aria-hidden", "false");
   $("viewBackdrop").hidden = false;
@@ -1493,6 +1709,7 @@ function updateUnread() {
 function openChat() {
   closePanel();
   closeViewPanel();
+  closeSettings();
   $("chatPanel").classList.add("open");
   $("chatPanel").setAttribute("aria-hidden", "false");
   chatUnread = 0;
@@ -1697,6 +1914,7 @@ function fillQuality() {
     });
     sel.value = keep;
   });
+  refreshQualityLimits();
 }
 
 function applyLang() {
@@ -1709,6 +1927,8 @@ function applyLang() {
   $("codeInput").placeholder = t("codePlaceholder");
   $("nick").placeholder = t("nickPlaceholder");
   $("nickNew").placeholder = t("nickPlaceholder");
+  $("settingsBtn").title = t("settings");
+  $("settingsBtn").setAttribute("aria-label", t("settings"));
   updateChatInput();
   fillQuality();
   $("langPt").classList.toggle("active", lang === "pt");
@@ -1747,6 +1967,7 @@ function setStatus(el, key, isError, vars) {
 
 function openPanel() {
   closeChat();
+  closeSettings();
   $("panel").classList.add("open");
   $("panel").setAttribute("aria-hidden", "false");
   $("backdrop").hidden = false;
@@ -1835,6 +2056,10 @@ async function startHost(share) {
   if (!requireNick()) return;
   qualityKey = $("quality").value;
   quality = QUALITIES[qualityKey];
+  chosenQuality = qualityKey;
+  lastAutoAt = 0;
+  lastLimitedAt = 0;
+  autoNoteState = null;
   const vis = await askVisibility();
   if (!vis) return;
   let s = null;
@@ -2041,8 +2266,9 @@ function limitBitrate(call, kbps) {
   }, 250);
 }
 
-function setQuality(key) {
+function setQuality(key, auto) {
   qualityKey = key;
+  if (!auto) chosenQuality = key;
   quality = QUALITIES[key];
   $("liveQuality").value = key;
   $("viewQuality").value = key;
@@ -2061,7 +2287,7 @@ function setQuality(key) {
   outCalls.forEach((c) => limitBitrate(c, quality.kbps));
   if (hosting) {
     updateHostCount();
-    checkLoad();
+    if (!auto) checkLoad();
   } else {
     updateViewerUpload();
   }
@@ -2089,6 +2315,34 @@ async function checkLoad() {
       });
     } catch (e) {}
   }
+  if (!stream) return;
+  const now = Date.now();
+  const limited = reason === "bandwidth" || reason === "cpu";
+  if (limited) lastLimitedAt = now;
+  const idx = ORDER.indexOf(qualityKey);
+  if (settings.autoReduce && limited && idx > 0 && now - lastAutoAt >= AUTO_DOWN_COOLDOWN) {
+    lastAutoAt = now;
+    setQuality(ORDER[idx - 1], true);
+    autoNote("autoLowered", ORDER[idx - 1]);
+    return;
+  }
+  if (
+    settings.autoRecover &&
+    !limited &&
+    idx < ORDER.indexOf(chosenQuality) &&
+    idx < ORDER.indexOf(qualityCap()) &&
+    now - Math.max(lastLimitedAt, lastAutoAt) >= AUTO_UP_MS
+  ) {
+    lastAutoAt = now;
+    setQuality(ORDER[idx + 1], true);
+    autoNote("autoRaised", ORDER[idx + 1]);
+    return;
+  }
+  if (autoNoteState && now < autoNoteState.until) {
+    showAutoNote();
+    return;
+  }
+  autoNoteState = null;
   const estimate = (count * quality.kbps) / 1000;
   let key = "";
   let vars = null;
@@ -2132,6 +2386,7 @@ function updateHostCount() {
   renderPeople();
   renderRequests();
   syncSuccessor();
+  enforceCap();
   saveHostSession(false);
 }
 
@@ -2499,6 +2754,7 @@ function resumeNow() {
   if (QUALITIES[sess.q]) {
     qualityKey = sess.q;
     quality = QUALITIES[sess.q];
+    chosenQuality = sess.q;
   }
   const g = Number(sess.gen);
   enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0);
@@ -2622,6 +2878,7 @@ function stopAwayView() {
 
 function updateViewerUpload() {
   if (hosting) return;
+  enforceCap();
   if (shareState === "sharing") {
     setStatus($("viewStatus"), "hostUpload", false, { m: ((outCalls.size * quality.kbps) / 1000).toFixed(1) });
   } else if ($("viewStatus").dataset.i18n === "hostUpload") {
@@ -2695,6 +2952,10 @@ function callTarget(id) {
 async function viewerShare() {
   qualityKey = $("viewQuality").value;
   quality = QUALITIES[qualityKey];
+  chosenQuality = qualityKey;
+  lastAutoAt = 0;
+  lastLimitedAt = 0;
+  autoNoteState = null;
   const s = await captureScreen(quality, $("viewAudio").checked);
   if (!s) {
     setStatus($("viewStatus"), "shareFailed", true);
@@ -3054,8 +3315,10 @@ function connectToRoom(code) {
           return;
         }
         if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
+          roomCount = d.count;
           $("viewCount").hidden = false;
           setT($("viewCount"), "eyeCount", { n: d.count });
+          enforceCap();
           return;
         }
         if (d.closed === true) viewerEnded("roomEndedByHost");
@@ -3151,6 +3414,7 @@ function leaveRoom() {
     old.destroy();
   }
   activeGrid = null;
+  roomCount = 0;
   closeViewPanel();
   $("hostName").hidden = true;
   delete $("hostName").dataset.i18n;
@@ -3175,6 +3439,7 @@ document.addEventListener("keydown", (e) => {
   closeViewPanel();
   closeChat();
   closePanel();
+  closeSettings();
   closePipDialog();
   if (visResolve) closeVis(null);
 });
@@ -3303,11 +3568,36 @@ $("volume").addEventListener("input", (e) => {
   applyAudio();
   updateMuteBtn();
 });
+$("settingsBtn").addEventListener("click", openSettings);
+$("closeSettings").addEventListener("click", closeSettings);
+$("settingsBackdrop").addEventListener("click", closeSettings);
+$("newsOk").addEventListener("click", markNewsSeen);
+$("setTheme").addEventListener("change", (e) => {
+  settings.theme = e.target.value;
+  saveSettings();
+  applyTheme();
+});
+$("setAutoReduce").addEventListener("change", (e) => {
+  settings.autoReduce = e.target.checked;
+  saveSettings();
+});
+$("setAutoRecover").addEventListener("change", (e) => {
+  settings.autoRecover = e.target.checked;
+  saveSettings();
+});
+$("setCap").addEventListener("change", (e) => {
+  settings.capByViewers = e.target.checked;
+  saveSettings();
+  enforceCap();
+});
 $("langPt").addEventListener("click", () => setLang("pt"));
 $("langEn").addEventListener("click", () => setLang("en"));
 
 lang = detectLang();
+applyTheme();
+renderSettings();
 applyLang();
+if (!newsSeen()) $("newsBanner").hidden = false;
   let savedNick = "";
   try { savedNick = localStorage.getItem("nick") || ""; } catch (e) {}
   if (!savedNick) {
