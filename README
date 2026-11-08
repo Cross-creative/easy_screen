@@ -1,6 +1,6 @@
 Easy Screen
 
-Share a browser tab or window directly with other people, with no account, no install and no server of your own. The whole app is a single HTML file.
+Share a browser tab or window directly with other people, with no account, no install and no server of your own. Several people can share in the same room, with the host's permission. The whole app is a single HTML file.
 
 Live site: https://cross-creative.github.io/easy_screen/
 
@@ -19,17 +19,22 @@ Sharing
 3. Click "Choose a tab or window" and select what to share.
 4. Send the 6-character room code, or the link, to your viewers.
 
+You can also click "Create room without sharing" to open the room first and share later.
+
 Watching
 
 1. Open the link, or choose a nickname, type the room code on the home page and click "Join".
 2. If the video starts muted because of browser autoplay rules, click "Unmute".
+3. To share your own screen, click "Ask to share". When the host allows it, click "Share".
 
 
 Features
 
 Room codes: each host gets a random 6-character code, plus a shareable link that joins the room directly.
 
-Nickname required to host or join, with duplicate nicknames blocked inside a room.
+Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room.
+
+The viewer sees "Host: name" at the top, and the host sees a viewer counter like "3 👁".
 
 Chat: users can chat with each other. You are responsible for what you say, and the host can mute you, delete your messages or kick you.
 
@@ -41,7 +46,13 @@ Automatic reconnection: if a viewer's connection drops, the site retries up to 6
 
 Tab or window sharing with optional audio.
 
-Quality levels from 480p up to 4K, adjustable while streaming.
+Multi-sharing: viewers ask to share and the host allows, denies or revokes. Up to 4 people share at the same time, host included.
+
+Grid with every shared screen. Click a screen to enlarge it, click again to go back.
+
+Quality levels from 480p up to QHD (1440p), adjustable while streaming.
+
+Leave to menu: the host can go to the menu while the room stays open for 8 minutes, with a countdown shown to everyone, and come back with "Back to the room". Starting a new room closes the old one.
 
 Warning for the host when upload bandwidth or CPU is overloaded, with a one-click option to lower the quality.
 
@@ -73,9 +84,8 @@ Economy: 720p, 15 fps, about 0.8 Mbps
 Balanced: 720p, 24 fps, about 1.5 Mbps
 High: 1080p, 30 fps, about 3 Mbps
 QHD: 1440p, 60 fps, about 8 Mbps
-4K: 2160p, 30 fps, about 15 Mbps
 
-Example: 4 viewers at Balanced need about 6 Mbps of upload. The actual resolution also depends on the size of the shared tab or window.
+Example: 4 viewers at Balanced need about 6 Mbps of upload. Anyone who shares uploads one copy to every other person in the room, so 4 people sharing in a room of 16 can need far more. The actual resolution also depends on the size of the shared tab or window.
 
 
 Browser support
@@ -107,7 +117,7 @@ Both serve the site over HTTPS, which browsers require for screen capture.
 
 Limitations
 
-Mesh topology: the host uploads one stream per viewer. The limit is 16 viewers, but in practice it depends on the host's upload. It is best suited to small groups, roughly 3 to 6 people at higher quality levels.
+Mesh topology: everyone who shares uploads one stream per person in the room. The limit is 16 viewers, but in practice it depends on the host's upload. It is best suited to small groups, roughly 3 to 6 people at higher quality levels.
 
 Depends on the free public PeerJS server, which can be slow or unavailable.
 
@@ -117,6 +127,8 @@ Duplicate-tab detection only works within the same browser profile. Another brow
 
 Bans after a kick are temporary and can be bypassed, for example with a VPN or a different network. The IP ban may also affect other people who share the same network.
 
+If the host closes the tab, the room ends immediately. Joining another room as a viewer also closes your own room.
+
 Automatic reconnection stops after 6 failed attempts, and the viewer then has to join again.
 
 
@@ -125,6 +137,8 @@ Privacy
 No accounts, no analytics and no cookies.
 
 The browser stores only your language choice, nickname and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
+
+Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
 
 The host's browser reads each viewer's IP address only to apply a temporary ban after a kick. It is kept in memory, is never displayed and is discarded when the room ends.
 
