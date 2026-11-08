@@ -535,7 +535,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <p class="away-text" data-i18n="newsText">Novidade: agora o Tela Fácil tem configurações! Toque no ⚙ no canto da tela para mudar idioma, tema e a qualidade automática.</p>
     <button id="newsOk" class="primary" data-i18n="newsOk">Entendi</button>
   </div>
-  <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
+  <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
   <div class="card highlight" id="awayHome" hidden>
     <p class="away-text" id="awayHomeText"></p>
     <button id="backToRoom" class="primary" data-i18n="backToRoom">Voltar para a sala</button>
@@ -555,7 +555,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       </div>
       <div class="row">
         <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
-        <button id="createRoom" data-i18n="createRoomOnly">Criar sala sem compartilhar (BETA)</button>
+        <button id="createRoom" data-i18n="createRoomOnly">Criar sala (BETA)</button>
       </div>
     </div>
 
@@ -954,11 +954,11 @@ const I18N = {
     title: "Tela Fácil",
     heading: "Tela Fácil",
     sub: "Transmissão direta entre navegadores, sem cadastro.",
-    about: "Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.",
+    about: "Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.",
     shareMyScreen: "Compartilhar minha tela",
     shareAudio: "Compartilhar áudio",
     pickSurface: "Escolher aba ou janela",
-    createRoomOnly: "Criar sala sem compartilhar (BETA)",
+    createRoomOnly: "Criar sala (BETA)",
     watchWithCode: "Assistir com um código",
     codePlaceholder: "CÓDIGO",
     join: "Entrar",
@@ -1103,11 +1103,11 @@ const I18N = {
     title: "Easy Screen",
     heading: "Easy Screen",
     sub: "Direct browser-to-browser streaming, no sign-up.",
-    about: "Create a room and share a tab or window from your computer with up to 16 people, straight from the browser. People in the room can also ask to share, with your permission. No sign-up or install needed: send the code or the link and whoever receives it watches right away, with chat included.",
+    about: "Create a room and share a tab or window from your computer with up to 16 people, straight from the browser. In rooms created with “Create room (BETA)”, people in the room can also ask to share, with your permission. No sign-up or install needed: send the code or the link and whoever receives it watches right away, with chat included.",
     shareMyScreen: "Share my screen",
     shareAudio: "Share audio",
     pickSurface: "Choose a tab or window",
-    createRoomOnly: "Create room without sharing (BETA)",
+    createRoomOnly: "Create room (BETA)",
     watchWithCode: "Watch with a code",
     codePlaceholder: "CODE",
     join: "Join",
@@ -1266,6 +1266,8 @@ let lastLimitedAt = 0;
 let autoNoteState = null;
 let roomCount = 0;
 let lastWarnKey = "";
+let roomMulti = false;
+let viewMulti = false;
 let viewers = new Map();
 let currentCode = "";
 let viewerTimeout = null;
@@ -1743,14 +1745,14 @@ function revokeShare(id) {
 }
 
 function onShareRequest(v) {
-  if (v.canShare || v.wantsShare) return;
+  if (!roomMulti || v.canShare || v.wantsShare) return;
   v.wantsShare = true;
   renderRequests();
   notify("share-" + v.nick, t("title"), t("requestText", { name: v.nick }));
 }
 
 function onShareStart(id, v) {
-  if (!v.canShare) {
+  if (!roomMulti || !v.canShare) {
     if (v.conn.open) v.conn.send({ shareDenied: "noperm" });
     return;
   }
@@ -2255,6 +2257,7 @@ async function startHost(share) {
   stopPendingResume(true);
   if (hosting) closeRoom();
   roomPrivate = vis === "private";
+  roomMulti = !share;
   setT($("roomType"), roomPrivate ? "roomPrivateBadge" : "roomPublicBadge");
   setT($("hostSelfName"), "hostLabel", { name: myNick });
   hosting = true;
@@ -2363,6 +2366,7 @@ function closeRoom() {
   approvals.clear();
   allowed.clear();
   roomPrivate = false;
+  roomMulti = false;
   succSig = "";
   clearHostSession();
   $("hostNote").hidden = true;
@@ -2644,6 +2648,7 @@ function saveHostSession(closing) {
       code: currentCode,
       gen: hostGen,
       priv: roomPrivate,
+      multi: roomMulti,
       nick: myNick,
       q: qualityKey,
       allowed: [...allowed],
@@ -2666,6 +2671,7 @@ function syncSuccessor() {
   });
   const st = {
     priv: roomPrivate,
+    multi: roomMulti,
     allowed: [...allowed],
     grants: [...grants],
     bans: [...bans].filter((b) => b[1] > Date.now()),
@@ -2741,7 +2747,7 @@ function admit(conn, ctx) {
     nick: ctx.nick,
     muted: !!(ctx.vid && mutedVids.has(ctx.vid)),
     lastMsg: 0,
-    canShare: !!(ctx.vid && grants.has(ctx.vid)),
+    canShare: roomMulti && !!(ctx.vid && grants.has(ctx.vid)),
     wantsShare: false,
     sharing: false
   };
@@ -2751,6 +2757,7 @@ function admit(conn, ctx) {
     yourNick: ctx.nick,
     sharers: sharerList(),
     canShare: v.canShare,
+    multi: roomMulti,
     away: away ? Math.max(0, away.deadline - Date.now()) : null
   });
   if (v.muted) conn.send({ muted: true });
@@ -2871,6 +2878,7 @@ peer.on("disconnected", () => {
 
 function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
   roomPrivate = priv;
+  if (extra) roomMulti = extra.multi === true;
   takeoverMode = noteKey === "nowHost";
   allowed.clear();
   allowedList.forEach((x) => allowed.add(x));
@@ -2944,6 +2952,7 @@ function resumeNow() {
     chosenQuality = sess.q;
   }
   const g = Number(sess.gen);
+  roomMulti = sess.multi === true;
   enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0);
 }
 
@@ -3075,7 +3084,9 @@ function updateViewerUpload() {
 
 function updateShareUI() {
   const btn = $("shareAction");
-  btn.hidden = !canCapture;
+  btn.hidden = !canCapture || !viewMulti;
+  $("viewShareOpts").hidden = !canCapture || !viewMulti;
+  $("openViewOptions").hidden = !canCapture || !viewMulti;
   btn.disabled = false;
   if (shareState === "none") {
     setT(btn, "reqShare");
@@ -3374,6 +3385,7 @@ function connectToRoom(code) {
           iAmSucc = false;
           succState = null;
           viewerLive = true;
+          viewMulti = d.multi === true;
           shareState = d.canShare === true ? "allowed" : "none";
           updateShareUI();
           if ("away" in d) startAwayView(d.away);
@@ -3388,6 +3400,7 @@ function connectToRoom(code) {
         if (d.succState && typeof d.succState === "object") {
           succState = {
             priv: d.succState.priv === true,
+            multi: d.succState.multi === true,
             allowed: strList(d.succState.allowed),
             grants: strList(d.succState.grants),
             bans: banList(d.succState.bans),
@@ -3605,6 +3618,7 @@ function leaveRoom() {
   }
   activeGrid = null;
   roomCount = 0;
+  viewMulti = false;
   closeViewPanel();
   $("hostName").hidden = true;
   delete $("hostName").dataset.i18n;
