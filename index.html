@@ -423,6 +423,28 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   z-index: 10;
 }
 .panel-body .check { align-items: flex-start; }
+.alerts {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 25;
+  pointer-events: none;
+}
+.alerts > div:empty { display: none; }
+.alerts #joinRequests, .alerts #shareRequests { display: flex; flex-direction: column; gap: 8px; }
+.alerts .request, .alerts .warn {
+  margin: 0;
+  pointer-events: auto;
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
 .bar {
   position: relative;
   display: flex;
@@ -505,7 +527,6 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <span data-i18n="unofficial">Atenção: este não é o site oficial. Use apenas o endereço oficial:</span>
   <a id="officialLink" rel="noopener noreferrer"></a>
 </div>
-  <div id="joinRequests"></div>
   <h1 data-i18n="heading">Tela Fácil</h1>
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
@@ -566,11 +587,6 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <button id="openOptions" data-i18n="options">Opções</button>
       <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
     </div>
-    <div id="shareRequests"></div>
-    <div class="warn" id="hostWarn" hidden>
-      <span id="hostWarnText"></span>
-      <button id="lowerQ" data-i18n="lowerQuality">Reduzir qualidade</button>
-    </div>
     <div class="stage" id="hostStage">
       <div class="tiles" id="hostGrid"></div>
       <div class="overlay" id="hostOverlay" data-i18n="nobodySharing">Ninguém está compartilhando.</div>
@@ -628,7 +644,6 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <button id="openViewOptions" data-i18n="options">Opções</button>
 </div>
 <div class="warn" id="awayBanner" hidden><span id="awayText"></span></div>
-<div class="warn" id="viewWarn" hidden><span id="viewWarnText"></span></div>
     <div class="stage" id="viewStage">
       <div class="tiles" id="viewGrid"></div>
       <div class="overlay" id="viewOverlay" data-i18n="connecting">Conectando...</div>
@@ -713,6 +728,16 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
   </div>
 
+  <div class="alerts" id="alerts">
+    <div id="joinRequests"></div>
+    <div id="shareRequests"></div>
+    <div class="warn" id="hostWarn" hidden>
+      <span id="hostWarnText"></span>
+      <button id="lowerQ" data-i18n="lowerQuality">Reduzir qualidade</button>
+    </div>
+    <div class="warn" id="viewWarn" hidden><span id="viewWarnText"></span></div>
+  </div>
+
   <button class="gear" id="settingsBtn" type="button">⚙</button>
 
   <div class="backdrop" id="settingsBackdrop" hidden></div>
@@ -743,6 +768,8 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <p class="hint" data-i18n="setAutoRecoverHint">Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.</p>
       <label class="check"><input type="checkbox" id="setCap"> <span data-i18n="setCap">Limitar a qualidade pelo número de espectadores</span></label>
       <p class="hint" data-i18n="setCapHint">Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.</p>
+      <label class="check"><input type="checkbox" id="setNotify"> <span data-i18n="setNotify">Notificações do sistema</span></label>
+      <p class="hint" id="setNotifyHint" data-i18n="setNotifyHint">Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.</p>
     </div>
   </aside>
 </main>
@@ -787,7 +814,8 @@ function loadSettings() {
     theme: s.theme === "light" || s.theme === "dark" ? s.theme : "auto",
     autoReduce: s.autoReduce !== false,
     autoRecover: s.autoRecover !== false,
-    capByViewers: s.capByViewers !== false
+    capByViewers: s.capByViewers !== false,
+    notify: s.notify !== false
   };
 }
 
@@ -819,6 +847,36 @@ function renderSettings() {
   $("setAutoReduce").checked = settings.autoReduce;
   $("setAutoRecover").checked = settings.autoRecover;
   $("setCap").checked = settings.capByViewers;
+  $("setNotify").checked = settings.notify;
+  const hint = $("setNotifyHint");
+  if (!("Notification" in window)) {
+    setT(hint, "notifyUnsupported");
+  } else if (Notification.permission === "denied") {
+    setT(hint, "notifyDenied");
+  } else {
+    setT(hint, "setNotifyHint");
+  }
+}
+
+function askNotifyPermission() {
+  if (!settings.notify || !("Notification" in window) || Notification.permission !== "default") return;
+  try {
+    const r = Notification.requestPermission();
+    if (r && r.then) r.then(renderSettings, () => {});
+  } catch (e) {}
+}
+
+function notify(tag, title, body) {
+  if (!settings.notify || !("Notification" in window) || Notification.permission !== "granted") return;
+  if (document.hasFocus() && !document.hidden) return;
+  try {
+    const n = new Notification(title, { body: body, tag: tag });
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
+    setTimeout(() => n.close(), 20000);
+  } catch (e) {}
 }
 
 function openSettings() {
@@ -868,6 +926,7 @@ function refreshQualityLimits() {
 function autoNote(key, q) {
   autoNoteState = { key: key, q: q, until: Date.now() + 12000 };
   showAutoNote();
+  notify("auto", t("title"), t(key, { q: t("q_" + q) }));
 }
 
 function showAutoNote() {
@@ -1034,7 +1093,11 @@ const I18N = {
     newsOk: "Entendi",
     tipPip: "Modo Retrato (Picture in Picture)",
     tipFs: "Tela cheia",
-    tipAudio: "Áudio"
+    tipAudio: "Áudio",
+    setNotify: "Notificações do sistema",
+    setNotifyHint: "Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.",
+    notifyDenied: "As notificações estão bloqueadas no navegador. Libere nas permissões do site para receber os avisos.",
+    notifyUnsupported: "Este navegador não suporta notificações do sistema."
   },
   en: {
     title: "Easy Screen",
@@ -1179,7 +1242,11 @@ const I18N = {
     newsOk: "Got it",
     tipPip: "Picture Mode (Picture in Picture)",
     tipFs: "Fullscreen",
-    tipAudio: "Audio"
+    tipAudio: "Audio",
+    setNotify: "System notifications",
+    setNotifyHint: "Shows an alert in the corner of your computer screen (requests to join or share, and upload problems) when the room tab is in the background.",
+    notifyDenied: "Notifications are blocked in the browser. Allow them in the site permissions to receive alerts.",
+    notifyUnsupported: "This browser does not support system notifications."
   }
 };
 
@@ -1198,6 +1265,7 @@ let lastAutoAt = 0;
 let lastLimitedAt = 0;
 let autoNoteState = null;
 let roomCount = 0;
+let lastWarnKey = "";
 let viewers = new Map();
 let currentCode = "";
 let viewerTimeout = null;
@@ -1678,6 +1746,7 @@ function onShareRequest(v) {
   if (v.canShare || v.wantsShare) return;
   v.wantsShare = true;
   renderRequests();
+  notify("share-" + v.nick, t("title"), t("requestText", { name: v.nick }));
 }
 
 function onShareStart(id, v) {
@@ -2166,6 +2235,7 @@ function closeVis(val) {
 
 async function startHost(share) {
   if (!requireNick()) return;
+  askNotifyPermission();
   qualityKey = $("quality").value;
   quality = QUALITIES[qualityKey];
   chosenQuality = qualityKey;
@@ -2468,6 +2538,8 @@ async function checkLoad() {
     vars = { m: estimate.toFixed(0) };
   }
   if (key) setT(text, key, vars);
+  if ((key === "warnBandwidth" || key === "warnCpu") && key !== lastWarnKey) notify("warn", t("title"), t(key));
+  lastWarnKey = key;
   if (hosting) $("lowerQ").hidden = qualityKey === ORDER[0];
   box.hidden = !key || !stream;
 }
@@ -2653,6 +2725,7 @@ function requestEntry(conn, ctx) {
   approvals.set(conn.peer, { conn, ctx, timer });
   conn.send({ waiting: true });
   renderJoinRequests();
+  notify("join-" + conn.peer, t("title"), t("joinRequestText", { name: ctx.nick }));
 }
 
 function admit(conn, ctx) {
@@ -3064,6 +3137,7 @@ function callTarget(id) {
 }
 
 async function viewerShare() {
+  askNotifyPermission();
   qualityKey = $("viewQuality").value;
   quality = QUALITIES[qualityKey];
   chosenQuality = qualityKey;
@@ -3713,6 +3787,12 @@ $("setAutoReduce").addEventListener("change", (e) => {
 $("setAutoRecover").addEventListener("change", (e) => {
   settings.autoRecover = e.target.checked;
   saveSettings();
+});
+$("setNotify").addEventListener("change", (e) => {
+  settings.notify = e.target.checked;
+  saveSettings();
+  askNotifyPermission();
+  renderSettings();
 });
 $("setCap").addEventListener("change", (e) => {
   settings.capByViewers = e.target.checked;
