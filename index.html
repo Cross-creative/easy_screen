@@ -212,7 +212,22 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
   grid-auto-rows: minmax(0, 1fr);
 }
-.tiles.has-big { grid-template-rows: minmax(0, 2fr); }
+.tiles.has-big { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.tiles.has-big .tile:not(.big) { display: none; }
+.tile .back-grid {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.85rem;
+  z-index: 2;
+}
+.tile.big .back-grid { display: block; }
 .tile {
   position: relative;
   min-width: 0;
@@ -609,6 +624,7 @@ const I18N = {
     leave: "Sair",
     mute: "Silenciar",
     unmute: "Ativar som",
+    backToGrid: "✕ Ver todas as telas",
     hostLabel: "Host: {name}",
     viewersMany: "{n} 👁",
     connecting: "Conectando...",
@@ -716,6 +732,7 @@ const I18N = {
     leave: "Leave",
     mute: "Mute",
     unmute: "Unmute",
+    backToGrid: "✕ View all screens",
     hostLabel: "Host: {name}",
     viewersMany: "{n} 👁",
     connecting: "Connecting...",
@@ -883,7 +900,7 @@ function refreshOverlays() {
 }
 
 function toggleBig(el) {
-  if (tiles.size < 2 || !activeGrid) return;
+  if (!activeGrid) return;
   const was = el.classList.contains("big");
   activeGrid.querySelectorAll(".tile.big").forEach((x) => x.classList.remove("big"));
   if (!was) el.classList.add("big");
@@ -901,8 +918,18 @@ function addTile(id, nick, mediaStream, local) {
     video.playsInline = true;
     const tag = document.createElement("span");
     tag.className = "tag";
-    el.append(video, tag);
-    el.addEventListener("click", () => toggleBig(el));
+    const backBtn = document.createElement("button");
+    backBtn.type = "button";
+    backBtn.className = "back-grid";
+    setT(backBtn, "backToGrid");
+    backBtn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      toggleBig(el);
+    });
+    el.append(video, tag, backBtn);
+    el.addEventListener("click", () => {
+      if (tiles.size >= 2 && !el.classList.contains("big")) toggleBig(el);
+    });
     activeGrid.appendChild(el);
     t = { el, video, tag, local };
     tiles.set(id, t);
