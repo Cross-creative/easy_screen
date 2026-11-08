@@ -724,6 +724,9 @@ const I18N = {
     pipPick: "Escolha a tela para o Modo Retrato",
     nowHost: "O host saiu. Agora você é o host da sala.",
     resumedHost: "Sala retomada. Quem estava na sala reconecta sozinho.",
+    resumeHome: "Sua sala {code} perdeu a conexão com você. Volte em {time} ou outra pessoa assume a sala.",
+    hostLost: "O host saiu ou perdeu a conexão. Se ele não voltar em {time}, outra pessoa assume a sala.",
+    hostHandover: "O host não voltou. Passando o comando para outra pessoa...",
     unofficial: "Atenção: este não é o site oficial. Use apenas o endereço oficial:",
     roomFull: "A sala está cheia.",
     duplicateTab: "Você já está assistindo esta sala em outra aba. Feche a outra aba para assistir aqui.",
@@ -845,6 +848,9 @@ const I18N = {
     pipPick: "Choose the screen for Picture Mode",
     nowHost: "The host left. You are now the host of this room.",
     resumedHost: "Room resumed. People who were in the room will reconnect on their own.",
+    resumeHome: "Your room {code} lost its connection to you. Come back within {time} or someone else takes over the room.",
+    hostLost: "The host left or lost connection. If they do not return within {time}, someone else takes over the room.",
+    hostHandover: "The host did not return. Handing the room over to someone else...",
     unofficial: "Warning: this is not the official site. Only use the official address:",
     roomFull: "The room is full.",
     duplicateTab: "You are already watching this room in another tab. Close the other tab to watch here.",
@@ -937,6 +943,8 @@ let takeoverTimer = null;
 let iAmSucc = false;
 let succState = null;
 let succSig = "";
+let pendingResume = null;
+let lostView = null;
 const TAKEOVER_MS = 10000;
 const RESUME_MS = 10000;
 const HS_KEY = "hostSession";
@@ -1814,6 +1822,7 @@ async function startHost(share) {
     if (s) s.getTracks().forEach((tr) => tr.stop());
     return;
   }
+  stopPendingResume(true);
   if (hosting) closeRoom();
   roomPrivate = vis === "private";
   setT($("roomType"), roomPrivate ? "roomPrivateBadge" : "roomPublicBadge");
@@ -1897,6 +1906,10 @@ function goAway() {
 }
 
 function backToRoom() {
+  if (pendingResume) {
+    resumeNow();
+    return;
+  }
   if (!away) return;
   stopAway();
   show(hostView);
@@ -2380,6 +2393,39 @@ function enterHost(code, priv, allowedList, grantList, noteKey) {
   startPeerHost(0, code);
 }
 
+function stopPendingResume(clear) {
+  if (!pendingResume) return;
+  clearInterval(pendingResume.tick);
+  pendingResume = null;
+  $("awayHome").hidden = true;
+  if (clear) clearHostSession();
+}
+
+function tickResume() {
+  if (!pendingResume) return;
+  const left = pendingResume.deadline - Date.now();
+  if (left <= 0) {
+    stopPendingResume(true);
+    return;
+  }
+  $("awayHome").hidden = false;
+  setT($("awayHomeText"), "resumeHome", { code: pendingResume.sess.code, time: fmtTime(left) });
+}
+
+function resumeNow() {
+  const r = pendingResume;
+  if (!r) return;
+  stopPendingResume(false);
+  const sess = r.sess;
+  myNick = cleanNick(sess.nick);
+  $("nick").value = myNick;
+  if (QUALITIES[sess.q]) {
+    qualityKey = sess.q;
+    quality = QUALITIES[sess.q];
+  }
+  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost");
+}
+
 function tryResumeHost(urlCode) {
   let sess = null;
   try { sess = JSON.parse(localStorage.getItem(HS_KEY) || "null"); } catch (e) {}
@@ -2393,13 +2439,8 @@ function tryResumeHost(urlCode) {
   }
   if (!(sess.closing === true || age > 6000)) return false;
   if (urlCode && urlCode !== sess.code) return false;
-  myNick = nick;
-  $("nick").value = nick;
-  if (QUALITIES[sess.q]) {
-    qualityKey = sess.q;
-    quality = QUALITIES[sess.q];
-  }
-  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost");
+  pendingResume = { sess, deadline: Number(sess.t) + RESUME_MS, tick: setInterval(tickResume, 1000) };
+  tickResume();
   return true;
 }
 
@@ -2461,7 +2502,26 @@ function renderAwayView() {
   setT($("awayText"), "awayViewer", { time: fmtTime(awayView.deadline - Date.now()) });
 }
 
+function renderLostView() {
+  if (!lostView) return;
+  const left = lostView.deadline - Date.now();
+  $("awayBanner").hidden = false;
+  if (left > 0) {
+    setT($("awayText"), "hostLost", { time: fmtTime(left) });
+  } else {
+    setT($("awayText"), "hostHandover");
+  }
+}
+
+function startLostView() {
+  if (lostView || awayView) return;
+  lostView = { deadline: Date.now() + TAKEOVER_MS, tick: setInterval(renderLostView, 1000) };
+  renderLostView();
+}
+
 function stopAwayView() {
+  if (lostView) clearInterval(lostView.tick);
+  lostView = null;
   if (awayView) clearInterval(awayView.tick);
   awayView = null;
   $("awayBanner").hidden = true;
@@ -2698,6 +2758,7 @@ function joinRoom(code) {
     return;
   }
   if (!requireNick()) return;
+  stopPendingResume(true);
   if (hosting) closeRoom();
   activeGrid = $("viewGrid");
   clearTiles();
@@ -2888,11 +2949,13 @@ function connectToRoom(code) {
     conn.on("close", () => {
       if (peer !== p || blockedTab) return;
       maybeStartTakeover();
+      startLostView();
       scheduleRetry();
     });
     conn.on("error", () => {
       if (peer !== p || blockedTab) return;
       maybeStartTakeover();
+      startLostView();
       scheduleRetry();
     });
     viewerTimeout = setTimeout(() => {
