@@ -1809,6 +1809,8 @@ async function startHost(share) {
   if (!requireNick()) return;
   qualityKey = $("quality").value;
   quality = QUALITIES[qualityKey];
+  const vis = await askVisibility();
+  if (!vis) return;
   let s = null;
   if (share) {
     s = await captureScreen(quality, $("audio").checked);
@@ -1816,11 +1818,6 @@ async function startHost(share) {
       setStatus($("homeStatus"), "shareFailed", true);
       return;
     }
-  }
-  const vis = await askVisibility();
-  if (!vis) {
-    if (s) s.getTracks().forEach((tr) => tr.stop());
-    return;
   }
   stopPendingResume(true);
   if (hosting) closeRoom();
