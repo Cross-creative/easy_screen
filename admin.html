@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel de denúncias</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1c1e21;
+  --muted: #62666d;
+  --border: #dfe2e6;
+  --accent: #2563eb;
+  --accent-text: #ffffff;
+  --danger: #c62828;
+  --new: #2563eb;
+  --analyzing: #b26a00;
+  --resolved: #2e7d32;
+  --dismissed: #62666d;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --card: #1e2126;
+    --text: #e8eaed;
+    --muted: #9aa0a8;
+    --border: #343941;
+    --accent: #5b8def;
+    --accent-text: #0b1220;
+    --danger: #ef6a6a;
+    --new: #7aa2ff;
+    --analyzing: #f0b34a;
+    --resolved: #6fcf74;
+    --dismissed: #9aa0a8;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 1.4rem; }
+.sub { margin: 0 0 20px; color: var(--muted); }
+button, select, input, textarea { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+button { cursor: pointer; font-weight: 600; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+button.danger { color: var(--danger); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+.bar input[type="search"] { flex: 1 1 200px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border-radius: 999px; padding: 5px 12px; font-size: 0.85rem; }
+button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.badge { font-size: 0.75rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.badge.new { color: var(--new); }
+.badge.analyzing { color: var(--analyzing); }
+.badge.resolved { color: var(--resolved); }
+.badge.dismissed { color: var(--dismissed); }
+.who { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: 0.82rem; overflow-wrap: anywhere; }
+.text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 0.85rem; max-height: 180px; overflow: auto; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions select { flex: 1 1 140px; }
+.card textarea { width: 100%; resize: vertical; min-height: 56px; }
+.empty, .msg { color: var(--muted); padding: 24px 0; text-align: center; }
+.err { color: var(--danger); }
+.login { max-width: 420px; margin: 12vh auto 0; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; text-align: center; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="login" id="login">
+    <h1>Painel de denúncias</h1>
+    <p class="sub">Acesso restrito ao administrador.</p>
+    <button class="primary" id="signIn">Entrar com Google</button>
+    <p class="err" id="loginErr" hidden></p>
+  </div>
+
+  <div id="panel" hidden>
+    <h1>Painel de denúncias</h1>
+    <p class="sub"><span id="who"></span> · <button id="signOut" type="button">Sair</button></p>
+    <div class="bar">
+      <input type="search" id="q" placeholder="Buscar por apelido, identificador, sala ou texto">
+      <button id="group" type="button" aria-pressed="false">Agrupar por pessoa</button>
+    </div>
+    <div class="bar chips" id="chips"></div>
+    <div class="msg" id="msg">Carregando...</div>
+    <div class="grid" id="grid"></div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  appId: ""
+};
+const ADMIN_EMAIL = "";
+
+const STATUS = { new: "Nova", analyzing: "Analisando", resolved: "Resolvida", dismissed: "Descartada" };
+const $ = (id) => document.getElementById(id);
+
+let all = [];
+let filter = "all";
+let grouped = false;
+let unsub = null;
+
+if (!FIREBASE_CONFIG.projectId || !ADMIN_EMAIL) {
+  $("loginErr").hidden = false;
+  $("loginErr").textContent = "Configure FIREBASE_CONFIG e ADMIN_EMAIL neste arquivo antes de usar.";
+  $("signIn").disabled = true;
+} else {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  $("signIn").addEventListener("click", async () => {
+    $("loginErr").hidden = true;
+    try {
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    } catch (e) {
+      $("loginErr").hidden = false;
+      $("loginErr").textContent = "Não foi possível entrar: " + (e.code || e.message);
+    }
+  });
+  $("signOut").addEventListener("click", () => auth.signOut());
+
+  auth.onAuthStateChanged((user) => {
+    if (unsub) {
+      unsub();
+      unsub = null;
+    }
+    if (!user) {
+      $("login").hidden = false;
+      $("panel").hidden = true;
+      return;
+    }
+    if (user.email !== ADMIN_EMAIL || !user.emailVerified) {
+      $("loginErr").hidden = false;
+      $("loginErr").textContent = "Esta conta (" + user.email + ") não tem acesso.";
+      auth.signOut();
+      return;
+    }
+    $("login").hidden = true;
+    $("panel").hidden = false;
+    $("who").textContent = user.email;
+    $("msg").hidden = false;
+    $("msg").textContent = "Carregando...";
+    unsub = db.collection("reports").orderBy("createdAt", "desc").limit(500).onSnapshot(
+      (snap) => {
+        all = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+        render();
+      },
+      (e) => {
+        $("msg").hidden = false;
+        $("msg").className = "msg err";
+        $("msg").textContent = "Erro ao ler as denúncias: " + (e.code || e.message);
+      }
+    );
+  });
+
+  function update(id, data) {
+    return db.collection("reports").doc(id).update(data);
+  }
+
+  function remove(id) {
+    return db.collection("reports").doc(id).delete();
+  }
+
+  window.__update = update;
+  window.__remove = remove;
+}
+
+function fmt(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? "-" : d.toLocaleString("pt-BR");
+}
+
+function matches(r, q) {
+  if (!q) return true;
+  const hay = [r.target, r.targetId, r.prev, r.room, r.text, r.by].join(" ").toLowerCase();
+  return hay.includes(q);
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function renderChips() {
+  const box = $("chips");
+  box.innerHTML = "";
+  const counts = { all: all.length };
+  Object.keys(STATUS).forEach((k) => {
+    counts[k] = all.filter((r) => (r.status || "new") === k).length;
+  });
+  [["all", "Todas"]].concat(Object.entries(STATUS)).forEach(([k, label]) => {
+    const b = el("button", "chip", label + " (" + counts[k] + ")");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(filter === k));
+    b.addEventListener("click", () => {
+      filter = k;
+      render();
+    });
+    box.appendChild(b);
+  });
+}
+
+function card(r, perTarget) {
+  const c = el("div", "card");
+  const top = el("div", "top");
+  top.appendChild(el("span", "who", r.target || "(sem apelido)"));
+  const st = r.status && STATUS[r.status] ? r.status : "new";
+  top.appendChild(el("span", "badge " + st, STATUS[st]));
+  c.appendChild(top);
+  let meta = fmt(r.createdAt) + " · sala " + (r.room || "-");
+  if (r.targetId) meta += " · ID " + r.targetId + " (" + (perTarget[r.targetId] || 1) + " denúncia" + ((perTarget[r.targetId] || 1) > 1 ? "s" : "") + ")";
+  c.appendChild(el("div", "meta", meta));
+  if (r.prev) c.appendChild(el("div", "meta", "Apelidos anteriores: " + r.prev));
+  c.appendChild(el("div", "meta", "Denunciante: " + (r.by || "-")));
+  c.appendChild(el("div", "text", r.text || ""));
+  if (r.chat) c.appendChild(el("div", "chat", r.chat));
+  const notes = el("textarea");
+  notes.placeholder = "Suas notas";
+  notes.value = r.notes || "";
+  notes.addEventListener("blur", () => {
+    if ((r.notes || "") !== notes.value) window.__update(r.id, { notes: notes.value.slice(0, 2000) });
+  });
+  c.appendChild(notes);
+  const actions = el("div", "actions");
+  const sel = el("select");
+  Object.entries(STATUS).forEach(([k, label]) => {
+    const o = el("option", "", label);
+    o.value = k;
+    sel.appendChild(o);
+  });
+  sel.value = st;
+  sel.addEventListener("change", () => window.__update(r.id, { status: sel.value }));
+  const del = el("button", "danger", "Excluir");
+  del.type = "button";
+  del.addEventListener("click", () => {
+    if (confirm("Excluir esta denúncia?")) window.__remove(r.id);
+  });
+  actions.append(sel, del);
+  c.appendChild(actions);
+  return c;
+}
+
+function render() {
+  renderChips();
+  const q = $("q").value.trim().toLowerCase();
+  const perTarget = {};
+  all.forEach((r) => {
+    if (r.targetId) perTarget[r.targetId] = (perTarget[r.targetId] || 0) + 1;
+  });
+  let list = all.filter((r) => (filter === "all" || (r.status || "new") === filter) && matches(r, q));
+  if (grouped) {
+    list = list.slice().sort((a, b) => (b.targetId ? perTarget[b.targetId] : 0) - (a.targetId ? perTarget[a.targetId] : 0) || String(a.targetId).localeCompare(String(b.targetId)));
+  }
+  const grid = $("grid");
+  grid.innerHTML = "";
+  list.forEach((r) => grid.appendChild(card(r, perTarget)));
+  $("msg").hidden = list.length > 0;
+  $("msg").className = "msg";
+  $("msg").textContent = all.length ? "Nenhuma denúncia com esse filtro." : "Nenhuma denúncia ainda.";
+}
+
+$("q").addEventListener("input", () => render());
+$("group").addEventListener("click", () => {
+  grouped = !grouped;
+  $("group").setAttribute("aria-pressed", String(grouped));
+  render();
+});
+</script>
+</body>
+</html>
