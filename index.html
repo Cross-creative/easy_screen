@@ -334,7 +334,16 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .linkbtn:hover { color: var(--text); }
 #reportDialog input[type="text"], #reportDialog textarea { width: 100%; box-sizing: border-box; text-transform: none; letter-spacing: normal; margin-bottom: 8px; }
 #reportDialog textarea { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; resize: vertical; }
-#reportDialog select { width: 100%; margin-bottom: 8px; }
+#reportDialog .rwho { margin-bottom: 8px; }
+#reportDialog .rgroups { max-height: 190px; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+#reportDialog details { border: 1px solid var(--border); border-radius: 10px; }
+#reportDialog summary { padding: 8px 12px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+#reportDialog .rp { display: block; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; font-weight: 500; padding: 8px 12px; }
+#reportDialog .rp[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
+#reportDialog.done > *:not(#reportDoneMsg) { display: none !important; }
+#reportDoneMsg { background: rgba(46, 160, 67, 0.16); color: #2e7d32; border: 1px solid #2e7d32; border-radius: 10px; padding: 18px; text-align: center; font-weight: 600; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #reportDoneMsg { color: #6fcf74; border-color: #6fcf74; } }
+:root[data-theme="dark"] #reportDoneMsg { color: #6fcf74; border-color: #6fcf74; }
 #reportDialog .check { display: flex; gap: 8px; align-items: center; font-size: 0.9rem; margin-bottom: 8px; }
 #reportDialog .check.off { opacity: 0.45; filter: grayscale(1); cursor: not-allowed; }
 #reportDialog .hint { margin: 0 0 10px; font-size: 0.8rem; color: var(--muted); }
@@ -758,11 +767,15 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <h2 id="reportTitle" data-i18n="reportTitle">Denunciar uso indevido</h2>
     <p data-i18n="reportIntro">Preencha o que aconteceu e escolha como enviar. A denúncia vai para o responsável pelo site.</p>
     <input type="text" id="reportCode" maxlength="6" autocomplete="off" data-i18n-ph="reportCodePh" placeholder="Código da sala">
-    <select id="reportWho"></select>
+    <div class="rwho" id="reportWhoBox" hidden>
+      <div class="hint" data-i18n="reportWho">Quem você está denunciando?</div>
+      <div class="rgroups" id="reportGroups"></div>
+    </div>
     <input type="text" id="reportNick" maxlength="40" autocomplete="off" data-i18n-ph="reportNickPh" placeholder="Apelido de quem você está denunciando">
     <textarea id="reportText" rows="4" maxlength="1000" data-i18n-ph="reportTextPh" placeholder="O que aconteceu?"></textarea>
     <label class="check" id="reportChatWrap"><input type="checkbox" id="reportChat"> <span data-i18n="reportChatOpt">Incluir as últimas mensagens do chat da sala</span></label>
     <div class="status" id="reportStatus" hidden></div>
+    <div id="reportDoneMsg" hidden></div>
     <p class="hint" id="reportAddr"></p>
     <div class="row">
       <button id="reportSend" type="button" class="primary" data-i18n="reportSend" hidden>Enviar denúncia</button>
@@ -1262,7 +1275,7 @@ const I18N = {
     ipLink: "Sobre o seu IP",
     termsLink: "Termos de uso",
     termsTitle: "Termos de uso",
-    termsBody: "1. O Tela Fácil é gratuito e oferecido como está, sem garantia de funcionamento ou disponibilidade.\n2. Você é responsável pelo que compartilha, escreve e assiste. Não use o site para conteúdo ilegal, que viole direitos autorais ou a privacidade de outras pessoas, nem para violência, assédio, golpes ou qualquer conteúdo que envolva a exploração de menores.\n3. Compartilhe apenas o que você tem direito de compartilhar. Antes de transmitir, feche senhas, e-mails e dados pessoais que apareçam na tela.\n4. O vídeo, o áudio e o chat vão direto entre os navegadores. O site não grava nem consegue ver esse conteúdo, por isso quem cria a sala é o responsável por moderá-la (silenciar, expulsar e recusar entradas).\n5. Quem participa de uma sala pode ver o IP público das outras pessoas. Veja “Sobre o seu IP”.\n6. O autor pode alterar estes termos ou tirar o site do ar a qualquer momento.\n7. Para denunciar um uso indevido, use o botão “Denunciar uso indevido” no rodapé. A denúncia inclui o código da sala, o apelido e o identificador da pessoa denunciada, os apelidos que ela usou na sala, o seu identificador, o seu relato e, só se você marcar, as últimas mensagens do chat.\n8. Cada navegador tem um identificador aleatório, guardado no seu aparelho, usado para banimentos temporários e para reconhecer a mesma pessoa em denúncias. Ele não revela quem você é.\n9. As denúncias enviadas pelo botão do site ficam num banco de dados privado (Google Firebase), que só o autor acessa, e são usadas apenas para analisar o caso e moderar o uso. O autor as apaga depois de analisadas. Denúncias enviadas por e-mail ficam na caixa de entrada do autor.\n10. Denúncias falsas ou em excesso podem ser ignoradas.",
+    termsBody: "1. O Tela Fácil é gratuito e oferecido como está, sem garantia de funcionamento ou disponibilidade.\n2. Você é responsável pelo que compartilha, escreve e assiste. Não use o site para conteúdo ilegal, que viole direitos autorais ou a privacidade de outras pessoas, nem para violência, assédio, golpes ou qualquer conteúdo que envolva a exploração de menores.\n3. Compartilhe apenas o que você tem direito de compartilhar. Antes de transmitir, feche senhas, e-mails e dados pessoais que apareçam na tela.\n4. O vídeo, o áudio e o chat vão direto entre os navegadores. O site não grava nem consegue ver esse conteúdo, por isso quem cria a sala é o responsável por moderá-la (silenciar, expulsar e recusar entradas).\n5. Quem participa de uma sala pode ver o IP público das outras pessoas. Veja “Sobre o seu IP”.\n6. O autor pode alterar estes termos ou tirar o site do ar a qualquer momento.\n7. Para denunciar um uso indevido, use o botão “Denunciar uso indevido” no rodapé. A denúncia inclui o código da sala, o apelido e o identificador da pessoa denunciada, os apelidos que ela usou na sala, o seu identificador, o seu relato e, só se você marcar, as últimas mensagens do chat.\n8. Cada navegador tem um identificador aleatório, guardado no seu aparelho, usado para banimentos temporários e para reconhecer a mesma pessoa em denúncias. Ele não revela quem você é. Seu navegador também guarda, só no seu aparelho, os apelidos e identificadores das pessoas das duas últimas salas, para facilitar denúncias.\n9. As denúncias enviadas pelo botão do site ficam num banco de dados privado (Google Firebase), que só o autor acessa, e são usadas apenas para analisar o caso e moderar o uso. O autor as apaga depois de analisadas. Denúncias enviadas por e-mail ficam na caixa de entrada do autor.\n10. Denúncias falsas ou em excesso podem ser ignoradas.",
     reportLink: "Denunciar uso indevido",
     reportSubject: "Denúncia - Tela Fácil",
     reportSend: "Enviar denúncia",
@@ -1270,8 +1283,9 @@ const I18N = {
     reportFail: "Não foi possível enviar agora. Use uma das opções por e-mail.",
     reportWait: "Aguarde alguns segundos antes de enviar outra denúncia.",
     reportEmpty: "Descreva o que aconteceu antes de enviar.",
-    reportWho: "Quem você está denunciando?",
-    reportWhoOther: "Outra pessoa / não está na lista",
+    reportWho: "Pessoas que estiveram nas suas duas últimas salas (toque para escolher):",
+    reportRoom: "Sala {code}",
+    reportCurrent: "atual",
     reportChatOpt: "Incluir as últimas mensagens do chat da sala",
     reportLblRoom: "Código da sala",
     reportLblWho: "Pessoa denunciada",
@@ -1451,7 +1465,7 @@ const I18N = {
     ipLink: "About your IP",
     termsLink: "Terms of use",
     termsTitle: "Terms of use",
-    termsBody: "1. Easy Screen is free and provided as is, with no guarantee of operation or availability.\n2. You are responsible for what you share, write and watch. Do not use the site for illegal content, content that violates copyright or other people's privacy, or for violence, harassment, scams or any content involving the exploitation of minors.\n3. Only share what you have the right to share. Before streaming, close passwords, emails and personal data that appear on your screen.\n4. Video, audio and chat go directly between browsers. The site does not record or see this content, so whoever creates the room is responsible for moderating it (muting, kicking and declining entries).\n5. People in a room can see each other's public IP. See “About your IP”.\n6. The author may change these terms or take the site down at any time.\n7. To report misuse, use the “Report misuse” button in the footer. The report includes the room code, the nickname and identifier of the reported person, the nicknames they used in the room, your identifier, your description and, only if you tick it, the latest chat messages.\n8. Each browser has a random identifier, stored on your device, used for temporary bans and to recognize the same person in reports. It does not reveal who you are.\n9. Reports sent through the site button are stored in a private database (Google Firebase) that only the author can access, and are used only to review the case and moderate use. The author deletes them after review. Reports sent by email stay in the author's inbox.\n10. False or excessive reports may be ignored.",
+    termsBody: "1. Easy Screen is free and provided as is, with no guarantee of operation or availability.\n2. You are responsible for what you share, write and watch. Do not use the site for illegal content, content that violates copyright or other people's privacy, or for violence, harassment, scams or any content involving the exploitation of minors.\n3. Only share what you have the right to share. Before streaming, close passwords, emails and personal data that appear on your screen.\n4. Video, audio and chat go directly between browsers. The site does not record or see this content, so whoever creates the room is responsible for moderating it (muting, kicking and declining entries).\n5. People in a room can see each other's public IP. See “About your IP”.\n6. The author may change these terms or take the site down at any time.\n7. To report misuse, use the “Report misuse” button in the footer. The report includes the room code, the nickname and identifier of the reported person, the nicknames they used in the room, your identifier, your description and, only if you tick it, the latest chat messages.\n8. Each browser has a random identifier, stored on your device, used for temporary bans and to recognize the same person in reports. It does not reveal who you are. Your browser also keeps, only on your device, the nicknames and identifiers of the people in your last two rooms, to make reporting easier.\n9. Reports sent through the site button are stored in a private database (Google Firebase) that only the author can access, and are used only to review the case and moderate use. The author deletes them after review. Reports sent by email stay in the author's inbox.\n10. False or excessive reports may be ignored.",
     reportLink: "Report misuse",
     reportSubject: "Report - Easy Screen",
     reportSend: "Send report",
@@ -1459,8 +1473,9 @@ const I18N = {
     reportFail: "Could not send right now. Use one of the email options.",
     reportWait: "Wait a few seconds before sending another report.",
     reportEmpty: "Describe what happened before sending.",
-    reportWho: "Who are you reporting?",
-    reportWhoOther: "Someone else / not in the list",
+    reportWho: "People who were in your last two rooms (tap to choose):",
+    reportRoom: "Room {code}",
+    reportCurrent: "current",
     reportChatOpt: "Include the latest chat messages from the room",
     reportLblRoom: "Room code",
     reportLblWho: "Reported person",
@@ -2936,6 +2951,7 @@ function updateHostCount() {
   }
   $("uploadInfo").hidden = !(stream && n);
   const people = peopleList();
+  rememberRoom(currentCode, people);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ count: n, people: people });
   });
@@ -3975,6 +3991,7 @@ function connectToRoom(code) {
               n: cleanNick(x.n),
               p: Array.isArray(x.p) ? x.p.slice(0, 5).map((y) => cleanNick(String(y))) : []
             }));
+            rememberRoom(activeCode, roomPeople);
           }
           $("viewCount").hidden = false;
           setT($("viewCount"), "eyeCount", { n: d.count });
@@ -4272,15 +4289,59 @@ document.addEventListener("keydown", (e) => {
 });
 $("termsLink").addEventListener("click", () => showInfo("termsTitle", "termsBody", false));
 $("ipLink").addEventListener("click", () => showInfo("ipTitle", "ipBody", false));
-let roomPeopleView = [];
+let reportPick = null;
+const RECENT_KEY = "recentRooms";
+function loadRecent() {
+  try {
+    const a = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+    if (!Array.isArray(a)) return [];
+    return a
+      .filter((r) => r && /^[A-Z0-9]{6}$/.test(r.code) && Array.isArray(r.people) && Number.isFinite(r.ts))
+      .slice(0, 2)
+      .map((r) => ({
+        code: r.code,
+        ts: r.ts,
+        people: r.people.slice(0, 40).filter((x) => x && typeof x.g === "string" && typeof x.n === "string").map((x) => ({
+          g: x.g.slice(0, 8),
+          n: cleanNick(x.n),
+          p: Array.isArray(x.p) ? x.p.slice(0, 5).map((y) => cleanNick(String(y))) : []
+        }))
+      }));
+  } catch (e) {
+    return [];
+  }
+}
+function rememberRoom(code, people) {
+  if (!/^[A-Z0-9]{6}$/.test(code || "") || !Array.isArray(people)) return;
+  const me = getViewerId().slice(0, 8);
+  const list = loadRecent();
+  const i = list.findIndex((r) => r.code === code);
+  const entry = i >= 0 ? list.splice(i, 1)[0] : { code: code, ts: 0, people: [] };
+  const byId = new Map(entry.people.map((x) => [x.g, x]));
+  people.forEach((x) => {
+    if (!x || x.g === me) return;
+    const old = byId.get(x.g);
+    let prev = (x.p || []).slice();
+    if (old) {
+      prev = prev.concat(old.p);
+      if (old.n !== x.n) prev.push(old.n);
+    }
+    prev = prev.filter((y, k) => y && y !== x.n && prev.indexOf(y) === k).slice(-5);
+    byId.set(x.g, { g: x.g, n: x.n, p: prev });
+  });
+  entry.people = [...byId.values()].slice(-40);
+  entry.ts = Date.now();
+  list.unshift(entry);
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 2)));
+  } catch (e) {}
+}
+let reportDoneTimer = 0;
 let reportLastSent = 0;
 const REPORT_API = { projectId: "easy-screen-reports", apiKey: "AIzaSyCSg3MOH3QfMID1xYjsoxDt7-8qES-BxJg" };
 const REPORT_MAIL = "supervxz99@gmail.com";
 function reportTarget() {
-  const sel = $("reportWho");
-  const i = sel.value;
-  if (i !== "" && roomPeopleView[Number(i)]) return roomPeopleView[Number(i)];
-  return null;
+  return reportPick;
 }
 function reportData() {
   const tg = reportTarget();
@@ -4344,9 +4405,12 @@ async function sendReport() {
     });
     if (!r.ok) throw new Error("http " + r.status);
     reportLastSent = Date.now();
-    show("reportSent", false);
-    $("reportText").value = "";
-    refreshReport();
+    $("reportStatus").hidden = true;
+    setT($("reportDoneMsg"), "reportSent");
+    $("reportDoneMsg").hidden = false;
+    $("reportDialog").classList.add("done");
+    clearTimeout(reportDoneTimer);
+    reportDoneTimer = setTimeout(closeReport, 4000);
   } catch (e) {
     show("reportFail", true);
   }
@@ -4358,24 +4422,37 @@ function refreshReport() {
   $("reportMail").href = "mailto:" + REPORT_MAIL + "?subject=" + encodeURIComponent(d.subject) + "&body=" + encodeURIComponent(d.body);
 }
 function fillReportWho() {
-  const sel = $("reportWho");
-  const me = getViewerId().slice(0, 8);
-  roomPeopleView = roomPeople.filter((x) => x.g !== me);
-  if (hosting) roomPeopleView = peopleList().filter((x) => x.g !== me);
-  sel.innerHTML = "";
-  roomPeopleView.forEach((x, i) => {
-    const o = document.createElement("option");
-    o.value = String(i);
-    o.textContent = x.n + (x.p.length ? " (" + x.p.join(", ") + ")" : "");
-    sel.appendChild(o);
+  const box = $("reportGroups");
+  const groups = loadRecent();
+  const cur = hosting ? currentCode : !viewerView.hidden ? activeCode : "";
+  box.innerHTML = "";
+  reportPick = null;
+  groups.forEach((r, gi) => {
+    const det = document.createElement("details");
+    if (gi === 0) det.open = true;
+    const sum = document.createElement("summary");
+    const when = new Date(r.ts).toLocaleString(lang === "pt" ? "pt-BR" : "en", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    sum.textContent = t("reportRoom", { code: r.code }) + (r.code === cur ? " (" + t("reportCurrent") + ")" : "") + " · " + when;
+    det.appendChild(sum);
+    r.people.forEach((x) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "rp";
+      b.setAttribute("aria-pressed", "false");
+      b.textContent = x.n + (x.p.length ? " (" + x.p.join(", ") + ")" : "");
+      b.addEventListener("click", () => {
+        box.querySelectorAll(".rp").forEach((o) => o.setAttribute("aria-pressed", "false"));
+        b.setAttribute("aria-pressed", "true");
+        reportPick = { g: x.g, n: x.n, p: x.p };
+        $("reportCode").value = r.code;
+        $("reportNick").value = "";
+        refreshReport();
+      });
+      det.appendChild(b);
+    });
+    box.appendChild(det);
   });
-  const other = document.createElement("option");
-  other.value = "";
-  other.textContent = t("reportWhoOther");
-  sel.appendChild(other);
-  sel.hidden = roomPeopleView.length === 0;
-  sel.value = roomPeopleView.length ? "0" : "";
-  $("reportNick").hidden = roomPeopleView.length > 0;
+  $("reportWhoBox").hidden = groups.length === 0;
   const hasChat = !!$("chatList").querySelector(".msg");
   $("reportChat").disabled = !hasChat;
   $("reportChat").checked = false;
@@ -4388,6 +4465,9 @@ function openReport() {
   $("reportText").value = "";
   $("reportChat").checked = false;
   $("reportStatus").hidden = true;
+  clearTimeout(reportDoneTimer);
+  $("reportDoneMsg").hidden = true;
+  $("reportDialog").classList.remove("done");
   $("reportSend").hidden = !(REPORT_API.projectId && REPORT_API.apiKey);
   fillReportWho();
   $("reportAddr").textContent = t("reportAddr", { mail: REPORT_MAIL });
@@ -4404,9 +4484,11 @@ $("reportCode").addEventListener("input", () => {
   $("reportCode").value = $("reportCode").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
 });
 ["reportCode", "reportNick", "reportText"].forEach((id) => $(id).addEventListener("input", refreshReport));
-$("reportWho").addEventListener("change", () => {
-  $("reportNick").hidden = $("reportWho").value !== "";
-  refreshReport();
+$("reportNick").addEventListener("input", () => {
+  if ($("reportNick").value) {
+    reportPick = null;
+    $("reportGroups").querySelectorAll(".rp").forEach((o) => o.setAttribute("aria-pressed", "false"));
+  }
 });
 $("reportChat").addEventListener("change", refreshReport);
 $("reportLink").addEventListener("click", openReport);
