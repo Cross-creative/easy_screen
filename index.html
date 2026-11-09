@@ -329,6 +329,12 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 }
 .status { margin-top: 12px; color: var(--muted); font-size: 0.95rem; min-height: 1.4em; }
 .status.error { color: var(--danger); }
+.foot { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 32px; font-size: 0.85rem; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 500; text-decoration: underline; cursor: pointer; }
+.linkbtn:hover { color: var(--text); }
+.dialog.info { width: min(520px, 94vw); max-height: 85vh; overflow-y: auto; }
+.infobody { display: flex; flex-direction: column; gap: 10px; }
+.dialog .infobody p { margin: 0; color: var(--text); line-height: 1.5; font-size: 0.92rem; }
 .statuswrap { display: flex; align-items: flex-start; gap: 8px; }
 .statuswrap .status { flex: 1; min-width: 0; }
 .xclose { margin-top: 8px; padding: 0 8px; min-width: 28px; height: 28px; line-height: 1; border-radius: 8px; font-size: 0.9rem; color: var(--muted); }
@@ -728,6 +734,16 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
   </div>
 
+  <div class="backdrop" id="infoBackdrop" hidden></div>
+  <div class="dialog info" id="infoDialog" role="dialog" aria-modal="true" aria-labelledby="infoTitle" hidden>
+    <h2 id="infoTitle"></h2>
+    <div class="infobody" id="infoBody"></div>
+    <div class="row">
+      <button id="infoOk" class="primary"></button>
+      <button id="infoCancel" data-i18n="cancel" hidden>Cancelar</button>
+    </div>
+  </div>
+
   <div class="backdrop" id="endBackdrop" hidden></div>
   <div class="dialog" id="endDialog" role="dialog" aria-modal="true" aria-labelledby="endTitle" hidden>
     <h2 id="endTitle" data-i18n="closeRoom">Encerrar sala</h2>
@@ -807,6 +823,11 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <p class="hint" id="setNotifyHint" data-i18n="setNotifyHint">Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.</p>
     </div>
   </aside>
+  <footer class="foot">
+    <button type="button" class="linkbtn" id="termsLink" data-i18n="termsLink">Termos de uso</button>
+    <button type="button" class="linkbtn" id="ipLink" data-i18n="ipLink">Sobre o seu IP</button>
+    <a class="linkbtn" id="reportLink" href="mailto:supervxz99@gmail.com" data-i18n="reportLink">Denunciar uso indevido</a>
+  </footer>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" integrity="sha256-rV2IcNHjiZFPnLqNNb4xPEMnxp7goiHkgum/diETb+U=" crossorigin="anonymous"></script>
@@ -1205,7 +1226,19 @@ const I18N = {
     updateHome: "O site recebeu uma atualização e precisa ser reiniciado para que ela seja aplicada.",
     updateRoom: "O site recebeu uma atualização. Feche a sala e reinicie a página para que ela seja aplicada.",
     updateRestart: "Reiniciar agora",
-    updateDismiss: "Entendi"
+    updateDismiss: "Entendi",
+    ipTitle: "Sobre o seu IP",
+    ipBody: "O que é compartilhado: ao criar ou entrar em uma sala, o host e as outras pessoas conseguem ver o seu IP público. É o endereço com que a sua internet aparece para o resto do mundo.\nO que ele revela: de forma aproximada, o seu provedor de internet e a cidade ou região da conexão. Isso não é a sua localização exata. Não mostra o seu endereço, o seu GPS, o seu nome nem os seus arquivos.\nO que o site faz: o site nunca pede a sua localização e não mostra o IP na tela. Mesmo assim, uma pessoa com conhecimento técnico consegue descobri-lo.\nComo se proteger: uma VPN troca o seu IP pelo do servidor dela. Se isso for um problema para você, evite salas públicas.",
+    ipOk: "Entendi, continuar",
+    ipLink: "Sobre o seu IP",
+    termsLink: "Termos de uso",
+    termsTitle: "Termos de uso",
+    termsBody: "1. O Tela Fácil é gratuito e oferecido como está, sem garantia de funcionamento ou disponibilidade.\n2. Você é responsável pelo que compartilha, escreve e assiste. Não use o site para conteúdo ilegal, que viole direitos autorais ou a privacidade de outras pessoas, nem para violência, assédio, golpes ou qualquer conteúdo que envolva a exploração de menores.\n3. Compartilhe apenas o que você tem direito de compartilhar. Antes de transmitir, feche senhas, e-mails e dados pessoais que apareçam na tela.\n4. O vídeo, o áudio e o chat vão direto entre os navegadores. O site não grava nem consegue ver esse conteúdo, por isso quem cria a sala é o responsável por moderá-la (silenciar, expulsar e recusar entradas).\n5. Quem participa de uma sala pode ver o IP público das outras pessoas. Veja “Sobre o seu IP”.\n6. O autor pode alterar estes termos ou tirar o site do ar a qualquer momento.\n7. Para denunciar um uso indevido, use o link “Denunciar uso indevido” no rodapé, que abre um e-mail para o autor.",
+    reportLink: "Denunciar uso indevido",
+    reportSubject: "Denúncia - Tela Fácil",
+    reportBody: "Código da sala: {code}\nApelido de quem estou denunciando:\nO que aconteceu:\n",
+    queueWait: "Aguardando a sua vez de entrar (posição {n})...",
+    roomBusy: "A sala está recebendo muitas entradas. Tente de novo em instantes."
   },
   en: {
     title: "Easy Screen",
@@ -1358,7 +1391,19 @@ const I18N = {
     updateHome: "The site received an update and needs to be restarted for it to be applied.",
     updateRoom: "The site received an update. Close the room and reload the page for it to be applied.",
     updateRestart: "Restart now",
-    updateDismiss: "Got it"
+    updateDismiss: "Got it",
+    ipTitle: "About your IP",
+    ipBody: "What is shared: when you create or join a room, the host and the other people can see your public IP. It is the address your internet connection shows to the rest of the world.\nWhat it reveals: roughly, your internet provider and the city or region of the connection. This is not your exact location. It does not show your street address, your GPS position, your name or your files.\nWhat the site does: the site never asks for your location and does not show the IP on screen. Even so, a technically skilled person can find it.\nHow to protect yourself: a VPN replaces your IP with the one from its server. If this is a problem for you, avoid public rooms.",
+    ipOk: "Got it, continue",
+    ipLink: "About your IP",
+    termsLink: "Terms of use",
+    termsTitle: "Terms of use",
+    termsBody: "1. Easy Screen is free and provided as is, with no guarantee of operation or availability.\n2. You are responsible for what you share, write and watch. Do not use the site for illegal content, content that violates copyright or other people's privacy, or for violence, harassment, scams or any content involving the exploitation of minors.\n3. Only share what you have the right to share. Before streaming, close passwords, emails and personal data that appear on your screen.\n4. Video, audio and chat go directly between browsers. The site does not record or see this content, so whoever creates the room is responsible for moderating it (muting, kicking and declining entries).\n5. People in a room can see each other's public IP. See “About your IP”.\n6. The author may change these terms or take the site down at any time.\n7. To report misuse, use the “Report misuse” link in the footer, which opens an email to the author.",
+    reportLink: "Report misuse",
+    reportSubject: "Report - Easy Screen",
+    reportBody: "Room code: {code}\nNickname of the person I am reporting:\nWhat happened:\n",
+    queueWait: "Waiting for your turn to join (position {n})...",
+    roomBusy: "The room is receiving many entries. Try again in a moment."
   }
 };
 
@@ -1430,6 +1475,15 @@ const allowed = new Set();
 const audioPrefs = new Map();
 let audioSig = "";
 let visResolve = null;
+let infoResolve = null;
+let ipSeenMem = false;
+const ADMIT_GAP_MS = 5000;
+const ADMIT_QUEUE_MAX = 8;
+const GRACE_MS = 90000;
+const admitQueue = [];
+let nextAdmitAt = 0;
+let admitTimer = null;
+let graceUntil = 0;
 let takeoverTimer = null;
 let iAmSucc = false;
 let succState = null;
@@ -2367,6 +2421,52 @@ function applyStream(newStream) {
   $("audioNote").hidden = !($("audio").checked && !newStream.getAudioTracks().length);
 }
 
+function ipSeen() {
+  if (ipSeenMem) return true;
+  try { return localStorage.getItem("ipSeen") === "1"; } catch (e) { return false; }
+}
+
+function markIpSeen() {
+  ipSeenMem = true;
+  try { localStorage.setItem("ipSeen", "1"); } catch (e) {}
+}
+
+function showInfo(titleKey, bodyKey, gate) {
+  return new Promise((res) => {
+    if (infoResolve) infoResolve(false);
+    infoResolve = res;
+    setT($("infoTitle"), titleKey);
+    const box = $("infoBody");
+    box.innerHTML = "";
+    t(bodyKey).split("\n").forEach((line) => {
+      const para = document.createElement("p");
+      para.textContent = line;
+      box.appendChild(para);
+    });
+    setT($("infoOk"), gate ? "ipOk" : "close");
+    $("infoCancel").hidden = !gate;
+    $("infoBackdrop").hidden = false;
+    $("infoDialog").hidden = false;
+    $("infoOk").focus();
+  });
+}
+
+function closeInfo(val) {
+  $("infoDialog").hidden = true;
+  $("infoBackdrop").hidden = true;
+  const r = infoResolve;
+  infoResolve = null;
+  if (r) r(val);
+}
+
+function ensureIpNotice() {
+  if (ipSeen()) return Promise.resolve(true);
+  return showInfo("ipTitle", "ipBody", true).then((ok) => {
+    if (ok) markIpSeen();
+    return ok;
+  });
+}
+
 function askVisibility() {
   return new Promise((res) => {
     if (visResolve) visResolve(null);
@@ -2388,6 +2488,7 @@ function closeVis(val) {
 
 async function startHost(share) {
   if (!requireNick()) return;
+  if (!(await ensureIpNotice())) return;
   askNotifyPermission();
   qualityKey = $("quality").value;
   quality = QUALITIES[qualityKey];
@@ -2515,6 +2616,8 @@ function closeRoom() {
     a.conn.close();
   });
   approvals.clear();
+  clearQueue();
+  graceUntil = 0;
   allowed.clear();
   roomPrivate = false;
   roomMulti = false;
@@ -2756,6 +2859,7 @@ function dropPending(id) {
 }
 
 function askNick(conn, ctx, tries) {
+  if (!pending.has(conn.peer) && pending.size >= ADMIT_QUEUE_MAX) return refuse(conn, { busy: true });
   const prev = pending.get(conn.peer);
   if (prev) clearTimeout(prev.timer);
   if (!ctx.deadline) ctx.deadline = Date.now() + NICK_WAIT_MS;
@@ -2885,9 +2989,62 @@ function requestEntry(conn, ctx) {
   notify("join-" + conn.peer, t("title"), t("joinRequestText", { name: ctx.nick }));
 }
 
+function dropQueued(id) {
+  const i = admitQueue.findIndex((q) => q.conn.peer === id);
+  if (i < 0) return;
+  admitQueue.splice(i, 1);
+  notifyQueue();
+}
+
+function notifyQueue() {
+  admitQueue.forEach((q, i) => {
+    if (q.conn.open) q.conn.send({ queued: i + 1 });
+  });
+}
+
+function pumpQueue() {
+  if (admitTimer || !admitQueue.length) return;
+  const wait = Math.max(0, nextAdmitAt - Date.now());
+  admitTimer = setTimeout(() => {
+    admitTimer = null;
+    const q = admitQueue.shift();
+    if (q && q.conn.open && hosting) {
+      nextAdmitAt = Date.now() + ADMIT_GAP_MS;
+      admitNow(q.conn, q.ctx);
+    }
+    notifyQueue();
+    pumpQueue();
+  }, wait);
+}
+
+function clearQueue() {
+  clearTimeout(admitTimer);
+  admitTimer = null;
+  nextAdmitAt = 0;
+  admitQueue.splice(0).forEach((q) => {
+    if (q.conn.open) q.conn.send({ closed: true });
+    q.conn.close();
+  });
+}
+
 function admit(conn, ctx) {
   if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
-  if (roomPrivate && !ctx.approved && !(ctx.vid && allowed.has(ctx.vid))) return requestEntry(conn, ctx);
+  const known = !!(ctx.vid && allowed.has(ctx.vid));
+  if (roomPrivate && !ctx.approved && !known) return requestEntry(conn, ctx);
+  if (Date.now() < graceUntil) return admitNow(conn, ctx);
+  if (admitQueue.some((q) => q.conn.peer === conn.peer)) return;
+  if (!admitQueue.length && !admitTimer && Date.now() >= nextAdmitAt) {
+    nextAdmitAt = Date.now() + ADMIT_GAP_MS;
+    return admitNow(conn, ctx);
+  }
+  if (admitQueue.length >= ADMIT_QUEUE_MAX) return refuse(conn, { busy: true });
+  admitQueue.push({ conn, ctx });
+  notifyQueue();
+  pumpQueue();
+}
+
+function admitNow(conn, ctx) {
+  if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
   if (ctx.vid) allowed.add(ctx.vid);
   const v = {
     conn,
@@ -2992,11 +3149,13 @@ peer.on("connection", (conn) => {
   conn.on("close", () => {
     dropPending(conn.peer);
     dropApproval(conn.peer);
+    dropQueued(conn.peer);
     dropViewer(conn.peer);
   });
   conn.on("error", () => {
     dropPending(conn.peer);
     dropApproval(conn.peer);
+    dropQueued(conn.peer);
     dropViewer(conn.peer);
   });
 });
@@ -3028,6 +3187,7 @@ peer.on("disconnected", () => {
 }
 
 function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
+  graceUntil = Date.now() + GRACE_MS;
   roomPrivate = priv;
   if (extra) roomMulti = extra.multi === true;
   takeoverMode = noteKey === "nowHost";
@@ -3465,6 +3625,16 @@ function updateMuteBtn() {
 }
 
 function joinRoom(code) {
+  if (String(code).trim().length === 6 && cleanNick($("nick").value) && !ipSeen()) {
+    ensureIpNotice().then((ok) => {
+      if (ok) joinRoomNow(code);
+    });
+    return;
+  }
+  joinRoomNow(code);
+}
+
+function joinRoomNow(code) {
   code = code.trim().toUpperCase();
   if (code.length !== 6) {
     setStatus($("homeStatus"), "codeLength", true);
@@ -3507,15 +3677,13 @@ function connectToRoom(code) {
   const p = new Peer();
   peer = p;
   p.on("connection", (c) => c.close());
+  let startRest = null;
 
   p.on("open", () => {
     if (peer !== p) return;
     viewerConn = null;
     const conns = [];
-    for (let g = 0; g < ROOM_GENS; g++) {
-      conns.push(p.connect(peerIdFor(code, g), { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } }));
-    }
-    conns.forEach((conn, g) => {
+    const wireConn = (conn, g) => {
       conn.on("data", (d) => {
         if (peer !== p || viewerConn !== conn || !d || typeof d !== "object") return;
         if (typeof d.hostNick === "string") {
@@ -3560,7 +3728,16 @@ function connectToRoom(code) {
           };
           return;
         }
-        if (d.waiting === true) {
+        if (Number.isInteger(d.queued)) {
+        setT($("viewOverlay"), "queueWait", { n: d.queued });
+        return;
+      }
+      if (d.busy === true) {
+        leaveRoom();
+        setStatus($("homeStatus"), "roomBusy", true);
+        return;
+      }
+      if (d.waiting === true) {
           clearTimeout(viewerTimeout);
           setT($("viewOverlay"), "joinWaiting");
           return;
@@ -3708,7 +3885,20 @@ function connectToRoom(code) {
         startLostView();
         scheduleRetry();
       });
-    });
+    };
+    const startConn = (g) => {
+      if (conns[g]) return;
+      const c = p.connect(peerIdFor(code, g), { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } });
+      conns[g] = c;
+      wireConn(c, g);
+    };
+    startRest = () => {
+      for (let g = 1; g < ROOM_GENS; g++) startConn(g);
+    };
+    startConn(0);
+    setTimeout(() => {
+      if (peer === p && !viewerConn) startRest();
+    }, 3000);
     viewerTimeout = setTimeout(() => {
       if (peer !== p) return;
       if (retry === 0) {
@@ -3729,6 +3919,7 @@ function connectToRoom(code) {
     if (peer !== p) return;
     if (err.type === "peer-unavailable") {
       if (viewerConn && viewerConn.open) return;
+      if (startRest) startRest();
       unavailable++;
       if (unavailable < ROOM_GENS) return;
       if (retry === 0) {
@@ -3944,6 +4135,18 @@ $("volume").addEventListener("input", (e) => {
   updateMuteBtn();
 });
 $("settingsBtn").addEventListener("click", openSettings);
+$("infoOk").addEventListener("click", () => closeInfo(true));
+$("infoCancel").addEventListener("click", () => closeInfo(false));
+$("infoBackdrop").addEventListener("click", () => closeInfo(false));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && infoResolve) closeInfo(false);
+});
+$("termsLink").addEventListener("click", () => showInfo("termsTitle", "termsBody", false));
+$("ipLink").addEventListener("click", () => showInfo("ipTitle", "ipBody", false));
+$("reportLink").addEventListener("click", () => {
+  const code = hosting ? currentCode : !viewerView.hidden ? activeCode : "";
+  $("reportLink").href = "mailto:supervxz99@gmail.com?subject=" + encodeURIComponent(t("reportSubject")) + "&body=" + encodeURIComponent(t("reportBody", { code: code || "-" }));
+});
 $("homeStatusX").addEventListener("click", () => setStatus($("homeStatus"), ""));
 $("viewStatusX").addEventListener("click", () => setStatus($("viewStatus"), ""));
 $("closeSettings").addEventListener("click", closeSettings);
