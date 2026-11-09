@@ -334,6 +334,8 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .linkbtn:hover { color: var(--text); }
 #reportDialog input[type="text"], #reportDialog textarea { width: 100%; box-sizing: border-box; text-transform: none; letter-spacing: normal; margin-bottom: 8px; }
 #reportDialog textarea { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; resize: vertical; }
+#reportDialog select { width: 100%; margin-bottom: 8px; }
+#reportDialog .check { display: flex; gap: 8px; align-items: center; font-size: 0.9rem; margin-bottom: 8px; }
 #reportDialog .hint { margin: 0 0 10px; font-size: 0.8rem; color: var(--muted); }
 #reportDialog .row { gap: 8px; }
 .btnlink { display: inline-block; padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font-weight: 600; text-decoration: none; cursor: pointer; }
@@ -755,8 +757,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <h2 id="reportTitle" data-i18n="reportTitle">Denunciar uso indevido</h2>
     <p data-i18n="reportIntro">Preencha o que aconteceu e escolha como enviar. A denúncia vai para o responsável pelo site.</p>
     <input type="text" id="reportCode" maxlength="12" autocomplete="off" data-i18n-ph="reportCodePh" placeholder="Código da sala">
+    <select id="reportWho"></select>
     <input type="text" id="reportNick" maxlength="40" autocomplete="off" data-i18n-ph="reportNickPh" placeholder="Apelido de quem você está denunciando">
     <textarea id="reportText" rows="4" maxlength="1000" data-i18n-ph="reportTextPh" placeholder="O que aconteceu?"></textarea>
+    <label class="check" id="reportChatWrap"><input type="checkbox" id="reportChat"> <span data-i18n="reportChatOpt">Incluir as últimas mensagens do chat da sala</span></label>
     <p class="hint" id="reportAddr"></p>
     <div class="row">
       <a class="btnlink primary" id="reportGmail" target="_blank" rel="noopener" data-i18n="reportGmail">Abrir no Gmail</a>
@@ -1258,11 +1262,21 @@ const I18N = {
     termsBody: "1. O Tela Fácil é gratuito e oferecido como está, sem garantia de funcionamento ou disponibilidade.\n2. Você é responsável pelo que compartilha, escreve e assiste. Não use o site para conteúdo ilegal, que viole direitos autorais ou a privacidade de outras pessoas, nem para violência, assédio, golpes ou qualquer conteúdo que envolva a exploração de menores.\n3. Compartilhe apenas o que você tem direito de compartilhar. Antes de transmitir, feche senhas, e-mails e dados pessoais que apareçam na tela.\n4. O vídeo, o áudio e o chat vão direto entre os navegadores. O site não grava nem consegue ver esse conteúdo, por isso quem cria a sala é o responsável por moderá-la (silenciar, expulsar e recusar entradas).\n5. Quem participa de uma sala pode ver o IP público das outras pessoas. Veja “Sobre o seu IP”.\n6. O autor pode alterar estes termos ou tirar o site do ar a qualquer momento.\n7. Para denunciar um uso indevido, use o link “Denunciar uso indevido” no rodapé, que abre um e-mail para o autor.",
     reportLink: "Denunciar uso indevido",
     reportSubject: "Denúncia - Tela Fácil",
-    reportBody: "Código da sala: {code}\nApelido de quem estou denunciando: {nick}\nO que aconteceu: {text}\n",
+    reportWho: "Quem você está denunciando?",
+    reportWhoOther: "Outra pessoa / não está na lista",
+    reportChatOpt: "Incluir as últimas mensagens do chat da sala",
+    reportLblRoom: "Código da sala",
+    reportLblWho: "Pessoa denunciada",
+    reportLblId: "Identificador",
+    reportLblAlso: "Apelidos usados antes na sala",
+    reportLblBy: "Identificador de quem denuncia",
+    reportLblTime: "Data e hora",
+    reportLblText: "O que aconteceu",
+    reportLblChat: "Últimas mensagens do chat",
     reportTitle: "Denunciar uso indevido",
     reportIntro: "Preencha o que aconteceu e escolha como enviar. A denúncia vai para o responsável pelo site.",
     reportCodePh: "Código da sala",
-    reportNickPh: "Apelido de quem você está denunciando",
+    reportNickPh: "Apelido da pessoa denunciada",
     reportTextPh: "O que aconteceu?",
     reportGmail: "Abrir no Gmail",
     reportMail: "App de e-mail",
@@ -1432,11 +1446,21 @@ const I18N = {
     termsBody: "1. Easy Screen is free and provided as is, with no guarantee of operation or availability.\n2. You are responsible for what you share, write and watch. Do not use the site for illegal content, content that violates copyright or other people's privacy, or for violence, harassment, scams or any content involving the exploitation of minors.\n3. Only share what you have the right to share. Before streaming, close passwords, emails and personal data that appear on your screen.\n4. Video, audio and chat go directly between browsers. The site does not record or see this content, so whoever creates the room is responsible for moderating it (muting, kicking and declining entries).\n5. People in a room can see each other's public IP. See “About your IP”.\n6. The author may change these terms or take the site down at any time.\n7. To report misuse, use the “Report misuse” link in the footer, which opens an email to the author.",
     reportLink: "Report misuse",
     reportSubject: "Report - Easy Screen",
-    reportBody: "Room code: {code}\nNickname of the person I am reporting: {nick}\nWhat happened: {text}\n",
+    reportWho: "Who are you reporting?",
+    reportWhoOther: "Someone else / not in the list",
+    reportChatOpt: "Include the latest chat messages from the room",
+    reportLblRoom: "Room code",
+    reportLblWho: "Reported person",
+    reportLblId: "Identifier",
+    reportLblAlso: "Nicknames used before in the room",
+    reportLblBy: "Reporter identifier",
+    reportLblTime: "Date and time",
+    reportLblText: "What happened",
+    reportLblChat: "Latest chat messages",
     reportTitle: "Report misuse",
     reportIntro: "Fill in what happened and choose how to send it. The report goes to the site owner.",
     reportCodePh: "Room code",
-    reportNickPh: "Nickname of the person you are reporting",
+    reportNickPh: "Reported person nickname",
     reportTextPh: "What happened?",
     reportGmail: "Open in Gmail",
     reportMail: "Email app",
@@ -1484,6 +1508,8 @@ const bans = new Map();
 const grants = new Set();
 const mutedVids = new Set();
 const chatLog = [];
+const roomNicks = new Map();
+let roomPeople = [];
 let chatSeq = 0;
 let chatMuted = false;
 let blockedTab = false;
@@ -2100,6 +2126,7 @@ function toggleChat() {
 
 function clearChat() {
   closeChat();
+  roomPeople = [];
   $("chatList").innerHTML = "";
   $("people").hidden = true;
   $("people").innerHTML = "";
@@ -2652,6 +2679,7 @@ function closeRoom() {
   mutedVids.clear();
   chatLog.length = 0;
   chatSeq = 0;
+  roomNicks.clear();
   grants.clear();
   approvals.forEach((a) => {
     clearTimeout(a.timer);
@@ -2855,6 +2883,34 @@ function stopMonitor() {
   monitorTimer = null;
 }
 
+function noteNick(vid, nick) {
+  if (!vid || !nick) return;
+  const list = roomNicks.get(vid) || [];
+  const i = list.indexOf(nick);
+  if (i >= 0) list.splice(i, 1);
+  list.push(nick);
+  while (list.length > 6) list.shift();
+  roomNicks.set(vid, list);
+}
+
+function peopleList() {
+  const out = [];
+  const mine = getViewerId();
+  noteNick(mine, myNick);
+  const add = (vid, nick) => {
+    const list = roomNicks.get(vid) || [nick];
+    out.push({ g: vid.slice(0, 8), n: nick, p: list.filter((x) => x !== nick).slice(-5) });
+  };
+  add(mine, myNick);
+  viewers.forEach((v) => {
+    if (v.vid) {
+      noteNick(v.vid, v.nick);
+      add(v.vid, v.nick);
+    }
+  });
+  return out;
+}
+
 function updateHostCount() {
   const n = viewers.size;
   setT($("count"), "viewersMany", { n: n });
@@ -2866,8 +2922,9 @@ function updateHostCount() {
     setStatus($("hostStatus"), "hostWaiting");
   }
   $("uploadInfo").hidden = !(stream && n);
+  const people = peopleList();
   viewers.forEach((v) => {
-    if (v.conn.open) v.conn.send({ count: n });
+    if (v.conn.open) v.conn.send({ count: n, people: people });
   });
   renderPeople();
   renderRequests();
@@ -2974,7 +3031,8 @@ function syncSuccessor() {
     grants: [...grants],
     bans: [...bans].filter((b) => b[1] > Date.now() && b[0].startsWith("vid:")),
     muted: [...mutedVids],
-    chat: chatLog.slice()
+    chat: chatLog.slice(),
+    nicks: [...roomNicks].map((e) => [e[0], e[1].slice(-6)])
   };
   const sig = JSON.stringify([first, st]);
   if (sig === succSig) return;
@@ -3242,7 +3300,15 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
   mutedVids.clear();
   chatLog.length = 0;
   chatSeq = 0;
+  roomNicks.clear();
   if (extra) {
+    if (Array.isArray(extra.nicks)) {
+      extra.nicks.slice(0, 64).forEach((e) => {
+        if (Array.isArray(e) && typeof e[0] === "string" && /^[A-Z0-9]{12}$/.test(e[0]) && Array.isArray(e[1])) {
+          e[1].slice(-6).forEach((x) => noteNick(e[0], cleanNick(x)));
+        }
+      });
+    }
     extra.bans.forEach((b) => bans.set(b[0], b[1]));
     extra.muted.forEach((x) => mutedVids.add(x));
     extra.chat.forEach((m) => {
@@ -3890,6 +3956,13 @@ function connectToRoom(code) {
         }
         if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
           roomCount = d.count;
+          if (Array.isArray(d.people)) {
+            roomPeople = d.people.slice(0, 40).filter((x) => x && typeof x.g === "string" && typeof x.n === "string").map((x) => ({
+              g: x.g.slice(0, 8),
+              n: cleanNick(x.n),
+              p: Array.isArray(x.p) ? x.p.slice(0, 5).map((y) => cleanNick(String(y))) : []
+            }));
+          }
           $("viewCount").hidden = false;
           setT($("viewCount"), "eyeCount", { n: d.count });
           enforceCap();
@@ -4186,22 +4259,68 @@ document.addEventListener("keydown", (e) => {
 });
 $("termsLink").addEventListener("click", () => showInfo("termsTitle", "termsBody", false));
 $("ipLink").addEventListener("click", () => showInfo("ipTitle", "ipBody", false));
+let roomPeopleView = [];
 const REPORT_MAIL = "supervxz99@gmail.com";
+function reportTarget() {
+  const sel = $("reportWho");
+  const i = sel.value;
+  if (i !== "" && roomPeopleView[Number(i)]) return roomPeopleView[Number(i)];
+  return null;
+}
 function reportData() {
-  const subject = t("reportSubject");
-  const body = t("reportBody", { code: $("reportCode").value.trim() || "-", nick: $("reportNick").value.trim(), text: $("reportText").value.trim() });
-  return { subject, body };
+  const tg = reportTarget();
+  const me = getViewerId().slice(0, 8);
+  const lines = [];
+  lines.push(t("reportLblRoom") + ": " + ($("reportCode").value.trim() || "-"));
+  if (tg) {
+    lines.push(t("reportLblWho") + ": " + tg.n);
+    lines.push(t("reportLblId") + ": " + tg.g);
+    if (tg.p.length) lines.push(t("reportLblAlso") + ": " + tg.p.join(", "));
+  } else {
+    lines.push(t("reportLblWho") + ": " + ($("reportNick").value.trim() || "-"));
+  }
+  lines.push(t("reportLblBy") + ": " + me);
+  lines.push(t("reportLblTime") + ": " + new Date().toISOString());
+  lines.push(t("reportLblText") + ": " + $("reportText").value.trim());
+  if ($("reportChat").checked && !$("reportChatWrap").hidden) {
+    const rows = [...$("chatList").querySelectorAll(".msg")].slice(-15).map((r) => r.textContent.trim().slice(0, 120));
+    if (rows.length) lines.push("", t("reportLblChat") + ":", ...rows);
+  }
+  return { subject: t("reportSubject"), body: lines.join("\n") + "\n" };
 }
 function refreshReport() {
   const d = reportData();
   $("reportGmail").href = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(REPORT_MAIL) + "&su=" + encodeURIComponent(d.subject) + "&body=" + encodeURIComponent(d.body);
   $("reportMail").href = "mailto:" + REPORT_MAIL + "?subject=" + encodeURIComponent(d.subject) + "&body=" + encodeURIComponent(d.body);
 }
+function fillReportWho() {
+  const sel = $("reportWho");
+  const me = getViewerId().slice(0, 8);
+  roomPeopleView = roomPeople.filter((x) => x.g !== me);
+  if (hosting) roomPeopleView = peopleList().filter((x) => x.g !== me);
+  sel.innerHTML = "";
+  roomPeopleView.forEach((x, i) => {
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = x.n + (x.p.length ? " (" + x.p.join(", ") + ")" : "");
+    sel.appendChild(o);
+  });
+  const other = document.createElement("option");
+  other.value = "";
+  other.textContent = t("reportWhoOther");
+  sel.appendChild(other);
+  sel.hidden = roomPeopleView.length === 0;
+  sel.value = roomPeopleView.length ? "0" : "";
+  $("reportNick").hidden = roomPeopleView.length > 0;
+  $("reportChatWrap").hidden = !$("chatList").querySelector(".msg");
+}
 function openReport() {
   const code = hosting ? currentCode : !viewerView.hidden ? activeCode : "";
   $("reportCode").value = code || "";
   $("reportNick").value = "";
   $("reportText").value = "";
+  $("reportChat").checked = false;
+  fillReportWho();
   $("reportAddr").textContent = t("reportAddr", { mail: REPORT_MAIL });
   refreshReport();
   $("reportBackdrop").hidden = false;
@@ -4213,6 +4332,11 @@ function closeReport() {
   $("reportDialog").hidden = true;
 }
 ["reportCode", "reportNick", "reportText"].forEach((id) => $(id).addEventListener("input", refreshReport));
+$("reportWho").addEventListener("change", () => {
+  $("reportNick").hidden = $("reportWho").value !== "";
+  refreshReport();
+});
+$("reportChat").addEventListener("change", refreshReport);
 $("reportLink").addEventListener("click", openReport);
 $("reportClose").addEventListener("click", closeReport);
 $("reportBackdrop").addEventListener("click", closeReport);
