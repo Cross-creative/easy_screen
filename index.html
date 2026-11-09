@@ -329,6 +329,9 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 }
 .status { margin-top: 12px; color: var(--muted); font-size: 0.95rem; min-height: 1.4em; }
 .status.error { color: var(--danger); }
+.statuswrap { display: flex; align-items: flex-start; gap: 8px; }
+.statuswrap .status { flex: 1; min-width: 0; }
+.xclose { margin-top: 8px; padding: 0 8px; min-width: 28px; height: 28px; line-height: 1; border-radius: 8px; font-size: 0.9rem; color: var(--muted); }
 .back { margin-bottom: 16px; }
 .warn {
   display: flex;
@@ -593,7 +596,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <p data-i18n="noShare">Compartilhar a tela só funciona no computador.</p>
     </div>
   </div>
-  <div class="status" id="homeStatus"></div>
+  <div class="statuswrap"><div class="status" id="homeStatus"></div><button class="xclose" id="homeStatusX" type="button" hidden>✕</button></div>
 </section>
 
   <section id="hostView" hidden>
@@ -607,6 +610,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       <span class="badge" id="roomType"></span>
       <button id="openOptions" data-i18n="options">Opções</button>
       <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
+      <button id="closeRoom" class="stop mini" data-i18n="closeRoom">Encerrar sala</button>
     </div>
     <div class="stage" id="hostStage">
       <div class="tiles" id="hostGrid"></div>
@@ -647,13 +651,6 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
         <button id="stopShare" data-i18n="stopShare">Parar de compartilhar</button>
         <button id="awayBtn" data-i18n="awayBtn">Sair para o menu</button>
-        <hr>
-        <button id="closeRoom" class="stop" data-i18n="closeRoom">Encerrar sala</button>
-        <div class="confirm" id="confirmBox" hidden>
-          <p data-i18n="confirmText">Encerrar a sala desconecta todos os espectadores.</p>
-          <button id="confirmClose" class="stop" data-i18n="confirmYes">Sim, encerrar</button>
-          <button id="cancelClose" data-i18n="cancel">Cancelar</button>
-        </div>
       </div>
     </aside>
   </section>
@@ -687,7 +684,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         </details>
       </div>
     </div>
-    <div class="status" id="viewStatus"></div>
+    <div class="statuswrap"><div class="status" id="viewStatus"></div><button class="xclose" id="viewStatusX" type="button" hidden>✕</button></div>
     <div class="backdrop" id="viewBackdrop" hidden></div>
 <aside class="panel" id="viewPanel" aria-hidden="true">
   <div class="panel-head">
@@ -728,6 +725,16 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <div class="row">
       <button id="nickConfirm" class="primary" data-i18n="join">Entrar</button>
       <button id="nickCancel" data-i18n="leave">Sair</button>
+    </div>
+  </div>
+
+  <div class="backdrop" id="endBackdrop" hidden></div>
+  <div class="dialog" id="endDialog" role="dialog" aria-modal="true" aria-labelledby="endTitle" hidden>
+    <h2 id="endTitle" data-i18n="closeRoom">Encerrar sala</h2>
+    <p data-i18n="confirmText">Encerrar a sala desconecta todos os espectadores.</p>
+    <div class="row">
+      <button id="confirmClose" class="stop" data-i18n="confirmYes">Sim, encerrar</button>
+      <button id="cancelClose" data-i18n="cancel">Cancelar</button>
     </div>
   </div>
 
@@ -892,14 +899,14 @@ function loadSettings() {
     autoReduce: s.autoReduce !== false,
     autoRecover: s.autoRecover !== false,
     capByViewers: s.capByViewers !== false,
-    notify: s.notify !== false
+    notify: s.notifyV2 === true && "Notification" in window && Notification.permission === "granted"
   };
 }
 
 let settings = loadSettings();
 
 function saveSettings() {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, notifyV2: settings.notify })); } catch (e) {}
 }
 
 function applyTheme() {
@@ -919,12 +926,22 @@ function markNewsSeen() {
   $("newsBanner").hidden = true;
 }
 
+function syncNotifyState() {
+  const ok = "Notification" in window && Notification.permission === "granted";
+  if (!ok && settings.notify) {
+    settings.notify = false;
+    saveSettings();
+  }
+}
+
 function renderSettings() {
+  syncNotifyState();
   $("setTheme").value = settings.theme;
   $("setAutoReduce").checked = settings.autoReduce;
   $("setAutoRecover").checked = settings.autoRecover;
   $("setCap").checked = settings.capByViewers;
   $("setNotify").checked = settings.notify;
+  $("setNotify").disabled = !("Notification" in window) || Notification.permission === "denied";
   const hint = $("setNotifyHint");
   if (!("Notification" in window)) {
     setT(hint, "notifyUnsupported");
@@ -937,10 +954,20 @@ function renderSettings() {
 
 function askNotifyPermission() {
   if (!settings.notify || !("Notification" in window) || Notification.permission !== "default") return;
+  requestNotifyPermission();
+}
+
+function requestNotifyPermission() {
+  const done = () => {
+    syncNotifyState();
+    renderSettings();
+  };
   try {
-    const r = Notification.requestPermission();
-    if (r && r.then) r.then(renderSettings, () => {});
-  } catch (e) {}
+    const r = Notification.requestPermission(done);
+    if (r && r.then) r.then(done, done);
+  } catch (e) {
+    done();
+  }
 }
 
 function notify(tag, title, body) {
@@ -2173,6 +2200,7 @@ function applyLang() {
   $("codeInput").placeholder = t("codePlaceholder");
   $("nick").placeholder = t("nickPlaceholder");
   $("nickNew").placeholder = t("nickPlaceholder");
+  ["homeStatusX", "viewStatusX"].forEach((id) => $(id).setAttribute("aria-label", t("close")));
   document.querySelectorAll("[data-tipkey]").forEach((el) => {
     const txt = t(el.dataset.tipkey);
     el.dataset.tip = txt;
@@ -2232,6 +2260,44 @@ function setStatus(el, key, isError, vars) {
     el.textContent = "";
   }
   el.className = isError ? "status error" : "status";
+  if (el.id !== "homeStatus" && el.id !== "viewStatus") return;
+  cancelFade(el);
+  const x = $(el.id + "X");
+  if (x) x.hidden = !(key && isError);
+  if (key && !isError && key !== "nickToJoin" && key !== "hostUpload") {
+    el._ft = setTimeout(() => startFade(el), 2000);
+  }
+}
+
+function cancelFade(el) {
+  clearTimeout(el._ft);
+  clearInterval(el._fi);
+}
+
+function startFade(el) {
+  const text = el.textContent;
+  if (!text) return;
+  delete el.dataset.i18n;
+  delete el.dataset.vars;
+  el.textContent = "";
+  const spans = Array.from(text).map((ch) => {
+    const sp = document.createElement("span");
+    sp.textContent = ch;
+    sp.style.transition = "opacity 0.25s";
+    el.appendChild(sp);
+    return sp;
+  });
+  let i = spans.length - 1;
+  const step = Math.max(25, Math.min(70, Math.floor(900 / spans.length)));
+  el._fi = setInterval(() => {
+    if (i < 0) {
+      clearInterval(el._fi);
+      el.textContent = "";
+      return;
+    }
+    spans[i].style.opacity = "0";
+    i--;
+  }, step);
 }
 
 function openPanel() {
@@ -2246,8 +2312,6 @@ function closePanel() {
   $("panel").classList.remove("open");
   $("panel").setAttribute("aria-hidden", "true");
   $("backdrop").hidden = true;
-  $("confirmBox").hidden = true;
-  $("closeRoom").hidden = false;
 }
 
 function isDetail(key) {
@@ -3769,15 +3833,22 @@ $("hostFs").addEventListener("click", () => {
   closePanel();
   toggleFullscreen(fsTarget($("hostStage")));
 });
+function closeEndDialog() {
+  $("endDialog").hidden = true;
+  $("endBackdrop").hidden = true;
+}
 $("closeRoom").addEventListener("click", () => {
-  $("confirmBox").hidden = false;
-  $("closeRoom").hidden = true;
+  $("endBackdrop").hidden = false;
+  $("endDialog").hidden = false;
+  $("cancelClose").focus();
 });
-$("cancelClose").addEventListener("click", () => {
-  $("confirmBox").hidden = true;
-  $("closeRoom").hidden = false;
+$("cancelClose").addEventListener("click", closeEndDialog);
+$("endBackdrop").addEventListener("click", closeEndDialog);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeEndDialog();
 });
 $("confirmClose").addEventListener("click", () => {
+  closeEndDialog();
   closePanel();
   closeRoom();
 });
@@ -3873,6 +3944,8 @@ $("volume").addEventListener("input", (e) => {
   updateMuteBtn();
 });
 $("settingsBtn").addEventListener("click", openSettings);
+$("homeStatusX").addEventListener("click", () => setStatus($("homeStatus"), ""));
+$("viewStatusX").addEventListener("click", () => setStatus($("viewStatus"), ""));
 $("closeSettings").addEventListener("click", closeSettings);
 $("settingsBackdrop").addEventListener("click", closeSettings);
 $("newsOk").addEventListener("click", markNewsSeen);
@@ -3895,10 +3968,25 @@ $("setAutoRecover").addEventListener("change", (e) => {
   saveSettings();
 });
 $("setNotify").addEventListener("change", (e) => {
-  settings.notify = e.target.checked;
+  const want = e.target.checked;
+  const supported = "Notification" in window;
+  if (!want || !supported || Notification.permission === "denied") {
+    settings.notify = false;
+    saveSettings();
+    renderSettings();
+    return;
+  }
+  settings.notify = true;
   saveSettings();
-  askNotifyPermission();
-  renderSettings();
+  if (Notification.permission === "default") {
+    requestNotifyPermission();
+  } else {
+    renderSettings();
+  }
+});
+window.addEventListener("focus", () => {
+  syncNotifyState();
+  if ($("settingsPanel").classList.contains("open")) renderSettings();
 });
 $("setCap").addEventListener("change", (e) => {
   settings.capByViewers = e.target.checked;
