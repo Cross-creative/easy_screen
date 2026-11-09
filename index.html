@@ -332,6 +332,12 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .foot { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 32px; font-size: 0.85rem; }
 .linkbtn { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 500; text-decoration: underline; cursor: pointer; }
 .linkbtn:hover { color: var(--text); }
+#reportDialog input[type="text"], #reportDialog textarea { width: 100%; box-sizing: border-box; text-transform: none; letter-spacing: normal; margin-bottom: 8px; }
+#reportDialog textarea { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; resize: vertical; }
+#reportDialog .hint { margin: 0 0 10px; font-size: 0.8rem; color: var(--muted); }
+#reportDialog .row { gap: 8px; }
+.btnlink { display: inline-block; padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font-weight: 600; text-decoration: none; cursor: pointer; }
+.btnlink.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
 .dialog.info { width: min(520px, 94vw); max-height: 85vh; overflow-y: auto; }
 .infobody { display: flex; flex-direction: column; gap: 10px; }
 .dialog .infobody p { margin: 0; color: var(--text); line-height: 1.5; font-size: 0.92rem; }
@@ -744,6 +750,22 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
   </div>
 
+  <div class="backdrop" id="reportBackdrop" hidden></div>
+  <div class="dialog info" id="reportDialog" role="dialog" aria-modal="true" aria-labelledby="reportTitle" hidden>
+    <h2 id="reportTitle" data-i18n="reportTitle">Denunciar uso indevido</h2>
+    <p data-i18n="reportIntro">Preencha o que aconteceu e escolha como enviar. A denúncia vai para o responsável pelo site.</p>
+    <input type="text" id="reportCode" maxlength="12" autocomplete="off" data-i18n-ph="reportCodePh" placeholder="Código da sala">
+    <input type="text" id="reportNick" maxlength="40" autocomplete="off" data-i18n-ph="reportNickPh" placeholder="Apelido de quem você está denunciando">
+    <textarea id="reportText" rows="4" maxlength="1000" data-i18n-ph="reportTextPh" placeholder="O que aconteceu?"></textarea>
+    <p class="hint" id="reportAddr"></p>
+    <div class="row">
+      <a class="btnlink primary" id="reportGmail" target="_blank" rel="noopener" data-i18n="reportGmail">Abrir no Gmail</a>
+      <a class="btnlink" id="reportMail" data-i18n="reportMail">App de e-mail</a>
+      <button id="reportCopy" type="button" data-i18n="reportCopy">Copiar texto</button>
+      <button id="reportClose" type="button" data-i18n="close">Fechar</button>
+    </div>
+  </div>
+
   <div class="backdrop" id="endBackdrop" hidden></div>
   <div class="dialog" id="endDialog" role="dialog" aria-modal="true" aria-labelledby="endTitle" hidden>
     <h2 id="endTitle" data-i18n="closeRoom">Encerrar sala</h2>
@@ -826,7 +848,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <footer class="foot">
     <button type="button" class="linkbtn" id="termsLink" data-i18n="termsLink">Termos de uso</button>
     <button type="button" class="linkbtn" id="ipLink" data-i18n="ipLink">Sobre o seu IP</button>
-    <a class="linkbtn" id="reportLink" href="mailto:supervxz99@gmail.com" data-i18n="reportLink">Denunciar uso indevido</a>
+    <button class="linkbtn" id="reportLink" type="button" data-i18n="reportLink">Denunciar uso indevido</button>
   </footer>
 </main>
 
@@ -1236,7 +1258,16 @@ const I18N = {
     termsBody: "1. O Tela Fácil é gratuito e oferecido como está, sem garantia de funcionamento ou disponibilidade.\n2. Você é responsável pelo que compartilha, escreve e assiste. Não use o site para conteúdo ilegal, que viole direitos autorais ou a privacidade de outras pessoas, nem para violência, assédio, golpes ou qualquer conteúdo que envolva a exploração de menores.\n3. Compartilhe apenas o que você tem direito de compartilhar. Antes de transmitir, feche senhas, e-mails e dados pessoais que apareçam na tela.\n4. O vídeo, o áudio e o chat vão direto entre os navegadores. O site não grava nem consegue ver esse conteúdo, por isso quem cria a sala é o responsável por moderá-la (silenciar, expulsar e recusar entradas).\n5. Quem participa de uma sala pode ver o IP público das outras pessoas. Veja “Sobre o seu IP”.\n6. O autor pode alterar estes termos ou tirar o site do ar a qualquer momento.\n7. Para denunciar um uso indevido, use o link “Denunciar uso indevido” no rodapé, que abre um e-mail para o autor.",
     reportLink: "Denunciar uso indevido",
     reportSubject: "Denúncia - Tela Fácil",
-    reportBody: "Código da sala: {code}\nApelido de quem estou denunciando:\nO que aconteceu:\n",
+    reportBody: "Código da sala: {code}\nApelido de quem estou denunciando: {nick}\nO que aconteceu: {text}\n",
+    reportTitle: "Denunciar uso indevido",
+    reportIntro: "Preencha o que aconteceu e escolha como enviar. A denúncia vai para o responsável pelo site.",
+    reportCodePh: "Código da sala",
+    reportNickPh: "Apelido de quem você está denunciando",
+    reportTextPh: "O que aconteceu?",
+    reportGmail: "Abrir no Gmail",
+    reportMail: "App de e-mail",
+    reportCopy: "Copiar texto",
+    reportAddr: "Se nenhuma opção abrir, copie o texto e envie para {mail}.",
     queueWait: "Aguardando a sua vez de entrar (posição {n})...",
     roomBusy: "A sala está recebendo muitas entradas. Tente de novo em instantes."
   },
@@ -1401,7 +1432,16 @@ const I18N = {
     termsBody: "1. Easy Screen is free and provided as is, with no guarantee of operation or availability.\n2. You are responsible for what you share, write and watch. Do not use the site for illegal content, content that violates copyright or other people's privacy, or for violence, harassment, scams or any content involving the exploitation of minors.\n3. Only share what you have the right to share. Before streaming, close passwords, emails and personal data that appear on your screen.\n4. Video, audio and chat go directly between browsers. The site does not record or see this content, so whoever creates the room is responsible for moderating it (muting, kicking and declining entries).\n5. People in a room can see each other's public IP. See “About your IP”.\n6. The author may change these terms or take the site down at any time.\n7. To report misuse, use the “Report misuse” link in the footer, which opens an email to the author.",
     reportLink: "Report misuse",
     reportSubject: "Report - Easy Screen",
-    reportBody: "Room code: {code}\nNickname of the person I am reporting:\nWhat happened:\n",
+    reportBody: "Room code: {code}\nNickname of the person I am reporting: {nick}\nWhat happened: {text}\n",
+    reportTitle: "Report misuse",
+    reportIntro: "Fill in what happened and choose how to send it. The report goes to the site owner.",
+    reportCodePh: "Room code",
+    reportNickPh: "Nickname of the person you are reporting",
+    reportTextPh: "What happened?",
+    reportGmail: "Open in Gmail",
+    reportMail: "Email app",
+    reportCopy: "Copy text",
+    reportAddr: "If no option opens, copy the text and send it to {mail}.",
     queueWait: "Waiting for your turn to join (position {n})...",
     roomBusy: "The room is receiving many entries. Try again in a moment."
   }
@@ -2254,6 +2294,9 @@ function applyLang() {
   $("codeInput").placeholder = t("codePlaceholder");
   $("nick").placeholder = t("nickPlaceholder");
   $("nickNew").placeholder = t("nickPlaceholder");
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
   ["homeStatusX", "viewStatusX"].forEach((id) => $(id).setAttribute("aria-label", t("close")));
   document.querySelectorAll("[data-tipkey]").forEach((el) => {
     const txt = t(el.dataset.tipkey);
@@ -4143,9 +4186,54 @@ document.addEventListener("keydown", (e) => {
 });
 $("termsLink").addEventListener("click", () => showInfo("termsTitle", "termsBody", false));
 $("ipLink").addEventListener("click", () => showInfo("ipTitle", "ipBody", false));
-$("reportLink").addEventListener("click", () => {
+const REPORT_MAIL = "supervxz99@gmail.com";
+function reportData() {
+  const subject = t("reportSubject");
+  const body = t("reportBody", { code: $("reportCode").value.trim() || "-", nick: $("reportNick").value.trim(), text: $("reportText").value.trim() });
+  return { subject, body };
+}
+function refreshReport() {
+  const d = reportData();
+  $("reportGmail").href = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(REPORT_MAIL) + "&su=" + encodeURIComponent(d.subject) + "&body=" + encodeURIComponent(d.body);
+  $("reportMail").href = "mailto:" + REPORT_MAIL + "?subject=" + encodeURIComponent(d.subject) + "&body=" + encodeURIComponent(d.body);
+}
+function openReport() {
   const code = hosting ? currentCode : !viewerView.hidden ? activeCode : "";
-  $("reportLink").href = "mailto:supervxz99@gmail.com?subject=" + encodeURIComponent(t("reportSubject")) + "&body=" + encodeURIComponent(t("reportBody", { code: code || "-" }));
+  $("reportCode").value = code || "";
+  $("reportNick").value = "";
+  $("reportText").value = "";
+  $("reportAddr").textContent = t("reportAddr", { mail: REPORT_MAIL });
+  refreshReport();
+  $("reportBackdrop").hidden = false;
+  $("reportDialog").hidden = false;
+  $("reportText").focus();
+}
+function closeReport() {
+  $("reportBackdrop").hidden = true;
+  $("reportDialog").hidden = true;
+}
+["reportCode", "reportNick", "reportText"].forEach((id) => $(id).addEventListener("input", refreshReport));
+$("reportLink").addEventListener("click", openReport);
+$("reportClose").addEventListener("click", closeReport);
+$("reportBackdrop").addEventListener("click", closeReport);
+$("reportCopy").addEventListener("click", async () => {
+  const d = reportData();
+  const txt = d.subject + "\n\n" + d.body;
+  try {
+    await navigator.clipboard.writeText(txt);
+  } catch (e) {
+    const ta = $("reportText");
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand("copy");
+    } catch (e2) {}
+  }
+  setT($("reportCopy"), "copied");
+  setTimeout(() => setT($("reportCopy"), "reportCopy"), 1500);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("reportDialog").hidden) closeReport();
 });
 $("homeStatusX").addEventListener("click", () => setStatus($("homeStatus"), ""));
 $("viewStatusX").addEventListener("click", () => setStatus($("viewStatus"), ""));
