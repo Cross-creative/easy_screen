@@ -44,6 +44,10 @@ Host moderation: mute, kick and delete messages from the people panel.
 
 Temporary ban after a kick: 5 minutes by viewer identifier and 2 minutes by IP address.
 
+Entry queue: to prevent floods, a room admits one new person every 5 seconds. People who arrive at the same time wait in an organized queue and see their position on screen. Up to 8 people can wait; beyond that the site shows that the room is busy. After a host handover, people who were already in the room reconnect without waiting.
+
+Alternate room addresses: besides the main address, a room can be recovered on alternate addresses after a host handover. Viewers try the main address first and only try the alternates, one at a time, if the main one does not answer.
+
 Automatic reconnection: if a viewer's connection drops, the site retries up to 8 times with increasing delays and keeps the chat on screen.
 
 Tab or window sharing with optional audio.
@@ -180,6 +184,10 @@ No accounts, no analytics and no cookies.
 The browser stores only your settings (language, theme, the automatic quality options and the notifications option), your nickname, a flag saying you already saw the what's new notice, and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
 
 Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
+
+IP notice: before creating or joining a room for the first time, the site shows a message explaining what the public IP reveals (roughly the internet provider and the city or region, not the exact location) and how to protect yourself, for example with a VPN. It is shown once, after you click "I understand", and stays available at any time through the "About your IP" link in the footer.
+
+Terms of use and reports: the footer has a "Terms of use" link (no mandatory acceptance) and a "Report misuse" link that opens an email already filled in, addressed to the site owner, including the room code when there is one. The terms text is a simple draft and was not reviewed by a lawyer.
 
 The host's browser reads each viewer's IP address only to apply a temporary ban after a kick. It is kept in memory, is never displayed, is never sent to other people in the room (not even to the person who would take over as host) and is discarded when the room ends.
 
