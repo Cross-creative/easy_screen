@@ -2691,7 +2691,7 @@ function strList(a) {
 function banList(a) {
   if (!Array.isArray(a)) return [];
   return a
-    .filter((b) => Array.isArray(b) && typeof b[0] === "string" && /^(vid|ip):[A-Za-z0-9:.%-]{1,64}$/.test(b[0]) && Number.isFinite(b[1]))
+    .filter((b) => Array.isArray(b) && typeof b[0] === "string" && /^vid:[A-Z0-9]{12}$/.test(b[0]) && Number.isFinite(b[1]))
     .slice(0, 64)
     .map((b) => [b[0], b[1]]);
 }
@@ -2737,7 +2737,7 @@ function syncSuccessor() {
     multi: roomMulti,
     allowed: [...allowed],
     grants: [...grants],
-    bans: [...bans].filter((b) => b[1] > Date.now()),
+    bans: [...bans].filter((b) => b[1] > Date.now() && b[0].startsWith("vid:")),
     muted: [...mutedVids],
     chat: chatLog.slice()
   };
