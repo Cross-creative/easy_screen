@@ -74,7 +74,7 @@ Update notice: every 5 minutes (and when you come back to the tab) the site chec
 
 Floating alerts: requests to join or share, upload or CPU warnings and automatic quality changes appear as a notice fixed at the top of the window. It follows the screen when you scroll, so it stays visible on small screens.
 
-System notifications: when the room tab is in the background or the window is not focused, the same alerts also appear as a notification on your computer. Clicking one takes you back to the room tab. The browser asks for permission the first time you create a room or start sharing from inside a room. They can be turned off in Settings.
+System notifications: off by default. When you turn them on in Settings, the browser asks for permission. If the browser does not allow them (or the permission is blocked later), the option turns itself off and is disabled in Settings. When on, and when the room tab is in the background or the window is not focused, the same alerts also appear as a notification on your computer. Clicking one takes you back to the room tab.
 
 Estimated upload usage and a live viewer counter.
 
@@ -82,7 +82,9 @@ Up to 16 viewers per room.
 
 Stop and resume sharing, or switch to another tab or window, without kicking anyone out of the room.
 
-Options panel for the host, with a confirmation before ending the room.
+Options panel for the host. The small red "End room" button sits in the top row, next to Options and Chat, and asks for confirmation before ending the room.
+
+Short messages (such as "Room ended") disappear on their own after 2 seconds, with the letters fading from right to left. Error messages stay on screen until you close them with the X button.
 
 One tab per viewer per room: duplicate tabs from the same browser are blocked.
 
