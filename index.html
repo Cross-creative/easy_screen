@@ -2921,20 +2921,21 @@ function noteNick(vid, nick) {
   roomNicks.set(vid, list);
 }
 
-function peopleList() {
+function peopleList(forPeer) {
   const out = [];
   const mine = getViewerId();
   noteNick(mine, myNick);
-  const add = (vid, nick) => {
-    const list = roomNicks.get(vid) || [nick];
-    out.push({ g: vid.slice(0, 8), n: nick, p: list.filter((x) => x !== nick).slice(-5) });
-  };
-  add(mine, myNick);
-  viewers.forEach((v) => {
+  const entries = [{ vid: mine, nick: myNick, m: forPeer === undefined }];
+  viewers.forEach((v, id) => {
     if (v.vid) {
       noteNick(v.vid, v.nick);
-      add(v.vid, v.nick);
+      entries.push({ vid: v.vid, nick: v.nick, m: id === forPeer });
     }
+  });
+  const nowNicks = new Set(entries.map((e) => e.nick));
+  entries.forEach((e) => {
+    const list = roomNicks.get(e.vid) || [e.nick];
+    out.push({ g: e.vid.slice(0, 8), n: e.nick, m: e.m ? 1 : 0, p: list.filter((x) => !nowNicks.has(x)).slice(-5) });
   });
   return out;
 }
@@ -2950,10 +2951,9 @@ function updateHostCount() {
     setStatus($("hostStatus"), "hostWaiting");
   }
   $("uploadInfo").hidden = !(stream && n);
-  const people = peopleList();
-  rememberRoom(currentCode, people);
-  viewers.forEach((v) => {
-    if (v.conn.open) v.conn.send({ count: n, people: people });
+  rememberRoom(currentCode, peopleList().filter((x) => !x.m));
+  viewers.forEach((v, id) => {
+    if (v.conn.open) v.conn.send({ count: n, people: peopleList(id) });
   });
   renderPeople();
   renderRequests();
@@ -3989,9 +3989,10 @@ function connectToRoom(code) {
             roomPeople = d.people.slice(0, 40).filter((x) => x && typeof x.g === "string" && typeof x.n === "string").map((x) => ({
               g: x.g.slice(0, 8),
               n: cleanNick(x.n),
+              m: x.m ? 1 : 0,
               p: Array.isArray(x.p) ? x.p.slice(0, 5).map((y) => cleanNick(String(y))) : []
             }));
-            rememberRoom(activeCode, roomPeople);
+            rememberRoom(activeCode, roomPeople.filter((x) => !x.m));
           }
           $("viewCount").hidden = false;
           setT($("viewCount"), "eyeCount", { n: d.count });
@@ -4313,21 +4314,30 @@ function loadRecent() {
 }
 function rememberRoom(code, people) {
   if (!/^[A-Z0-9]{6}$/.test(code || "") || !Array.isArray(people)) return;
-  const me = getViewerId().slice(0, 8);
   const list = loadRecent();
   const i = list.findIndex((r) => r.code === code);
   const entry = i >= 0 ? list.splice(i, 1)[0] : { code: code, ts: 0, people: [] };
-  const byId = new Map(entry.people.map((x) => [x.g, x]));
+  const dupOf = (arr) => {
+    const c = {};
+    arr.forEach((x) => {
+      c[x.g] = (c[x.g] || 0) + 1;
+    });
+    return (x) => (c[x.g] > 1 ? x.g + "|" + x.n : x.g);
+  };
+  const oldKey = dupOf(entry.people);
+  const newKey = dupOf(people);
+  const byId = new Map(entry.people.map((x) => [oldKey(x), x]));
   people.forEach((x) => {
-    if (!x || x.g === me) return;
-    const old = byId.get(x.g);
+    if (!x) return;
+    const key = newKey(x);
+    const old = byId.get(key);
     let prev = (x.p || []).slice();
     if (old) {
       prev = prev.concat(old.p);
       if (old.n !== x.n) prev.push(old.n);
     }
     prev = prev.filter((y, k) => y && y !== x.n && prev.indexOf(y) === k).slice(-5);
-    byId.set(x.g, { g: x.g, n: x.n, p: prev });
+    byId.set(key, { g: x.g, n: x.n, p: prev });
   });
   entry.people = [...byId.values()].slice(-40);
   entry.ts = Date.now();
