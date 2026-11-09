@@ -187,7 +187,7 @@ Because connections are peer-to-peer, the host and each viewer can see each othe
 
 IP notice: before creating or joining a room for the first time, the site shows a message explaining what the public IP reveals (roughly the internet provider and the city or region, not the exact location) and how to protect yourself, for example with a VPN. It is shown once, after you click "I understand", and stays available at any time through the "About your IP" link in the footer.
 
-Terms of use and reports: the footer has a "Terms of use" link (no mandatory acceptance) and a "Report misuse" link that opens an email already filled in, addressed to the site owner, including the room code when there is one. The terms text is a simple draft and was not reviewed by a lawyer.
+Terms of use and reports: the footer has a "Terms of use" link (no mandatory acceptance) and a "Report misuse" button that opens a small window with the room code, the nickname of the person being reported and a description of what happened. From there you can open the message in Gmail, open your email app, or copy the text and send it to the site owner by any email service. The terms text is a simple draft and was not reviewed by a lawyer.
 
 The host's browser reads each viewer's IP address only to apply a temporary ban after a kick. It is kept in memory, is never displayed, is never sent to other people in the room (not even to the person who would take over as host) and is discarded when the room ends.
 
