@@ -44,7 +44,7 @@ Host moderation: mute, kick and delete messages from the people panel.
 
 Temporary ban after a kick: 5 minutes by viewer identifier and 2 minutes by IP address.
 
-Automatic reconnection: if a viewer's connection drops, the site retries up to 6 times with increasing delays and keeps the chat on screen.
+Automatic reconnection: if a viewer's connection drops, the site retries up to 8 times with increasing delays and keeps the chat on screen.
 
 Tab or window sharing with optional audio.
 
@@ -88,7 +88,7 @@ One tab per viewer per room: duplicate tabs from the same browser are blocked.
 
 Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, from the bar under the video, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
 
-Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type, sharing mode and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The chat, the ban list and any active sharing are lost in the handover.
+Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type, sharing mode and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The new host keeps the room settings, the last 50 chat messages, the people muted and the temporary bans by viewer identifier. IP bans and any active sharing are not passed on: people who were sharing need to click Share again.
 
 English and Portuguese (Brazil), detected from the browser, remembered and changeable in Settings.
 
@@ -168,7 +168,7 @@ Bans after a kick are temporary and can be bypassed, for example with a VPN or a
 
 If the host closes the tab, the room ends immediately. Joining another room as a viewer also closes your own room.
 
-Automatic reconnection stops after 6 failed attempts, and the viewer then has to join again.
+Automatic reconnection stops after 8 failed attempts, and the viewer then has to join again.
 
 
 Privacy
@@ -179,9 +179,9 @@ The browser stores only your settings (language, theme, the automatic quality op
 
 Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
 
-The host's browser reads each viewer's IP address only to apply a temporary ban after a kick. It is kept in memory, is never displayed and is discarded when the room ends.
+The host's browser reads each viewer's IP address only to apply a temporary ban after a kick. It is kept in memory, is never displayed, is never sent to other people in the room (not even to the person who would take over as host) and is discarded when the room ends.
 
-Chat is not stored or recorded. It is cleared when the room ends.
+Chat is not recorded or saved on any server. The host's browser keeps the last 50 messages in memory so people who join later can see them, and everything is cleared when the room ends.
 
 Only share content you have the right to share. Streaming protected material, such as movies or series, may violate the terms of the service that provides it.
 
