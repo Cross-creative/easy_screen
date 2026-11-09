@@ -103,7 +103,13 @@ body {
 main { max-width: 960px; margin: 0 auto; padding: 24px 16px 72px; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 h2 { font-size: 1.1rem; margin: 0 0 12px; }
-.statusrow { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.statusrow { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 12px; }
+.codeline { display: inline-flex; align-items: center; gap: 10px; }
+@media (max-width: 520px) {
+  .row.codebar { display: grid; grid-template-columns: 1fr 1fr; }
+  .row.codebar .codeline { grid-column: 1 / -1; }
+}
+.statusline { display: flex; align-items: center; gap: 8px; }
 .statusrow .status { margin-top: 0; }
 .info {
   position: relative;
@@ -161,6 +167,17 @@ button.mini { padding: 2px 8px; font-size: 0.8rem; border-radius: 8px; }
 }
 .banner a { color: inherit; font-weight: 700; word-break: break-all; }
 .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 12px; }
+.card.news {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border-color: var(--accent);
+}
+.card.news .away-text { flex: 1 1 240px; margin: 0; }
 .card.highlight { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .notice p { margin: 0; color: var(--muted); }
 .sub { color: var(--muted); margin: 0 0 20px; }
@@ -208,8 +225,10 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   display: inline-block;
   padding: 4px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 0;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--muted);
+  font-size: 0.9rem;
   font-weight: 600;
 }
 .stage {
@@ -229,6 +248,8 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
   grid-auto-rows: minmax(0, 1fr);
 }
+.tiles.single { padding: 0; }
+.tiles.single .tile { border-radius: 0; }
 .tiles.has-big { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
 .tiles.has-big .tile:not(.big) { display: none; }
 .tile .back-grid {
@@ -422,6 +443,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   line-height: 1;
   z-index: 10;
 }
+.gear svg { width: 24px; height: 24px; display: block; margin: 0 auto; }
 .panel-body .check { align-items: flex-start; }
 .alerts {
   position: fixed;
@@ -531,7 +553,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
-  <div class="card highlight" id="newsBanner" hidden>
+  <div class="card news" id="newsBanner" hidden>
     <p class="away-text" data-i18n="newsText">Novidade: agora o Tela Fácil tem configurações! Toque no ⚙ no canto da tela para mudar idioma, tema e a qualidade automática.</p>
     <button id="newsOk" class="primary" data-i18n="newsOk">Entendi</button>
   </div>
@@ -575,9 +597,8 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 </section>
 
   <section id="hostView" hidden>
-    <div class="row">
-      <span data-i18n="codeLabel">Código:</span>
-      <span class="code" id="hostCode">······</span>
+    <div class="row codebar">
+      <span class="codeline"><span data-i18n="codeLabel">Código:</span> <span class="code" id="hostCode">······</span></span>
       <button id="copyCode" data-i18n="copyCode">Copiar código</button>
       <button id="copyLink" data-i18n="copyLink">Copiar link</button>
     </div>
@@ -607,8 +628,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <div class="status" id="hostNote" hidden></div>
     <div class="statusrow">
     <div class="status error" id="audioNote" data-i18n="audioMissing" hidden>O áudio não está sendo compartilhado.</div>
+  <div class="statusline">
   <div class="status" id="hostStatus"></div>
   <span class="info" id="uploadInfo" tabindex="0" hidden>🛈<span class="tip" role="tooltip" data-i18n="uploadHelp">Upload é a velocidade com que seu computador envia dados pela internet.</span></span>
+  </div>
 </div>
 
     <div class="backdrop" id="backdrop" hidden></div>
@@ -743,7 +766,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <div class="warn" id="viewWarn" hidden><span id="viewWarnText"></span></div>
   </div>
 
-  <button class="gear" id="settingsBtn" type="button">⚙</button>
+  <button class="gear" id="settingsBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
 
   <div class="backdrop" id="settingsBackdrop" hidden></div>
   <aside class="panel" id="settingsPanel" aria-hidden="true">
@@ -1411,6 +1434,7 @@ function layoutTiles() {
   if (!g) return;
   g.style.setProperty("--cols", tiles.size <= 1 ? 1 : 2);
   g.classList.toggle("has-big", !!g.querySelector(".tile.big"));
+  g.classList.toggle("single", tiles.size <= 1);
 }
 
 function prefOf(id) {
