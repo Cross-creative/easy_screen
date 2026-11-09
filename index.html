@@ -44,7 +44,7 @@ the copyright holder, subject to applicable law.
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob: mediastream:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob: mediastream:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://firestore.googleapis.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tela Fácil</title>
@@ -761,8 +761,10 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <input type="text" id="reportNick" maxlength="40" autocomplete="off" data-i18n-ph="reportNickPh" placeholder="Apelido de quem você está denunciando">
     <textarea id="reportText" rows="4" maxlength="1000" data-i18n-ph="reportTextPh" placeholder="O que aconteceu?"></textarea>
     <label class="check" id="reportChatWrap"><input type="checkbox" id="reportChat"> <span data-i18n="reportChatOpt">Incluir as últimas mensagens do chat da sala</span></label>
+    <div class="status" id="reportStatus" hidden></div>
     <p class="hint" id="reportAddr"></p>
     <div class="row">
+      <button id="reportSend" type="button" class="primary" data-i18n="reportSend" hidden>Enviar denúncia</button>
       <a class="btnlink primary" id="reportGmail" target="_blank" rel="noopener" data-i18n="reportGmail">Abrir no Gmail</a>
       <a class="btnlink" id="reportMail" data-i18n="reportMail">App de e-mail</a>
       <button id="reportCopy" type="button" data-i18n="reportCopy">Copiar texto</button>
@@ -1262,6 +1264,11 @@ const I18N = {
     termsBody: "1. O Tela Fácil é gratuito e oferecido como está, sem garantia de funcionamento ou disponibilidade.\n2. Você é responsável pelo que compartilha, escreve e assiste. Não use o site para conteúdo ilegal, que viole direitos autorais ou a privacidade de outras pessoas, nem para violência, assédio, golpes ou qualquer conteúdo que envolva a exploração de menores.\n3. Compartilhe apenas o que você tem direito de compartilhar. Antes de transmitir, feche senhas, e-mails e dados pessoais que apareçam na tela.\n4. O vídeo, o áudio e o chat vão direto entre os navegadores. O site não grava nem consegue ver esse conteúdo, por isso quem cria a sala é o responsável por moderá-la (silenciar, expulsar e recusar entradas).\n5. Quem participa de uma sala pode ver o IP público das outras pessoas. Veja “Sobre o seu IP”.\n6. O autor pode alterar estes termos ou tirar o site do ar a qualquer momento.\n7. Para denunciar um uso indevido, use o link “Denunciar uso indevido” no rodapé, que abre um e-mail para o autor.",
     reportLink: "Denunciar uso indevido",
     reportSubject: "Denúncia - Tela Fácil",
+    reportSend: "Enviar denúncia",
+    reportSent: "Denúncia enviada. Obrigado por avisar.",
+    reportFail: "Não foi possível enviar agora. Use uma das opções por e-mail.",
+    reportWait: "Aguarde alguns segundos antes de enviar outra denúncia.",
+    reportEmpty: "Descreva o que aconteceu antes de enviar.",
     reportWho: "Quem você está denunciando?",
     reportWhoOther: "Outra pessoa / não está na lista",
     reportChatOpt: "Incluir as últimas mensagens do chat da sala",
@@ -1446,6 +1453,11 @@ const I18N = {
     termsBody: "1. Easy Screen is free and provided as is, with no guarantee of operation or availability.\n2. You are responsible for what you share, write and watch. Do not use the site for illegal content, content that violates copyright or other people's privacy, or for violence, harassment, scams or any content involving the exploitation of minors.\n3. Only share what you have the right to share. Before streaming, close passwords, emails and personal data that appear on your screen.\n4. Video, audio and chat go directly between browsers. The site does not record or see this content, so whoever creates the room is responsible for moderating it (muting, kicking and declining entries).\n5. People in a room can see each other's public IP. See “About your IP”.\n6. The author may change these terms or take the site down at any time.\n7. To report misuse, use the “Report misuse” link in the footer, which opens an email to the author.",
     reportLink: "Report misuse",
     reportSubject: "Report - Easy Screen",
+    reportSend: "Send report",
+    reportSent: "Report sent. Thank you for letting us know.",
+    reportFail: "Could not send right now. Use one of the email options.",
+    reportWait: "Wait a few seconds before sending another report.",
+    reportEmpty: "Describe what happened before sending.",
     reportWho: "Who are you reporting?",
     reportWhoOther: "Someone else / not in the list",
     reportChatOpt: "Include the latest chat messages from the room",
@@ -4260,6 +4272,8 @@ document.addEventListener("keydown", (e) => {
 $("termsLink").addEventListener("click", () => showInfo("termsTitle", "termsBody", false));
 $("ipLink").addEventListener("click", () => showInfo("ipTitle", "ipBody", false));
 let roomPeopleView = [];
+let reportLastSent = 0;
+const REPORT_API = { projectId: "", apiKey: "" };
 const REPORT_MAIL = "supervxz99@gmail.com";
 function reportTarget() {
   const sel = $("reportWho");
@@ -4287,6 +4301,55 @@ function reportData() {
     if (rows.length) lines.push("", t("reportLblChat") + ":", ...rows);
   }
   return { subject: t("reportSubject"), body: lines.join("\n") + "\n" };
+}
+function reportFields() {
+  const tg = reportTarget();
+  const rows = $("reportChat").checked && !$("reportChatWrap").hidden
+    ? [...$("chatList").querySelectorAll(".msg")].slice(-15).map((r) => r.textContent.trim().slice(0, 120))
+    : [];
+  return {
+    room: $("reportCode").value.trim().slice(0, 12),
+    target: (tg ? tg.n : $("reportNick").value.trim()).slice(0, 40),
+    targetId: tg ? tg.g : "",
+    prev: tg ? tg.p.join(", ").slice(0, 200) : "",
+    by: getViewerId().slice(0, 8),
+    text: $("reportText").value.trim().slice(0, 1000),
+    chat: rows.join("\n").slice(0, 2500),
+    lang: lang,
+    status: "new",
+    createdAt: new Date().toISOString()
+  };
+}
+async function sendReport() {
+  const st = $("reportStatus");
+  const show = (key, err) => {
+    st.hidden = false;
+    st.className = "status" + (err ? " error" : "");
+    setT(st, key);
+  };
+  const f = reportFields();
+  if (!f.text) return show("reportEmpty", true);
+  if (Date.now() - reportLastSent < 30000) return show("reportWait", true);
+  $("reportSend").disabled = true;
+  try {
+    const fields = {};
+    Object.keys(f).forEach((k) => {
+      fields[k] = { stringValue: f[k] };
+    });
+    const r = await fetch("https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(REPORT_API.projectId) + "/databases/(default)/documents/reports?key=" + encodeURIComponent(REPORT_API.apiKey), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fields: fields })
+    });
+    if (!r.ok) throw new Error("http " + r.status);
+    reportLastSent = Date.now();
+    show("reportSent", false);
+    $("reportText").value = "";
+    refreshReport();
+  } catch (e) {
+    show("reportFail", true);
+  }
+  $("reportSend").disabled = false;
 }
 function refreshReport() {
   const d = reportData();
@@ -4320,6 +4383,8 @@ function openReport() {
   $("reportNick").value = "";
   $("reportText").value = "";
   $("reportChat").checked = false;
+  $("reportStatus").hidden = true;
+  $("reportSend").hidden = !(REPORT_API.projectId && REPORT_API.apiKey);
   fillReportWho();
   $("reportAddr").textContent = t("reportAddr", { mail: REPORT_MAIL });
   refreshReport();
@@ -4339,6 +4404,7 @@ $("reportWho").addEventListener("change", () => {
 $("reportChat").addEventListener("change", refreshReport);
 $("reportLink").addEventListener("click", openReport);
 $("reportClose").addEventListener("click", closeReport);
+$("reportSend").addEventListener("click", sendReport);
 $("reportBackdrop").addEventListener("click", closeReport);
 $("reportCopy").addEventListener("click", async () => {
   const d = reportData();
