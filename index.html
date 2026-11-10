@@ -263,7 +263,7 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
   font-size: 0.85rem;
-  z-index: 2;
+  z-index: 3;
 }
 .tile.big .back-grid { display: block; }
 .tile {
@@ -281,7 +281,7 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   position: absolute;
   left: 8px;
   bottom: 8px;
-  max-width: 80%;
+  max-width: 60%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -291,8 +291,41 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   color: #fff;
   font-size: 0.8rem;
   pointer-events: none;
+  z-index: 3;
 }
 video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+.tile video.v-cam { display: none; }
+.tile.has-cam.has-screen video.v-cam,
+.tile.swap.has-cam.has-screen video.v-screen {
+  display: block;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 28%;
+  min-width: 80px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  z-index: 2;
+  cursor: pointer;
+}
+.tile.swap.has-cam.has-screen video.v-cam,
+.tile.has-cam:not(.has-screen) video.v-cam {
+  display: block;
+  position: static;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  border: 0;
+  border-radius: 0;
+  cursor: inherit;
+}
+.tile.has-cam:not(.has-screen) video.v-screen { display: none; }
+.tile video.mirror { transform: scaleX(-1); }
 #nick, #chatInput, #nickNew { text-transform: none; letter-spacing: normal; }
 #nick { width: min(100%, 320px); }
 #chatInput { flex: 1; min-width: 0; width: auto; }
@@ -515,12 +548,13 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .ibtn svg { width: 22px; height: 22px; }
 .ibtn img { width: 22px; height: 22px; display: block; }
 .pipimg {
+  --pip: url(data:image/png;base64,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);
   display: block;
   width: 28px;
   height: 28px;
   background-color: currentColor;
-  -webkit-mask: url(data:image/png;base64,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) center / contain no-repeat;
-  mask: url(data:image/png;base64,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) center / contain no-repeat;
+  -webkit-mask: var(--pip) center / contain no-repeat;
+  mask: var(--pip) center / contain no-repeat;
 }
 .ibtn .mslash { display: none; }
 .ibtn.muted .mslash { display: block; }
@@ -584,7 +618,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     <p class="away-text" data-i18n="newsText">Novidade: agora o Tela Fácil tem configurações! Toque no ⚙ no canto da tela para mudar idioma, tema e a qualidade automática.</p>
     <button id="newsOk" class="primary" data-i18n="newsOk">Entendi</button>
   </div>
-  <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
+  <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar a tela ou ligar a câmera, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
   <div class="card highlight" id="awayHome" hidden>
     <p class="away-text" id="awayHomeText"></p>
     <button id="backToRoom" class="primary" data-i18n="backToRoom">Voltar para a sala</button>
@@ -603,7 +637,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         <p class="hint" data-i18n="audioTip">Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.</p>
       </div>
       <div class="row">
-        <button id="startHost" class="primary" data-i18n="pickSurface">Escolher aba ou janela</button>
+        <button id="startHost" class="primary" data-i18n="pickSurface">Compartilhar tela</button>
         <button id="createRoom" data-i18n="createRoomOnly">Criar sala (BETA)</button>
       </div>
     </div>
@@ -674,6 +708,13 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
         </label>
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
         <button id="stopShare" data-i18n="stopShare">Parar de compartilhar</button>
+        <div class="shareopts" id="camHostBox" hidden>
+          <hr>
+          <label class="field"><span data-i18n="camQuality">Qualidade da câmera</span>
+            <select id="liveCamQuality"></select>
+          </label>
+          <button id="camHostBtn" data-i18n="camOn">Ligar câmera</button>
+        </div>
         <button id="awayBtn" data-i18n="awayBtn">Sair para o menu</button>
       </div>
     </aside>
@@ -685,6 +726,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
   <span class="badge" id="viewCount" hidden></span>
   <button id="shareAction" data-i18n="reqShare" hidden>Pedir para compartilhar</button>
+  <button id="camAction" data-i18n="reqCam" hidden>Pedir para ligar a câmera</button>
   <button id="openViewOptions" data-i18n="options">Opções</button>
 </div>
 <div class="warn" id="awayBanner" hidden><span id="awayText"></span></div>
@@ -722,6 +764,11 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
       </label>
       <label class="check"><input type="checkbox" id="viewAudio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
       <button id="viewSwitch" data-i18n="switchSurface" hidden>Trocar aba ou janela</button>
+    </div>
+    <div class="shareopts" id="viewCamOpts" hidden>
+      <label class="field"><span data-i18n="camQuality">Qualidade da câmera</span>
+        <select id="viewCamQuality"></select>
+      </label>
     </div>
   </div>
 </aside>
@@ -888,6 +935,8 @@ function checkOfficial() {
 const PREFIX = "tcompartilha-";
 const MAX_VIEWERS = 16;
 const MAX_SHARERS = 4;
+const MAX_CAMS = 4;
+const CAM = "#cam";
 const AWAY_MS = 8 * 60 * 1000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const QUALITIES = {
@@ -898,6 +947,12 @@ const QUALITIES = {
   extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 }
 };
 const ORDER = ["light", "eco", "mid", "high", "extreme"];
+const CAM_QUALITIES = {
+  c360: { width: 640, height: 360, fps: 15, kbps: 300 },
+  c480: { width: 854, height: 480, fps: 24, kbps: 600 },
+  c720: { width: 1280, height: 720, fps: 30, kbps: 1200 }
+};
+const CAM_ORDER = ["c360", "c480", "c720"];
 const MAX_UPLOAD_KBPS = 13000;
 const AUTO_DOWN_COOLDOWN = 8000;
 const AUTO_UP_MS = 60000;
@@ -1063,9 +1118,34 @@ function closeSettings() {
   $("settingsBackdrop").hidden = true;
 }
 
+function ownerOf(sid) {
+  return sid.endsWith(CAM) ? sid.slice(0, -CAM.length) : sid;
+}
+
+function isCamSid(sid) {
+  return sid.endsWith(CAM);
+}
+
+function callSid(call) {
+  const m = call.metadata;
+  return call.peer + (m && m.cam === true ? CAM : "");
+}
+
 function roomSize() {
   if (hosting) return viewers.size;
-  return shareState === "sharing" ? outCalls.size : roomCount;
+  if (shareState === "sharing" || camState === "sharing") return new Set([...outCalls.keys()].map(ownerOf)).size;
+  return roomCount;
+}
+
+function uploadKbps() {
+  if (hosting) {
+    return viewers.size * ((stream ? quality.kbps : 0) + (camStream ? camQuality.kbps : 0));
+  }
+  let total = 0;
+  outCalls.forEach((c, k) => {
+    total += isCamSid(k) ? camQuality.kbps : quality.kbps;
+  });
+  return total;
 }
 
 function qualityCap() {
@@ -1073,10 +1153,23 @@ function qualityCap() {
   if (!settings.capByViewers) return top;
   const n = roomSize();
   if (n <= 0) return top;
+  const camLoad = camStream ? camQuality.kbps : 0;
   for (let i = ORDER.length - 1; i >= 0; i--) {
-    if (n * QUALITIES[ORDER[i]].kbps <= MAX_UPLOAD_KBPS) return ORDER[i];
+    if (n * (QUALITIES[ORDER[i]].kbps + camLoad) <= MAX_UPLOAD_KBPS) return ORDER[i];
   }
   return ORDER[0];
+}
+
+function camCap() {
+  const top = CAM_ORDER[CAM_ORDER.length - 1];
+  if (!settings.capByViewers) return top;
+  const n = roomSize();
+  if (n <= 0) return top;
+  const base = stream ? quality.kbps : 0;
+  for (let i = CAM_ORDER.length - 1; i >= 0; i--) {
+    if (n * (base + CAM_QUALITIES[CAM_ORDER[i]].kbps) <= MAX_UPLOAD_KBPS) return CAM_ORDER[i];
+  }
+  return CAM_ORDER[0];
 }
 
 function refreshQualityLimits() {
@@ -1084,6 +1177,14 @@ function refreshQualityLimits() {
   [$("liveQuality"), $("viewQuality")].forEach((sel) => {
     Array.from(sel.options).forEach((o) => {
       const over = ORDER.indexOf(o.value) > cap;
+      o.disabled = over;
+      o.textContent = t("q_" + o.value) + (over ? " 🔒" : "");
+    });
+  });
+  const camTop = CAM_ORDER.indexOf(camCap());
+  [$("liveCamQuality"), $("viewCamQuality")].forEach((sel) => {
+    Array.from(sel.options).forEach((o) => {
+      const over = CAM_ORDER.indexOf(o.value) > camTop;
       o.disabled = over;
       o.textContent = t("q_" + o.value) + (over ? " 🔒" : "");
     });
@@ -1107,12 +1208,21 @@ function showAutoNote() {
 
 function enforceCap() {
   refreshQualityLimits();
-  if (!stream) return;
-  const cap = qualityCap();
-  if (ORDER.indexOf(qualityKey) > ORDER.indexOf(cap)) {
-    lastAutoAt = Date.now();
-    setQuality(cap, true);
-    autoNote("capLowered", cap);
+  if (stream) {
+    const cap = qualityCap();
+    if (ORDER.indexOf(qualityKey) > ORDER.indexOf(cap)) {
+      lastAutoAt = Date.now();
+      setQuality(cap, true);
+      autoNote("capLowered", cap);
+    }
+  }
+  if (camStream) {
+    const cc = camCap();
+    if (CAM_ORDER.indexOf(camKey) > CAM_ORDER.indexOf(cc)) {
+      lastAutoAt = Date.now();
+      setCamQuality(cc, true);
+      autoNote("capLowered", cc);
+    }
   }
 }
 
@@ -1121,10 +1231,10 @@ const I18N = {
     title: "Tela Fácil",
     heading: "Tela Fácil",
     sub: "Transmissão direta entre navegadores, sem cadastro.",
-    about: "Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.",
+    about: "Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar a tela ou ligar a câmera, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.",
     shareMyScreen: "Compartilhar minha tela",
     shareAudio: "Compartilhar áudio",
-    pickSurface: "Escolher aba ou janela",
+    pickSurface: "Compartilhar tela",
     createRoomOnly: "Criar sala (BETA)",
     watchWithCode: "Assistir com um código",
     codePlaceholder: "CÓDIGO",
@@ -1230,7 +1340,22 @@ const I18N = {
     requestText: "{name} quer compartilhar a tela.",
     allow: "Permitir",
     deny: "Negar",
-    revokeShare: "Revogar",
+    revokeShare: "Revogar tela",
+    revokeCam: "Revogar câmera",
+    camOn: "Ligar câmera",
+    camOff: "Desligar câmera",
+    reqCam: "Pedir para ligar a câmera",
+    camReqSent: "Pedido de câmera enviado...",
+    camQuality: "Qualidade da câmera",
+    camFailed: "Não foi possível abrir a câmera. Confira a permissão do navegador.",
+    camLimit: "Já há {n} câmeras ligadas. Tente de novo quando alguém desligar.",
+    camReqDenied: "O host recusou o seu pedido de câmera.",
+    camRevoked: "O host removeu a sua permissão de câmera.",
+    camAllowed: "O host permitiu que você ligue a câmera.",
+    camRequestText: "{name} quer ligar a câmera.",
+    q_c360: "Câmera leve (360p, 15 fps)",
+    q_c480: "Câmera normal (480p, 24 fps)",
+    q_c720: "Câmera HD (720p, 30 fps)",
     youTag: "{name} (você)",
     awayBtn: "Sair para o menu",
     backToRoom: "Voltar para a sala",
@@ -1311,10 +1436,10 @@ const I18N = {
     title: "Easy Screen",
     heading: "Easy Screen",
     sub: "Direct browser-to-browser streaming, no sign-up.",
-    about: "Create a room and share a tab or window from your computer with up to 16 people, straight from the browser. In rooms created with “Create room (BETA)”, people in the room can also ask to share, with your permission. No sign-up or install needed: send the code or the link and whoever receives it watches right away, with chat included.",
+    about: "Create a room and share a tab or window from your computer with up to 16 people, straight from the browser. In rooms created with “Create room (BETA)”, people in the room can also ask to share their screen or turn on their camera, with your permission. No sign-up or install needed: send the code or the link and whoever receives it watches right away, with chat included.",
     shareMyScreen: "Share my screen",
     shareAudio: "Share audio",
-    pickSurface: "Choose a tab or window",
+    pickSurface: "Share screen",
     createRoomOnly: "Create room (BETA)",
     watchWithCode: "Watch with a code",
     codePlaceholder: "CODE",
@@ -1420,7 +1545,22 @@ const I18N = {
     requestText: "{name} wants to share their screen.",
     allow: "Allow",
     deny: "Deny",
-    revokeShare: "Revoke",
+    revokeShare: "Revoke screen",
+    revokeCam: "Revoke camera",
+    camOn: "Turn on camera",
+    camOff: "Turn off camera",
+    reqCam: "Ask to turn on camera",
+    camReqSent: "Camera request sent...",
+    camQuality: "Camera quality",
+    camFailed: "Could not open the camera. Check the browser permission.",
+    camLimit: "{n} cameras are already on. Try again when someone turns theirs off.",
+    camReqDenied: "The host declined your camera request.",
+    camRevoked: "The host removed your permission to use the camera.",
+    camAllowed: "The host allowed you to turn on the camera.",
+    camRequestText: "{name} wants to turn on their camera.",
+    q_c360: "Light camera (360p, 15 fps)",
+    q_c480: "Normal camera (480p, 24 fps)",
+    q_c720: "HD camera (720p, 30 fps)",
     youTag: "{name} (you)",
     awayBtn: "Leave to menu",
     backToRoom: "Back to the room",
@@ -1504,9 +1644,15 @@ const home = $("home");
 const hostView = $("hostView");
 const viewerView = $("viewerView");
 const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+const canCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
 let peer = null;
 let stream = null;
+let camStream = null;
+let pendingCamStream = null;
+let camKey = "c480";
+let camQuality = CAM_QUALITIES.c480;
+let camState = "none";
 let qualityKey = "eco";
 let quality = QUALITIES.eco;
 let chosenQuality = "eco";
@@ -1534,6 +1680,7 @@ const pending = new Map();
 let lastNickTry = "";
 const bans = new Map();
 const grants = new Set();
+const camGrants = new Set();
 const mutedVids = new Set();
 const chatLog = [];
 const roomNicks = new Map();
@@ -1601,7 +1748,9 @@ function fmtTime(ms) {
 
 function pickVideo() {
   if (!activeGrid) return null;
-  return activeGrid.querySelector(".tile.big video") || activeGrid.querySelector(".tile video");
+  const pick = (root) => [...root.querySelectorAll("video")].find((v) => v.srcObject) || null;
+  const big = activeGrid.querySelector(".tile.big");
+  return (big && pick(big)) || pick(activeGrid);
 }
 
 function layoutTiles() {
@@ -1633,9 +1782,10 @@ function renderAudioTabs() {
   const me = hosting ? hostId() : peer ? peer.id : "";
   const list = [];
   sharerNames.forEach((nick, id) => {
-    if (id !== me) list.push([id, nick]);
+    if (!isCamSid(id) && id !== me) list.push([id, nick]);
   });
-  const show = sharerIds.size > 1 && list.length > 0;
+  const screens = [...sharerIds].filter((s) => !isCamSid(s)).length;
+  const show = screens > 1 && list.length > 0;
   const sig = show ? list.map((x) => x[0] + "|" + x[1]).join(";") : "";
   $("audioTabHost").hidden = !show;
   $("audioTabView").hidden = !show;
@@ -1702,34 +1852,70 @@ function toggleBig(el) {
   layoutTiles();
 }
 
-function addTile(id, nick, mediaStream, local) {
-  if (!activeGrid) return;
-  let t = tiles.get(id);
-  if (!t) {
-    const el = document.createElement("div");
-    el.className = "tile";
-    const video = document.createElement("video");
-    video.autoplay = true;
-    video.playsInline = true;
-    const tag = document.createElement("span");
-    tag.className = "tag";
-    const backBtn = document.createElement("button");
-    backBtn.type = "button";
-    backBtn.className = "back-grid";
-    setT(backBtn, "backToGrid");
-    backBtn.addEventListener("click", (ev) => {
+function makeTile(owner, local) {
+  const el = document.createElement("div");
+  el.className = "tile";
+  const video = document.createElement("video");
+  video.className = "v-screen";
+  video.autoplay = true;
+  video.playsInline = true;
+  const camVideo = document.createElement("video");
+  camVideo.className = "v-cam";
+  camVideo.autoplay = true;
+  camVideo.playsInline = true;
+  camVideo.muted = true;
+  const tag = document.createElement("span");
+  tag.className = "tag";
+  const backBtn = document.createElement("button");
+  backBtn.type = "button";
+  backBtn.className = "back-grid";
+  setT(backBtn, "backToGrid");
+  backBtn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    toggleBig(el);
+  });
+  el.append(video, camVideo, tag, backBtn);
+  const isSmall = (v) => {
+    if (!el.classList.contains("has-cam") || !el.classList.contains("has-screen")) return false;
+    return v === camVideo ? !el.classList.contains("swap") : el.classList.contains("swap");
+  };
+  [video, camVideo].forEach((v) => {
+    v.addEventListener("click", (ev) => {
+      if (!isSmall(v)) return;
       ev.stopPropagation();
-      toggleBig(el);
+      el.classList.toggle("swap");
     });
-    el.append(video, tag, backBtn);
-    el.addEventListener("click", () => {
-      if (tiles.size >= 2 && !el.classList.contains("big")) toggleBig(el);
-    });
-    activeGrid.appendChild(el);
-    t = { el, video, tag, local };
-    tiles.set(id, t);
-  }
+  });
+  el.addEventListener("click", () => {
+    if (tiles.size >= 2 && !el.classList.contains("big")) toggleBig(el);
+  });
+  activeGrid.appendChild(el);
+  const t = { el, video, camVideo, tag, local, screen: null, cam: null };
+  tiles.set(owner, t);
+  return t;
+}
+
+function syncTile(t) {
+  t.el.classList.toggle("has-cam", !!t.cam);
+  t.el.classList.toggle("has-screen", !!t.screen);
+  if (!t.cam || !t.screen) t.el.classList.remove("swap");
+}
+
+function nickFor(owner) {
+  return sharerNames.get(owner) || sharerNames.get(owner + CAM) || "";
+}
+
+function setSource(owner, cam, nick, mediaStream, local) {
+  if (!activeGrid) return;
+  const t = tiles.get(owner) || makeTile(owner, local);
   t.local = local;
+  const vid = cam ? t.camVideo : t.video;
+  if (cam) {
+    t.cam = mediaStream;
+    t.camVideo.classList.toggle("mirror", local);
+  } else {
+    t.screen = mediaStream;
+  }
   if (local) {
     setT(t.tag, "youTag", { name: nick });
   } else {
@@ -1737,15 +1923,16 @@ function addTile(id, nick, mediaStream, local) {
     delete t.tag.dataset.vars;
     t.tag.textContent = nick;
   }
-  if (t.video.srcObject !== mediaStream) t.video.srcObject = mediaStream;
+  if (vid.srcObject !== mediaStream) vid.srcObject = mediaStream;
+  syncTile(t);
   applyAudio();
-  const started = t.video.play();
+  const started = vid.play();
   if (started && started.catch) {
     started.catch(() => {
       viewMuted = true;
       applyAudio();
       updateMuteBtn();
-      const again = t.video.play();
+      const again = vid.play();
       if (again && again.catch) again.catch(() => {});
     });
   }
@@ -1754,12 +1941,22 @@ function addTile(id, nick, mediaStream, local) {
   refreshOverlays();
 }
 
-function removeTile(id) {
-  const t = tiles.get(id);
+function removeSource(owner, cam) {
+  const t = tiles.get(owner);
   if (!t) return;
-  t.video.srcObject = null;
-  t.el.remove();
-  tiles.delete(id);
+  if (cam) {
+    t.cam = null;
+    t.camVideo.srcObject = null;
+  } else {
+    t.screen = null;
+    t.video.srcObject = null;
+  }
+  if (!t.cam && !t.screen) {
+    t.el.remove();
+    tiles.delete(owner);
+  } else {
+    syncTile(t);
+  }
   layoutTiles();
   refreshOverlays();
 }
@@ -1767,6 +1964,7 @@ function removeTile(id) {
 function clearTiles() {
   tiles.forEach((t) => {
     t.video.srcObject = null;
+    t.camVideo.srcObject = null;
     t.el.remove();
   });
   tiles.clear();
@@ -1777,35 +1975,38 @@ function clearTiles() {
 }
 
 function acceptCall(call) {
-  const id = call.peer;
-  const old = inCalls.get(id);
-  inCalls.set(id, call);
+  const sid = callSid(call);
+  const owner = call.peer;
+  const cam = isCamSid(sid);
+  const old = inCalls.get(sid);
+  inCalls.set(sid, call);
   if (old) old.close();
   call.answer();
   call.on("stream", (remote) => {
-    if (inCalls.get(id) !== call) return;
+    if (inCalls.get(sid) !== call) return;
     clearTimeout(viewerTimeout);
-    addTile(id, sharerNames.get(id) || "", remote, false);
+    setSource(owner, cam, nickFor(owner), remote, false);
   });
   call.on("close", () => {
-    if (inCalls.get(id) === call) {
-      inCalls.delete(id);
-      removeTile(id);
+    if (inCalls.get(sid) === call) {
+      inCalls.delete(sid);
+      removeSource(owner, cam);
     }
   });
 }
 
 function handleIncomingCall(call) {
-  if (sharerIds.has(call.peer)) {
+  const sid = callSid(call);
+  if (sharerIds.has(sid)) {
     acceptCall(call);
     return;
   }
-  const prev = stashed.get(call.peer);
+  const prev = stashed.get(sid);
   if (prev) prev.close();
-  stashed.set(call.peer, call);
+  stashed.set(sid, call);
   setTimeout(() => {
-    if (stashed.get(call.peer) === call) {
-      stashed.delete(call.peer);
+    if (stashed.get(sid) === call) {
+      stashed.delete(sid);
       call.close();
     }
   }, 10000);
@@ -1818,22 +2019,24 @@ function syncRoster(list) {
   });
   sharerNames = next;
   sharerIds = new Set(next.keys());
-  inCalls.forEach((call, id) => {
-    if (!next.has(id)) {
-      inCalls.delete(id);
+  inCalls.forEach((call, sid) => {
+    if (!next.has(sid)) {
+      inCalls.delete(sid);
       call.close();
-      removeTile(id);
+      removeSource(ownerOf(sid), isCamSid(sid));
     }
   });
-  tiles.forEach((t, id) => {
-    if (!t.local && !next.has(id)) removeTile(id);
+  [...tiles].forEach(([id, t]) => {
+    if (t.local) return;
+    if (t.screen && !next.has(id)) removeSource(id, false);
+    if (t.cam && !next.has(id + CAM)) removeSource(id, true);
   });
-  next.forEach((nick, id) => {
-    const t = tiles.get(id);
+  next.forEach((nick, sid) => {
+    const t = tiles.get(ownerOf(sid));
     if (t && !t.local) t.tag.textContent = nick;
-    const st = stashed.get(id);
+    const st = stashed.get(sid);
     if (st) {
-      stashed.delete(id);
+      stashed.delete(sid);
       acceptCall(st);
     }
   });
@@ -1950,10 +2153,16 @@ function hostId() {
 function sharerList() {
   const list = [];
   if (stream) list.push({ id: hostId(), nick: myNick });
+  if (camStream) list.push({ id: hostId() + CAM, nick: myNick });
   viewers.forEach((v, id) => {
     if (v.sharing) list.push({ id, nick: v.nick });
+    if (v.camSharing) list.push({ id: id + CAM, nick: v.nick });
   });
   return list;
+}
+
+function countSharers(cam) {
+  return sharerList().filter((s) => isCamSid(s.id) === cam).length;
 }
 
 function broadcastSharers() {
@@ -1964,13 +2173,28 @@ function broadcastSharers() {
   });
 }
 
-function dropSharerMedia(id) {
+function dropScreenMedia(id) {
   const c = inCalls.get(id);
   if (c) {
     inCalls.delete(id);
     c.close();
   }
-  removeTile(id);
+  removeSource(id, false);
+}
+
+function dropCamMedia(id) {
+  const k = id + CAM;
+  const c = inCalls.get(k);
+  if (c) {
+    inCalls.delete(k);
+    c.close();
+  }
+  removeSource(id, true);
+}
+
+function dropSharerMedia(id) {
+  dropScreenMedia(id);
+  dropCamMedia(id);
 }
 
 function approveShare(id) {
@@ -1999,8 +2223,40 @@ function revokeShare(id) {
   v.wantsShare = false;
   v.sharing = false;
   if (v.vid) grants.delete(v.vid);
-  if (was) dropSharerMedia(id);
+  if (was) dropScreenMedia(id);
   if (v.conn.open) v.conn.send({ canShare: false });
+  if (was) broadcastSharers();
+  updateHostCount();
+}
+
+function approveCam(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  v.canCam = true;
+  v.wantsCam = false;
+  if (v.vid) camGrants.add(v.vid);
+  if (v.conn.open) v.conn.send({ canCam: true });
+  updateHostCount();
+}
+
+function denyCam(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  v.wantsCam = false;
+  if (v.conn.open) v.conn.send({ camDenied: "denied" });
+  updateHostCount();
+}
+
+function revokeCam(id) {
+  const v = viewers.get(id);
+  if (!v) return;
+  const was = v.camSharing;
+  v.canCam = false;
+  v.wantsCam = false;
+  v.camSharing = false;
+  if (v.vid) camGrants.delete(v.vid);
+  if (was) dropCamMedia(id);
+  if (v.conn.open) v.conn.send({ canCam: false });
   if (was) broadcastSharers();
   updateHostCount();
 }
@@ -2012,52 +2268,91 @@ function onShareRequest(v) {
   notify("share-" + v.nick, t("title"), t("requestText", { name: v.nick }));
 }
 
+function onCamRequest(v) {
+  if (!roomMulti || v.canCam || v.wantsCam) return;
+  v.wantsCam = true;
+  renderRequests();
+  notify("cam-" + v.nick, t("title"), t("camRequestText", { name: v.nick }));
+}
+
+function peerTargets(skip) {
+  const targets = [hostId()];
+  viewers.forEach((o, oid) => {
+    if (oid !== skip) targets.push(oid);
+  });
+  return targets;
+}
+
 function onShareStart(id, v) {
   if (!roomMulti || !v.canShare) {
     if (v.conn.open) v.conn.send({ shareDenied: "noperm" });
     return;
   }
   if (v.sharing) return;
-  if (sharerList().length >= MAX_SHARERS) {
+  if (countSharers(false) >= MAX_SHARERS) {
     if (v.conn.open) v.conn.send({ shareDenied: "limit" });
     return;
   }
   v.sharing = true;
   broadcastSharers();
-  const targets = [hostId()];
-  viewers.forEach((o, oid) => {
-    if (oid !== id) targets.push(oid);
-  });
-  if (v.conn.open) v.conn.send({ targets: targets });
+  if (v.conn.open) v.conn.send({ targets: peerTargets(id) });
+  updateHostCount();
+}
+
+function onCamStart(id, v) {
+  if (!roomMulti || !v.canCam) {
+    if (v.conn.open) v.conn.send({ camDenied: "noperm" });
+    return;
+  }
+  if (v.camSharing) return;
+  if (countSharers(true) >= MAX_CAMS) {
+    if (v.conn.open) v.conn.send({ camDenied: "limit" });
+    return;
+  }
+  v.camSharing = true;
+  broadcastSharers();
+  if (v.conn.open) v.conn.send({ camTargets: peerTargets(id) });
   updateHostCount();
 }
 
 function onShareStop(id, v) {
   if (!v.sharing) return;
   v.sharing = false;
-  dropSharerMedia(id);
+  dropScreenMedia(id);
   broadcastSharers();
   updateHostCount();
+}
+
+function onCamStop(id, v) {
+  if (!v.camSharing) return;
+  v.camSharing = false;
+  dropCamMedia(id);
+  broadcastSharers();
+  updateHostCount();
+}
+
+function requestRow(textKey, name, onYes, onNo) {
+  const row = document.createElement("div");
+  row.className = "request";
+  const text = document.createElement("span");
+  setT(text, textKey, { name: name });
+  const yes = document.createElement("button");
+  yes.className = "primary";
+  setT(yes, "allow");
+  yes.addEventListener("click", onYes);
+  const no = document.createElement("button");
+  setT(no, "deny");
+  no.addEventListener("click", onNo);
+  row.append(text, yes, no);
+  return row;
 }
 
 function renderRequests() {
   const box = $("shareRequests");
   box.innerHTML = "";
   viewers.forEach((v, id) => {
-    if (!v.wantsShare) return;
-    const row = document.createElement("div");
-    row.className = "request";
-    const text = document.createElement("span");
-    setT(text, "requestText", { name: v.nick });
-    const yes = document.createElement("button");
-    yes.className = "primary";
-    setT(yes, "allow");
-    yes.addEventListener("click", () => approveShare(id));
-    const no = document.createElement("button");
-    setT(no, "deny");
-    no.addEventListener("click", () => denyShare(id));
-    row.append(text, yes, no);
-    box.appendChild(row);
+    if (v.wantsShare) box.appendChild(requestRow("requestText", v.nick, () => approveShare(id), () => denyShare(id)));
+    if (v.wantsCam) box.appendChild(requestRow("camRequestText", v.nick, () => approveCam(id), () => denyCam(id)));
   });
 }
 
@@ -2084,6 +2379,13 @@ function renderPeople() {
       rev.className = "mini";
       setT(rev, "revokeShare");
       rev.addEventListener("click", () => revokeShare(id));
+      row.appendChild(rev);
+    }
+    if (v.canCam) {
+      const rev = document.createElement("button");
+      rev.className = "mini";
+      setT(rev, "revokeCam");
+      rev.addEventListener("click", () => revokeCam(id));
       row.appendChild(rev);
     }
     const mute = document.createElement("button");
@@ -2249,7 +2551,7 @@ function openPipDialog(statusEl) {
     b.textContent = tl.tag.textContent || "?";
     b.addEventListener("click", () => {
       closePipDialog();
-      enterPip(tl.video, statusEl);
+      enterPip(tl.screen ? tl.video : tl.camVideo, statusEl);
     });
     box.appendChild(b);
   });
@@ -2262,9 +2564,9 @@ async function togglePip(statusEl) {
     try { await document.exitPictureInPicture(); } catch (e) {}
     return;
   }
-  const webkitOn = [...tiles.values()].find((tl) => tl.video.webkitPresentationMode === "picture-in-picture");
+  const webkitOn = [...tiles.values()].map((tl) => (tl.screen ? tl.video : tl.camVideo)).find((v) => v.webkitPresentationMode === "picture-in-picture");
   if (webkitOn) {
-    webkitOn.video.webkitSetPresentationMode("inline");
+    webkitOn.webkitSetPresentationMode("inline");
     return;
   }
   if (tiles.size > 1) {
@@ -2329,6 +2631,17 @@ function fillQuality() {
     const keep = sel.value || "eco";
     sel.innerHTML = "";
     ORDER.forEach((k) => {
+      const o = document.createElement("option");
+      o.value = k;
+      o.textContent = t("q_" + k);
+      sel.appendChild(o);
+    });
+    sel.value = keep;
+  });
+  [$("liveCamQuality"), $("viewCamQuality")].forEach((sel) => {
+    const keep = sel.value || camKey;
+    sel.innerHTML = "";
+    CAM_ORDER.forEach((k) => {
       const o = document.createElement("option");
       o.value = k;
       o.textContent = t("q_" + k);
@@ -2488,18 +2801,46 @@ async function captureScreen(q, withAudio) {
   }
 }
 
+async function captureCamera(q) {
+  if (!canCam) return null;
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: q.width },
+        height: { ideal: q.height },
+        frameRate: { ideal: q.fps }
+      },
+      audio: false
+    });
+  } catch (err) {
+    return null;
+  }
+}
+
+function setCamUI() {
+  $("camHostBox").hidden = !hosting || !roomMulti || !canCam;
+  setT($("camHostBtn"), camStream ? "camOff" : "camOn");
+}
+
 function setSharingUI(on) {
   $("stopShare").disabled = !on;
   setT($("shareBtn"), on ? "switchSurface" : "shareAgain");
   $("hostMute").disabled = !on || !stream || !stream.getAudioTracks().length;
   setT($("hostMute"), "muteAudio");
   updateHostAudioIcon();
+  setCamUI();
 }
 
 function sendStream(id, v) {
   if (v.call) v.call.close();
   v.call = peer.call(id, stream);
   limitBitrate(v.call, quality.kbps);
+}
+
+function sendCam(id, v) {
+  if (v.camCall) v.camCall.close();
+  v.camCall = peer.call(id, camStream, { metadata: { cam: true } });
+  limitBitrate(v.camCall, camQuality.kbps);
 }
 
 function applyStream(newStream) {
@@ -2510,13 +2851,60 @@ function applyStream(newStream) {
   track.addEventListener("ended", () => {
     if (stream === newStream) stopShare();
   });
-  addTile("me", myNick, newStream, true);
+  setSource("me", false, myNick, newStream, true);
   if (old) old.getTracks().forEach((tr) => tr.stop());
   setSharingUI(true);
   broadcastSharers();
   viewers.forEach((v, id) => sendStream(id, v));
   updateHostCount();
   $("audioNote").hidden = !($("audio").checked && !newStream.getAudioTracks().length);
+}
+
+function applyCam(newStream) {
+  camStream = newStream;
+  const track = newStream.getVideoTracks()[0];
+  track.addEventListener("ended", () => {
+    if (camStream === newStream) stopHostCam();
+  });
+  setSource("me", true, myNick, newStream, true);
+  setCamUI();
+  broadcastSharers();
+  viewers.forEach((v, id) => sendCam(id, v));
+  updateHostCount();
+}
+
+async function startHostCam() {
+  if (camStream || !hosting || !roomMulti) return;
+  if (countSharers(true) >= MAX_CAMS) {
+    setStatus($("hostStatus"), "camLimit", true, { n: MAX_CAMS });
+    return;
+  }
+  const s = await captureCamera(camQuality);
+  if (!s) {
+    setStatus($("hostStatus"), "camFailed", true);
+    return;
+  }
+  if (!hosting || camStream) {
+    s.getTracks().forEach((tr) => tr.stop());
+    return;
+  }
+  applyCam(s);
+}
+
+function stopHostCam() {
+  if (!camStream) return;
+  camStream.getTracks().forEach((tr) => tr.stop());
+  camStream = null;
+  removeSource("me", true);
+  viewers.forEach((v) => {
+    if (v.camCall) {
+      v.camCall.close();
+      v.camCall = null;
+    }
+  });
+  setCamUI();
+  broadcastSharers();
+  updateHostCount();
 }
 
 function ipSeen() {
@@ -2616,6 +3004,7 @@ async function startHost(share) {
   $("people").hidden = false;
   $("liveQuality").value = qualityKey;
   $("viewQuality").value = qualityKey;
+  $("liveCamQuality").value = camKey;
   $("hostWarn").hidden = true;
   setSharingUI(false);
   refreshOverlays();
@@ -2625,7 +3014,7 @@ async function startHost(share) {
 }
 
 async function reshare() {
-  if (!stream && sharerList().length >= MAX_SHARERS) {
+  if (!stream && countSharers(false) >= MAX_SHARERS) {
     setStatus($("hostStatus"), "shareLimit", true, { n: MAX_SHARERS });
     return;
   }
@@ -2639,7 +3028,7 @@ function stopShare() {
   stream.getTracks().forEach((tr) => tr.stop());
   stream = null;
   $("audioNote").hidden = true;
-  removeTile("me");
+  removeSource("me", false);
   viewers.forEach((v) => {
     if (v.call) {
       v.call.close();
@@ -2710,6 +3099,7 @@ function closeRoom() {
   chatSeq = 0;
   roomNicks.clear();
   grants.clear();
+  camGrants.clear();
   approvals.forEach((a) => {
     clearTimeout(a.timer);
     if (a.conn.open) a.conn.send({ closed: true });
@@ -2734,6 +3124,10 @@ function closeRoom() {
     stream.getTracks().forEach((tr) => tr.stop());
     stream = null;
   }
+  if (camStream) {
+    camStream.getTracks().forEach((tr) => tr.stop());
+    camStream = null;
+  }
   pending.forEach((p) => {
     clearTimeout(p.timer);
     if (p.conn.open) p.conn.send({ closed: true });
@@ -2743,6 +3137,7 @@ function closeRoom() {
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ closed: true });
     if (v.call) v.call.close();
+    if (v.camCall) v.camCall.close();
     v.conn.close();
   });
   viewers.clear();
@@ -2825,7 +3220,9 @@ function setQuality(key, auto) {
   viewers.forEach((v) => {
     if (v.call) limitBitrate(v.call, quality.kbps);
   });
-  outCalls.forEach((c) => limitBitrate(c, quality.kbps));
+  outCalls.forEach((c, k) => {
+    if (!isCamSid(k)) limitBitrate(c, quality.kbps);
+  });
   if (hosting) {
     updateHostCount();
     if (!auto) checkLoad();
@@ -2834,12 +3231,37 @@ function setQuality(key, auto) {
   }
 }
 
+function setCamQuality(key) {
+  camKey = key;
+  camQuality = CAM_QUALITIES[key];
+  $("liveCamQuality").value = key;
+  $("viewCamQuality").value = key;
+  const track = camStream && camStream.getVideoTracks()[0];
+  if (track) {
+    track.applyConstraints({
+      width: { ideal: camQuality.width },
+      height: { ideal: camQuality.height },
+      frameRate: { ideal: camQuality.fps }
+    }).catch(() => {});
+  }
+  viewers.forEach((v) => {
+    if (v.camCall) limitBitrate(v.camCall, camQuality.kbps);
+  });
+  outCalls.forEach((c, k) => {
+    if (isCamSid(k)) limitBitrate(c, camQuality.kbps);
+  });
+  if (hosting) {
+    updateHostCount();
+  } else {
+    updateViewerUpload();
+  }
+}
+
 async function checkLoad() {
-  const calls = hosting ? [...viewers.values()].map((v) => v.call) : [...outCalls.values()];
-  const count = hosting ? viewers.size : outCalls.size;
+  const calls = hosting ? [...viewers.values()].flatMap((v) => [v.call, v.camCall]) : [...outCalls.values()];
   const box = hosting ? $("hostWarn") : $("viewWarn");
   const text = hosting ? $("hostWarnText") : $("viewWarnText");
-  if (!stream) {
+  if (!stream && !camStream) {
     box.hidden = true;
     return;
   }
@@ -2856,19 +3278,29 @@ async function checkLoad() {
       });
     } catch (e) {}
   }
-  if (!stream) return;
+  if (!stream && !camStream) return;
   const now = Date.now();
   const limited = reason === "bandwidth" || reason === "cpu";
   if (limited) lastLimitedAt = now;
   const idx = ORDER.indexOf(qualityKey);
-  if (settings.autoReduce && limited && idx > 0 && now - lastAutoAt >= AUTO_DOWN_COOLDOWN) {
-    lastAutoAt = now;
-    setQuality(ORDER[idx - 1], true);
-    autoNote("autoLowered", ORDER[idx - 1]);
-    return;
+  if (settings.autoReduce && limited && now - lastAutoAt >= AUTO_DOWN_COOLDOWN) {
+    if (stream && idx > 0) {
+      lastAutoAt = now;
+      setQuality(ORDER[idx - 1], true);
+      autoNote("autoLowered", ORDER[idx - 1]);
+      return;
+    }
+    const ci = CAM_ORDER.indexOf(camKey);
+    if (!stream && camStream && ci > 0) {
+      lastAutoAt = now;
+      setCamQuality(CAM_ORDER[ci - 1], true);
+      autoNote("autoLowered", CAM_ORDER[ci - 1]);
+      return;
+    }
   }
   if (
     settings.autoRecover &&
+    stream &&
     !limited &&
     idx < ORDER.indexOf(chosenQuality) &&
     idx < ORDER.indexOf(qualityCap()) &&
@@ -2884,7 +3316,7 @@ async function checkLoad() {
     return;
   }
   autoNoteState = null;
-  const estimate = (count * quality.kbps) / 1000;
+  const estimate = uploadKbps() / 1000;
   let key = "";
   let vars = null;
   if (reason === "bandwidth") {
@@ -2898,8 +3330,8 @@ async function checkLoad() {
   if (key) setT(text, key, vars);
   if ((key === "warnBandwidth" || key === "warnCpu") && key !== lastWarnKey) notify("warn", t("title"), t(key));
   lastWarnKey = key;
-  if (hosting) $("lowerQ").hidden = qualityKey === ORDER[0];
-  box.hidden = !key || !stream;
+  if (hosting) $("lowerQ").hidden = !stream || qualityKey === ORDER[0];
+  box.hidden = !key || (!stream && !camStream);
 }
 
 function startMonitor() {
@@ -2944,14 +3376,14 @@ function peopleList(forPeer) {
 function updateHostCount() {
   const n = viewers.size;
   setT($("count"), "viewersMany", { n: n });
-  if (!stream) {
+  if (!stream && !camStream) {
     setStatus($("hostStatus"), "hostPausedStatus");
   } else if (n) {
-    setStatus($("hostStatus"), "hostUpload", false, { m: ((n * quality.kbps) / 1000).toFixed(1) });
+    setStatus($("hostStatus"), "hostUpload", false, { m: (uploadKbps() / 1000).toFixed(1) });
   } else {
     setStatus($("hostStatus"), "hostWaiting");
   }
-  $("uploadInfo").hidden = !(stream && n);
+  $("uploadInfo").hidden = !((stream || camStream) && n);
   rememberRoom(currentCode, peopleList().filter((x) => !x.m));
   viewers.forEach((v, id) => {
     if (v.conn.open) v.conn.send({ count: n, people: peopleList(id) });
@@ -2968,10 +3400,11 @@ function dropViewer(id) {
   if (!v) return;
   viewers.delete(id);
   if (v.call) v.call.close();
-  const was = v.sharing;
+  if (v.camCall) v.camCall.close();
+  const was = v.sharing || v.camSharing;
   if (was) dropSharerMedia(id);
   viewers.forEach((o) => {
-    if (o.sharing && o.conn.open) o.conn.send({ left: id });
+    if ((o.sharing || o.camSharing) && o.conn.open) o.conn.send({ left: id });
   });
   if (was) broadcastSharers();
   updateHostCount();
@@ -3038,6 +3471,7 @@ function saveHostSession(closing) {
       q: qualityKey,
       allowed: [...allowed],
       grants: [...grants],
+      camGrants: [...camGrants],
       t: Date.now(),
       closing: !!closing
     }));
@@ -3059,6 +3493,7 @@ function syncSuccessor() {
     multi: roomMulti,
     allowed: [...allowed],
     grants: [...grants],
+    camGrants: [...camGrants],
     bans: [...bans].filter((b) => b[1] > Date.now() && b[0].startsWith("vid:")),
     muted: [...mutedVids],
     chat: chatLog.slice(),
@@ -3180,6 +3615,7 @@ function admitNow(conn, ctx) {
   const v = {
     conn,
     call: null,
+    camCall: null,
     vid: ctx.vid,
     tab: ctx.tab,
     ip: ctx.ip,
@@ -3188,7 +3624,10 @@ function admitNow(conn, ctx) {
     lastMsg: 0,
     canShare: roomMulti && !!(ctx.vid && grants.has(ctx.vid)),
     wantsShare: false,
-    sharing: false
+    sharing: false,
+    canCam: roomMulti && !!(ctx.vid && camGrants.has(ctx.vid)),
+    wantsCam: false,
+    camSharing: false
   };
   viewers.set(conn.peer, v);
   conn.send({
@@ -3196,14 +3635,18 @@ function admitNow(conn, ctx) {
     yourNick: ctx.nick,
     sharers: sharerList(),
     canShare: v.canShare,
+    canCam: v.canCam,
     multi: roomMulti,
     away: away ? Math.max(0, away.deadline - Date.now()) : null
   });
   if (v.muted) conn.send({ muted: true });
   if (chatLog.length) conn.send({ history: chatLog });
   if (stream) sendStream(conn.peer, v);
+  if (camStream) sendCam(conn.peer, v);
   viewers.forEach((o, oid) => {
-    if (oid !== conn.peer && o.sharing && o.conn.open) o.conn.send({ callNew: conn.peer });
+    if (oid === conn.peer || !o.conn.open) return;
+    if (o.sharing) o.conn.send({ callNew: conn.peer });
+    if (o.camSharing) o.conn.send({ camCallNew: conn.peer });
   });
   updateHostCount();
 }
@@ -3270,6 +3713,9 @@ peer.on("connection", (conn) => {
     if (d.reqShare === true) return onShareRequest(v);
     if (d.shareStart === true) return onShareStart(conn.peer, v);
     if (d.shareStop === true) return onShareStop(conn.peer, v);
+    if (d.reqCam === true) return onCamRequest(v);
+    if (d.camStart === true) return onCamStart(conn.peer, v);
+    if (d.camStop === true) return onCamStop(conn.peer, v);
     if (v.muted || typeof d.msg !== "string") return;
     const now = Date.now();
     if (now - v.lastMsg < 700) return;
@@ -3317,7 +3763,7 @@ peer.on("disconnected", () => {
   });
 }
 
-function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
+function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra, camGrantList) {
   graceUntil = Date.now() + GRACE_MS;
   roomPrivate = priv;
   if (extra) roomMulti = extra.multi === true;
@@ -3326,6 +3772,8 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
   allowedList.forEach((x) => allowed.add(x));
   grants.clear();
   grantList.forEach((x) => grants.add(x));
+  camGrants.clear();
+  (camGrantList || []).forEach((x) => camGrants.add(x));
   bans.clear();
   mutedVids.clear();
   chatLog.length = 0;
@@ -3360,6 +3808,7 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra) {
   $("people").hidden = false;
   $("liveQuality").value = qualityKey;
   $("viewQuality").value = qualityKey;
+  $("liveCamQuality").value = camKey;
   $("hostWarn").hidden = true;
   setSharingUI(false);
   refreshOverlays();
@@ -3403,7 +3852,7 @@ function resumeNow() {
   }
   const g = Number(sess.gen);
   roomMulti = sess.multi === true;
-  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0);
+  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0, null, strList(sess.camGrants));
 }
 
 function tryResumeHost(urlCode) {
@@ -3447,7 +3896,7 @@ function becomeHost() {
   closeViewPanel();
   $("hostName").hidden = true;
   setStatus($("viewStatus"), "");
-  enterHost(code, st.priv, st.allowed, st.grants, "nowHost", (roomGen + 1) % ROOM_GENS, st);
+  enterHost(code, st.priv, st.allowed, st.grants, "nowHost", (roomGen + 1) % ROOM_GENS, st, st.camGrants);
 }
 
 function maybeStartTakeover() {
@@ -3525,8 +3974,8 @@ function stopAwayView() {
 function updateViewerUpload() {
   if (hosting) return;
   enforceCap();
-  if (shareState === "sharing") {
-    setStatus($("viewStatus"), "hostUpload", false, { m: ((outCalls.size * quality.kbps) / 1000).toFixed(1) });
+  if (shareState === "sharing" || camState === "sharing") {
+    setStatus($("viewStatus"), "hostUpload", false, { m: (uploadKbps() / 1000).toFixed(1) });
   } else if ($("viewStatus").dataset.i18n === "hostUpload") {
     setStatus($("viewStatus"), "");
   }
@@ -3534,10 +3983,14 @@ function updateViewerUpload() {
 
 function updateShareUI() {
   const btn = $("shareAction");
+  const cbtn = $("camAction");
   btn.hidden = !canCapture || !viewMulti;
+  cbtn.hidden = !canCam || !viewMulti;
   $("viewShareOpts").hidden = !canCapture || !viewMulti;
-  $("openViewOptions").hidden = !canCapture || !viewMulti;
+  $("viewCamOpts").hidden = !canCam || !viewMulti;
+  $("openViewOptions").hidden = !viewMulti || (!canCapture && !canCam);
   btn.disabled = false;
+  cbtn.disabled = false;
   if (shareState === "none") {
     setT(btn, "reqShare");
   } else if (shareState === "requested") {
@@ -3548,8 +4001,20 @@ function updateShareUI() {
   } else {
     setT(btn, "stopShare");
   }
+  if (camState === "none") {
+    setT(cbtn, "reqCam");
+  } else if (camState === "requested") {
+    setT(cbtn, "camReqSent");
+    cbtn.disabled = true;
+  } else if (camState === "allowed") {
+    setT(cbtn, "camOn");
+  } else {
+    setT(cbtn, "camOff");
+  }
   btn.classList.toggle("primary", shareState === "allowed");
   btn.classList.toggle("stop", shareState === "sharing");
+  cbtn.classList.toggle("primary", camState === "allowed");
+  cbtn.classList.toggle("stop", camState === "sharing");
   $("viewSwitch").hidden = shareState !== "sharing";
   updateViewerUpload();
 }
@@ -3563,13 +4028,22 @@ function resetShare() {
     pendingStream.getTracks().forEach((tr) => tr.stop());
     pendingStream = null;
   }
+  if (pendingCamStream) {
+    pendingCamStream.getTracks().forEach((tr) => tr.stop());
+    pendingCamStream = null;
+  }
   if (!hosting && stream) {
     stream.getTracks().forEach((tr) => tr.stop());
     stream = null;
   }
+  if (!hosting && camStream) {
+    camStream.getTracks().forEach((tr) => tr.stop());
+    camStream = null;
+  }
   outCalls.forEach((c) => c.close());
   outCalls.clear();
   shareState = "none";
+  camState = "none";
   updateShareUI();
 }
 
@@ -3597,6 +4071,23 @@ function callTarget(id) {
   updateViewerUpload();
 }
 
+function callCamTarget(id) {
+  if (!camStream || !peer || id === peer.id) return;
+  const key = id + CAM;
+  const old = outCalls.get(key);
+  if (old) old.close();
+  const call = peer.call(id, camStream, { metadata: { cam: true } });
+  outCalls.set(key, call);
+  limitBitrate(call, camQuality.kbps);
+  call.on("close", () => {
+    if (outCalls.get(key) === call) {
+      outCalls.delete(key);
+      updateViewerUpload();
+    }
+  });
+  updateViewerUpload();
+}
+
 async function viewerShare() {
   askNotifyPermission();
   qualityKey = $("viewQuality").value;
@@ -3618,15 +4109,47 @@ async function viewerShare() {
   viewerConn.send({ shareStart: true });
 }
 
+async function viewerCam() {
+  askNotifyPermission();
+  camKey = $("viewCamQuality").value;
+  camQuality = CAM_QUALITIES[camKey];
+  const s = await captureCamera(camQuality);
+  if (!s) {
+    setStatus($("viewStatus"), "camFailed", true);
+    return;
+  }
+  if (camState !== "allowed" || !viewerConn || !viewerConn.open) {
+    s.getTracks().forEach((tr) => tr.stop());
+    return;
+  }
+  pendingCamStream = s;
+  viewerConn.send({ camStart: true });
+}
+
 function beginViewerShare(targets) {
   const s = pendingStream;
   pendingStream = null;
   if (!s) return;
   stream = s;
   watchEnd(s);
-  addTile("me", myNick, s, true);
+  setSource("me", false, myNick, s, true);
   shareState = "sharing";
   targets.forEach(callTarget);
+  startMonitor();
+  updateShareUI();
+}
+
+function beginViewerCam(targets) {
+  const s = pendingCamStream;
+  pendingCamStream = null;
+  if (!s) return;
+  camStream = s;
+  s.getVideoTracks()[0].addEventListener("ended", () => {
+    if (camStream === s) viewerStopCam(true);
+  });
+  setSource("me", true, myNick, s, true);
+  camState = "sharing";
+  targets.forEach(callCamTarget);
   startMonitor();
   updateShareUI();
 }
@@ -3641,9 +4164,9 @@ async function viewerReshare() {
   const old = stream;
   stream = s;
   watchEnd(s);
-  addTile("me", myNick, s, true);
+  setSource("me", false, myNick, s, true);
   if (old) old.getTracks().forEach((tr) => tr.stop());
-  [...outCalls.keys()].forEach(callTarget);
+  [...outCalls.keys()].filter((k) => !isCamSid(k)).forEach(callTarget);
 }
 
 function viewerStopShare(notify) {
@@ -3652,13 +4175,39 @@ function viewerStopShare(notify) {
     stream.getTracks().forEach((tr) => tr.stop());
     stream = null;
   }
-  outCalls.forEach((c) => c.close());
-  outCalls.clear();
-  removeTile("me");
+  [...outCalls].forEach(([k, c]) => {
+    if (isCamSid(k)) return;
+    outCalls.delete(k);
+    c.close();
+  });
+  removeSource("me", false);
   if (notify && viewerConn && viewerConn.open) viewerConn.send({ shareStop: true });
-  stopMonitor();
-  $("viewWarn").hidden = true;
+  if (!camStream) {
+    stopMonitor();
+    $("viewWarn").hidden = true;
+  }
   shareState = "allowed";
+  updateShareUI();
+}
+
+function viewerStopCam(notify) {
+  if (camState !== "sharing" && !camStream) return;
+  if (camStream) {
+    camStream.getTracks().forEach((tr) => tr.stop());
+    camStream = null;
+  }
+  [...outCalls].forEach(([k, c]) => {
+    if (!isCamSid(k)) return;
+    outCalls.delete(k);
+    c.close();
+  });
+  removeSource("me", true);
+  if (notify && viewerConn && viewerConn.open) viewerConn.send({ camStop: true });
+  if (!stream) {
+    stopMonitor();
+    $("viewWarn").hidden = true;
+  }
+  camState = "allowed";
   updateShareUI();
 }
 
@@ -3792,6 +4341,7 @@ function joinRoomNow(code) {
   setStatus($("viewStatus"), "");
   stopAwayView();
   shareState = "none";
+  camState = "none";
   updateShareUI();
   updateMuteBtn();
   blockedTab = false;
@@ -3846,6 +4396,7 @@ function connectToRoom(code) {
           viewerLive = true;
           viewMulti = d.multi === true;
           shareState = d.canShare === true ? "allowed" : "none";
+          camState = d.canCam === true ? "allowed" : "none";
           updateShareUI();
           if ("away" in d) startAwayView(d.away);
           syncRoster(Array.isArray(d.sharers) ? d.sharers : []);
@@ -3862,6 +4413,7 @@ function connectToRoom(code) {
             multi: d.succState.multi === true,
             allowed: strList(d.succState.allowed),
             grants: strList(d.succState.grants),
+            camGrants: strList(d.succState.camGrants),
             bans: banList(d.succState.bans),
             muted: strList(d.succState.muted),
             chat: chatHist(d.succState.chat)
@@ -3949,6 +4501,18 @@ function connectToRoom(code) {
           updateShareUI();
           return;
         }
+        if (typeof d.canCam === "boolean") {
+          if (d.canCam) {
+            if (camState !== "sharing") camState = "allowed";
+            setStatus($("viewStatus"), "camAllowed");
+          } else {
+            viewerStopCam(false);
+            camState = "none";
+            setStatus($("viewStatus"), "camRevoked", true);
+          }
+          updateShareUI();
+          return;
+        }
         if (typeof d.shareDenied === "string") {
           if (pendingStream) {
             pendingStream.getTracks().forEach((tr) => tr.stop());
@@ -3964,21 +4528,46 @@ function connectToRoom(code) {
           updateShareUI();
           return;
         }
+        if (typeof d.camDenied === "string") {
+          if (pendingCamStream) {
+            pendingCamStream.getTracks().forEach((tr) => tr.stop());
+            pendingCamStream = null;
+          }
+          if (d.camDenied === "limit") {
+            camState = "allowed";
+            setStatus($("viewStatus"), "camLimit", true, { n: MAX_CAMS });
+          } else {
+            camState = "none";
+            if (d.camDenied === "denied") setStatus($("viewStatus"), "camReqDenied", true);
+          }
+          updateShareUI();
+          return;
+        }
         if (Array.isArray(d.targets)) {
           beginViewerShare(d.targets.filter((x) => typeof x === "string"));
+          return;
+        }
+        if (Array.isArray(d.camTargets)) {
+          beginViewerCam(d.camTargets.filter((x) => typeof x === "string"));
           return;
         }
         if (typeof d.callNew === "string") {
           callTarget(d.callNew);
           return;
         }
+        if (typeof d.camCallNew === "string") {
+          callCamTarget(d.camCallNew);
+          return;
+        }
         if (typeof d.left === "string") {
-          const c = outCalls.get(d.left);
-          if (c) {
-            outCalls.delete(d.left);
-            c.close();
-            updateViewerUpload();
-          }
+          [d.left, d.left + CAM].forEach((k) => {
+            const c = outCalls.get(k);
+            if (c) {
+              outCalls.delete(k);
+              c.close();
+            }
+          });
+          updateViewerUpload();
           return;
         }
         if ("away" in d) {
@@ -4176,6 +4765,13 @@ window.addEventListener("pagehide", () => {
 });
 $("shareBtn").addEventListener("click", reshare);
 $("stopShare").addEventListener("click", stopShare);
+$("camHostBtn").addEventListener("click", () => {
+  if (camStream) {
+    stopHostCam();
+  } else {
+    startHostCam();
+  }
+});
 $("openOptions").addEventListener("click", openPanel);
 $("closeOptions").addEventListener("click", closePanel);
 $("backdrop").addEventListener("click", closePanel);
@@ -4204,6 +4800,8 @@ $("confirmClose").addEventListener("click", () => {
 });
 $("liveQuality").addEventListener("change", (e) => setQuality(e.target.value));
 $("viewQuality").addEventListener("change", (e) => setQuality(e.target.value));
+$("liveCamQuality").addEventListener("change", (e) => setCamQuality(e.target.value));
+$("viewCamQuality").addEventListener("change", (e) => setCamQuality(e.target.value));
 $("lowerQ").addEventListener("click", () => {
   const i = ORDER.indexOf(qualityKey);
   if (i > 0) setQuality(ORDER[i - 1]);
@@ -4268,6 +4866,20 @@ $("shareAction").addEventListener("click", () => {
     viewerShare();
   } else if (shareState === "sharing") {
     viewerStopShare(true);
+  }
+});
+$("camAction").addEventListener("click", () => {
+  if (camState === "none") {
+    if (viewerConn && viewerConn.open) {
+      viewerConn.send({ reqCam: true });
+      camState = "requested";
+      setStatus($("viewStatus"), "");
+      updateShareUI();
+    }
+  } else if (camState === "allowed") {
+    viewerCam();
+  } else if (camState === "sharing") {
+    viewerStopCam(true);
   }
 });
 $("viewSwitch").addEventListener("click", () => {
@@ -4606,8 +5218,6 @@ startUpdateWatch();
   $("shareCard").hidden = true;
   $("shareNotice").hidden = false;
   $("watchCard").classList.add("highlight");
-  $("viewShareOpts").hidden = true;
-  $("openViewOptions").hidden = true;
 }
   if (pipSupported()) {
   $("pipView").hidden = false;
