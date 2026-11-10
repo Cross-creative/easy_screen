@@ -21,7 +21,7 @@ Sharing
 
 You can also click "Create room (BETA)" to open a room where several people can share their screens and turn on their cameras, with the host's permission. In rooms created with "Share screen", only the host shares the screen, and only the host can also turn on a camera (viewers cannot ask for one).
 
-On a phone, which cannot share a screen, the home page says so and offers a blue "camera" link. Clicking it creates a "Create room (BETA)" room (you pick public or private) with your camera already on. From there it works like any other room, all inside the room screen: people can join, chat, and ask to share their screen or camera.
+On a phone, which cannot share a screen, the home page says so and offers a blue "camera" link. Clicking it creates a "Create room (BETA)" room (you pick public or private) with your camera already on. From there it works like any other room, all inside the room screen: people can join, chat, and ask to share their screen or camera, and you can turn your camera on or off with the camera icon in the bar.
 
 When you click to create a room, you first pick the room type and then choose the tab or window (no window is asked for when using "Create room (BETA)"). Public is the default: anyone with the link or code can join. Private: you get a notice with the person's nickname and accept or decline each one.
 
@@ -29,7 +29,7 @@ Watching
 
 1. Open the link, or choose a nickname, type the room code on the home page and click "Join".
 2. If the video starts muted because of browser autoplay rules, click the audio icon in the bar under the video and click "Unmute".
-3. In rooms created with "Create room (BETA)", you can share your own screen: click "Ask to share" and, when the host allows it, click "Share". You can also show your camera: click "Ask to turn on camera" and, when the host allows it, click "Turn on camera". Screen and camera are separate permissions. In the other rooms only the host shares.
+3. In rooms created with "Create room (BETA)", you can share your own screen: click the Share screen icon in the bar under the video to ask and, when the host allows it and the icon turns blue, click it again. You can also show your camera the same way with the Share camera icon. Screen and camera are separate permissions. In the other rooms only the host shares.
 
 
 Features
@@ -38,7 +38,7 @@ Room codes: each host gets a random 6-character code, plus a shareable link that
 
 Nickname required to host or join. If the nickname is already taken, a dialog asks for another one instead of removing you from the room. The nickname is saved as you type and shown again after you leave a room. Opening a room link joins the room right away when a nickname is saved. Without one, you type the nickname and press Enter or click Join, and the code is already filled in.
 
-The bar under the video shows "Host: name" on the left, with the Picture Mode, Fullscreen and Audio icons on the right. Hold the mouse over an icon for 1 second to see what it does. The host also sees a viewer counter like "3 👁".
+The bar under the video shows "Host: name" on the left, with the Share screen, Share camera, Picture Mode, Fullscreen and Audio icons on the right. The Share screen icon (laptop with an arrow) only appears on computers and the Share camera icon (camera) only appears on devices with a camera. For viewers, both only appear in rooms created with "Create room (BETA)". The icons change color to show the state: normal, blue when the host allowed it and it is ready to turn on, and red while it is on. Clicking without permission sends the request to the host, and the icon stays dimmed until the host answers. Clicking while it is on stops it. Hold the mouse over an icon for 1 second to see what it does. The host also sees a viewer counter like "3 👁".
 
 Chat: users can chat with each other. You are responsible for what you say, and the host can mute you, delete your messages or kick you.
 
@@ -56,7 +56,7 @@ Tab or window sharing with optional audio.
 
 Multi-sharing (only in rooms created with "Create room (BETA)"): viewers ask to share and the host allows, denies or revokes. Up to 4 people share their screen at the same time, host included.
 
-Camera: video only, with no microphone. The host can turn on their own camera from the Options panel, in any room, including rooms created with "Share screen". Only in rooms created with "Create room (BETA)", viewers ask to turn on the camera and the host allows, denies or revokes, separately from the screen permission. Up to 4 cameras at the same time, host included, counted apart from the 4 screens. A person can share screen and camera together, and phones can turn on the camera even though they cannot share a screen. The site uses the device's default camera, and your own camera preview is mirrored. The camera has its own quality selector in the Options panel (see "Quality levels and upload").
+Camera: video only, with no microphone. The host can turn on their own camera with the Share camera icon in the bar, in any room, including rooms created with "Share screen". The camera quality is chosen in the Options panel. Only in rooms created with "Create room (BETA)", viewers ask to turn on the camera and the host allows, denies or revokes, separately from the screen permission. Up to 4 cameras at the same time, host included, counted apart from the 4 screens. A person can share screen and camera together, and phones can turn on the camera even though they cannot share a screen. The site uses the device's default camera, and your own camera preview is mirrored. The camera has its own quality selector in the Options panel (see "Quality levels and upload").
 
 Grid with one tile per person. When someone shares both screen and camera, the tile shows the screen with the camera as a small square in the bottom right corner. Click the small square to swap them (camera large, screen small). Someone who only has the camera on appears with the camera at full size. Click a tile to see only that person, and use the button in its top right corner to go back to all tiles. Fullscreen then shows only that tile.
 
@@ -90,7 +90,7 @@ Up to 16 viewers per room.
 
 Stop and resume sharing, turn the camera on or off, or switch to another tab or window, without kicking anyone out of the room.
 
-Options panel for the host. The small red "End room" button sits in the top row, next to Options and Chat, and asks for confirmation before ending the room.
+Options panel for the host, with the quality selectors, "Switch tab or window" and "Leave to menu". The small red "End room" button sits in the top row, next to Options and Chat, and asks for confirmation before ending the room.
 
 Short messages (such as "Room ended") disappear on their own after 2 seconds, with the letters fading from right to left. Error messages stay on screen until you close them with the X button.
 
