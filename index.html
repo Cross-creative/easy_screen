@@ -365,6 +365,8 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
 .foot { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 32px; font-size: 0.85rem; }
 .linkbtn { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 500; text-decoration: underline; cursor: pointer; }
 .linkbtn:hover { color: var(--text); }
+.linkbtn.camlink { color: var(--accent); font-size: inherit; font-weight: 700; }
+.linkbtn.camlink:hover { color: var(--accent); filter: brightness(1.15); }
 #reportDialog input[type="text"], #reportDialog textarea { width: 100%; box-sizing: border-box; text-transform: none; letter-spacing: normal; margin-bottom: 8px; }
 #reportDialog textarea { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font: inherit; resize: vertical; }
 #reportDialog .rwho { margin-bottom: 8px; }
@@ -651,7 +653,7 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
     </div>
 
     <div class="card notice" id="shareNotice" hidden>
-      <p data-i18n="noShare">Compartilhar a tela só funciona no computador.</p>
+      <p id="noShareText"><span id="noShareMsg" data-i18n="noShare">Compartilhar a tela só funciona no computador, mas você pode compartilhar a</span> <button type="button" class="linkbtn camlink" id="camHome" data-i18n="noShareCam">câmera</button><span id="noShareDot">.</span></p>
     </div>
   </div>
   <div class="statuswrap"><div class="status" id="homeStatus"></div><button class="xclose" id="homeStatusX" type="button" hidden>✕</button></div>
@@ -950,15 +952,17 @@ const ORDER = ["light", "eco", "mid", "high", "extreme"];
 const CAM_QUALITIES = {
   c360: { width: 640, height: 360, fps: 15, kbps: 300 },
   c480: { width: 854, height: 480, fps: 24, kbps: 600 },
-  c720: { width: 1280, height: 720, fps: 30, kbps: 1200 }
+  c720: { width: 1280, height: 720, fps: 30, kbps: 1200 },
+  c720f60: { width: 1280, height: 720, fps: 60, kbps: 2000 }
 };
-const CAM_ORDER = ["c360", "c480", "c720"];
+const CAM_ORDER = ["c360", "c480", "c720", "c720f60"];
 const MAX_UPLOAD_KBPS = 13000;
 const AUTO_DOWN_COOLDOWN = 8000;
 const AUTO_UP_MS = 60000;
 const SETTINGS_KEY = "settings";
 const NEWS_KEY = "newsSeen";
 const NEWS_ID = "settings1";
+const NEWS_ACTIVE = false;
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let pageBase = null;
 let updateReady = false;
@@ -1328,7 +1332,9 @@ const I18N = {
     roomFull: "A sala está cheia.",
     duplicateTab: "Você já está assistindo esta sala em outra aba. Feche a outra aba para assistir aqui.",
     uploadHelp: "Upload é a velocidade com que seu computador envia dados pela internet, medida em Mbps (megabits por segundo). Cada espectador recebe um vídeo separado, então o número cresce com a quantidade de pessoas. Se passar do seu upload real, o vídeo pode travar.",
-    noShare: "Compartilhar a tela só funciona no computador.",
+    noShare: "Compartilhar a tela só funciona no computador, mas você pode compartilhar a",
+    noShareCam: "câmera",
+    noShareOnly: "Compartilhar a tela só funciona no computador.",
     noFullscreen: "Seu aparelho não suporta tela cheia aqui (comum no iPhone).",
     reqShare: "Pedir para compartilhar",
     reqSent: "Pedido enviado...",
@@ -1356,6 +1362,7 @@ const I18N = {
     q_c360: "Câmera leve (360p, 15 fps)",
     q_c480: "Câmera normal (480p, 24 fps)",
     q_c720: "Câmera HD (720p, 30 fps)",
+    q_c720f60: "Câmera HD fluida (720p, 60 fps)",
     youTag: "{name} (você)",
     awayBtn: "Sair para o menu",
     backToRoom: "Voltar para a sala",
@@ -1533,7 +1540,9 @@ const I18N = {
     roomFull: "The room is full.",
     duplicateTab: "You are already watching this room in another tab. Close the other tab to watch here.",
     uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
-    noShare: "Screen sharing only works on a computer.",
+    noShare: "Screen sharing only works on a computer, but you can share your",
+    noShareCam: "camera",
+    noShareOnly: "Screen sharing only works on a computer.",
     noFullscreen: "Your device does not support fullscreen here (common on iPhone).",
     reqShare: "Ask to share",
     reqSent: "Request sent...",
@@ -1561,6 +1570,7 @@ const I18N = {
     q_c360: "Light camera (360p, 15 fps)",
     q_c480: "Normal camera (480p, 24 fps)",
     q_c720: "HD camera (720p, 30 fps)",
+    q_c720f60: "Smooth HD camera (720p, 60 fps)",
     youTag: "{name} (you)",
     awayBtn: "Leave to menu",
     backToRoom: "Back to the room",
@@ -2647,7 +2657,7 @@ function fillQuality() {
       o.textContent = t("q_" + k);
       sel.appendChild(o);
     });
-    sel.value = keep;
+    sel.value = CAM_QUALITIES[keep] ? keep : camKey;
   });
   refreshQualityLimits();
 }
@@ -2818,11 +2828,13 @@ async function captureCamera(q) {
 }
 
 function setCamUI() {
-  $("camHostBox").hidden = !hosting || !roomMulti || !canCam;
+  $("camHostBox").hidden = !hosting || !canCam;
   setT($("camHostBtn"), camStream ? "camOff" : "camOn");
 }
 
 function setSharingUI(on) {
+  $("shareBtn").hidden = !canCapture;
+  $("stopShare").hidden = !canCapture;
   $("stopShare").disabled = !on;
   setT($("shareBtn"), on ? "switchSurface" : "shareAgain");
   $("hostMute").disabled = !on || !stream || !stream.getAudioTracks().length;
@@ -2874,7 +2886,7 @@ function applyCam(newStream) {
 }
 
 async function startHostCam() {
-  if (camStream || !hosting || !roomMulti) return;
+  if (camStream || !hosting) return;
   if (countSharers(true) >= MAX_CAMS) {
     setStatus($("hostStatus"), "camLimit", true, { n: MAX_CAMS });
     return;
@@ -2972,7 +2984,7 @@ function closeVis(val) {
   if (r) r(val);
 }
 
-async function startHost(share) {
+async function startHost(share, withCam) {
   if (!requireNick()) return;
   if (!(await ensureIpNotice())) return;
   askNotifyPermission();
@@ -2989,6 +3001,14 @@ async function startHost(share) {
     s = await captureScreen(quality, $("audio").checked);
     if (!s) {
       setStatus($("homeStatus"), "shareFailed", true);
+      return;
+    }
+  }
+  let cs = null;
+  if (withCam) {
+    cs = await captureCamera(camQuality);
+    if (!cs) {
+      setStatus($("homeStatus"), "camFailed", true);
       return;
     }
   }
@@ -3011,6 +3031,7 @@ async function startHost(share) {
   startMonitor();
   startPeerHost(0);
   if (s) applyStream(s);
+  if (cs) applyCam(cs);
 }
 
 async function reshare() {
@@ -4745,6 +4766,7 @@ $("chatInput").addEventListener("keydown", (e) => {
 });
 $("startHost").addEventListener("click", () => startHost(true));
 $("createRoom").addEventListener("click", () => startHost(false));
+$("camHome").addEventListener("click", () => startHost(false, true));
 $("backToRoom").addEventListener("click", backToRoom);
 $("awayBtn").addEventListener("click", goAway);
 $("pipView").addEventListener("click", () => {
@@ -5204,7 +5226,7 @@ lang = detectLang();
 applyTheme();
 renderSettings();
 applyLang();
-if (!newsSeen()) $("newsBanner").hidden = false;
+if (NEWS_ACTIVE && !newsSeen()) $("newsBanner").hidden = false;
 startUpdateWatch();
   let savedNick = "";
   try { savedNick = localStorage.getItem("nick") || ""; } catch (e) {}
@@ -5217,6 +5239,11 @@ startUpdateWatch();
   if (!canCapture) {
   $("shareCard").hidden = true;
   $("shareNotice").hidden = false;
+  if (!canCam) {
+    setT($("noShareMsg"), "noShareOnly");
+    $("camHome").hidden = true;
+    $("noShareDot").hidden = true;
+  }
   $("watchCard").classList.add("highlight");
 }
   if (pipSupported()) {
