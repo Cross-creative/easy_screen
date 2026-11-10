@@ -1,6 +1,6 @@
 Easy Screen
 
-Share a browser tab or window directly with other people, with no account, no install and no server of your own. In rooms created with "Create room (BETA)", several people can share in the same room, with the host's permission. The whole app is a single HTML file.
+Share a browser tab or window directly with other people, with no account, no install and no server of your own. In rooms created with "Create room (BETA)", several people can share their screen and turn on their camera in the same room, with the host's permission. The whole app is a single HTML file.
 
 Live site: https://cross-creative.github.io/easy_screen/
 
@@ -16,10 +16,10 @@ Sharing
 
 1. Open the site on a computer.
 2. Choose a nickname, pick a quality level and decide whether to share audio.
-3. Click "Choose a tab or window" and select what to share.
+3. Click "Share screen" and select the tab or window to share.
 4. Send the 6-character room code, or the link, to your viewers.
 
-You can also click "Create room (BETA)" to open a room where several people can share their screens, with the host's permission. In rooms created with "Choose a tab or window", only the host shares.
+You can also click "Create room (BETA)" to open a room where several people can share their screens and turn on their cameras, with the host's permission. In rooms created with "Share screen", only the host shares, and there is no camera.
 
 When you click to create a room, you first pick the room type and then choose the tab or window (no window is asked for when using "Create room (BETA)"). Public is the default: anyone with the link or code can join. Private: you get a notice with the person's nickname and accept or decline each one.
 
@@ -27,7 +27,7 @@ Watching
 
 1. Open the link, or choose a nickname, type the room code on the home page and click "Join".
 2. If the video starts muted because of browser autoplay rules, click the audio icon in the bar under the video and click "Unmute".
-3. In rooms created with "Create room (BETA)", you can share your own screen: click "Ask to share" and, when the host allows it, click "Share". In the other rooms only the host shares.
+3. In rooms created with "Create room (BETA)", you can share your own screen: click "Ask to share" and, when the host allows it, click "Share". You can also show your camera: click "Ask to turn on camera" and, when the host allows it, click "Turn on camera". Screen and camera are separate permissions. In the other rooms only the host shares.
 
 
 Features
@@ -40,7 +40,7 @@ The bar under the video shows "Host: name" on the left, with the Picture Mode, F
 
 Chat: users can chat with each other. You are responsible for what you say, and the host can mute you, delete your messages or kick you.
 
-Host moderation: mute, kick and delete messages from the people panel.
+Host moderation: mute, kick and delete messages from the people panel. The panel also has buttons to revoke a person's screen permission or camera permission separately.
 
 Temporary ban after a kick: 5 minutes by viewer identifier and 2 minutes by IP address.
 
@@ -52,19 +52,21 @@ Automatic reconnection: if a viewer's connection drops, the site retries up to 8
 
 Tab or window sharing with optional audio.
 
-Multi-sharing (only in rooms created with "Create room (BETA)"): viewers ask to share and the host allows, denies or revokes. Up to 4 people share at the same time, host included.
+Multi-sharing (only in rooms created with "Create room (BETA)"): viewers ask to share and the host allows, denies or revokes. Up to 4 people share their screen at the same time, host included.
 
-Grid with every shared screen. Click a screen to see only that one, and use the button in its top right corner to go back to all screens. Fullscreen then shows only that screen.
+Camera (only in rooms created with "Create room (BETA)"): video only, with no microphone. The host can turn on their own camera from the Options panel. Viewers ask to turn on the camera and the host allows, denies or revokes, separately from the screen permission. Up to 4 cameras at the same time, host included, counted apart from the 4 screens. A person can share screen and camera together, and phones can turn on the camera even though they cannot share a screen. The site uses the device's default camera, and your own camera preview is mirrored. The camera has its own quality selector in the Options panel (see "Quality levels and upload").
 
-Audio icon in the bar under the video: opens a small panel. For viewers it has the volume slider and the mute button. For the host it has the button that mutes the audio being shared. When more than one person is sharing, the panel also shows a volume slider and a mute button for each shared screen. This only affects your own device.
+Grid with one tile per person. When someone shares both screen and camera, the tile shows the screen with the camera as a small square in the bottom right corner. Click the small square to swap them (camera large, screen small). Someone who only has the camera on appears with the camera at full size. Click a tile to see only that person, and use the button in its top right corner to go back to all tiles. Fullscreen then shows only that tile.
+
+Audio icon in the bar under the video: opens a small panel. For viewers it has the volume slider and the mute button. For the host it has the button that mutes the audio being shared. When more than one person is sharing a screen, the panel also shows a volume slider and a mute button for each shared screen. This only affects your own device. Cameras have no audio.
 
 Public and private rooms: in a private room the host accepts or declines each person who tries to join. Requests expire after 90 seconds, and people who were accepted can reconnect without asking again.
 
-Quality levels from 480p up to QHD (1440p), adjustable while streaming.
+Quality levels from 480p up to QHD (1440p) for the screen, and from 360p up to 720p for the camera, adjustable while streaming.
 
-Automatic quality reduction: when the browser reports that your upload or your computer is the bottleneck, the app drops one quality level by itself and shows a notice. After 1 minute without problems it goes back up one level at a time, never above the quality you picked. Both behaviors are on by default and can be turned off in Settings.
+Automatic quality reduction: when the browser reports that your upload or your computer is the bottleneck, the app drops one quality level by itself and shows a notice. It lowers the screen first. The camera only drops by itself when no screen is being shared. After 1 minute without problems the screen goes back up one level at a time, never above the quality you picked. Both behaviors are on by default and can be turned off in Settings.
 
-Quality limit by number of viewers: the more people in the room, the lower the highest quality that can be selected. Locked levels are marked with a lock in the quality selector, and the quality is lowered automatically if the room grows. This can be turned off in Settings. See "Quality levels and upload" for the exact limits.
+Quality limit by number of viewers: the more people in the room, the lower the highest quality that can be selected. Locked levels are marked with a lock in the quality selectors (screen and camera), and the quality is lowered automatically if the room grows. When your camera is on, its upload counts toward the limit on the screen quality, and the other way around. This can be turned off in Settings. See "Quality levels and upload" for the exact limits.
 
 Settings: the gear button in the corner of the screen opens the same panel on the home page, in the host room and in the viewer room. It has the language (Portuguese or English), the theme (automatic, light or dark), automatic quality reduction, automatic quality recovery and the quality limit by number of viewers and the system notifications. Settings are saved in your browser.
 
@@ -76,15 +78,15 @@ Warning for the host when upload bandwidth or CPU is overloaded, with a one-clic
 
 Update notice: every 5 minutes (and when you come back to the tab) the site checks whether a new version was published. If so, a notice asks everyone to restart the page. On the home page there is a "Restart now" button. Inside a room the notice asks you to close the room and reload the page, and can be dismissed. Nothing is sent during this check: the page only downloads its own file again and compares it.
 
-Floating alerts: requests to join or share, upload or CPU warnings and automatic quality changes appear as a notice fixed at the top of the window. It follows the screen when you scroll, so it stays visible on small screens.
+Floating alerts: requests to join, share or turn on the camera, upload or CPU warnings and automatic quality changes appear as a notice fixed at the top of the window. It follows the screen when you scroll, so it stays visible on small screens.
 
 System notifications: off by default. When you turn them on in Settings, the browser asks for permission. If the browser does not allow them (or the permission is blocked later), the option turns itself off and is disabled in Settings. When on, and when the room tab is in the background or the window is not focused, the same alerts also appear as a notification on your computer. Clicking one takes you back to the room tab.
 
-Estimated upload usage and a live viewer counter.
+Estimated upload usage and a live viewer counter. The estimate adds the screen and the camera.
 
 Up to 16 viewers per room.
 
-Stop and resume sharing, or switch to another tab or window, without kicking anyone out of the room.
+Stop and resume sharing, turn the camera on or off, or switch to another tab or window, without kicking anyone out of the room.
 
 Options panel for the host. The small red "End room" button sits in the top row, next to Options and Chat, and asks for confirmation before ending the room.
 
@@ -92,9 +94,9 @@ Short messages (such as "Room ended") disappear on their own after 2 seconds, wi
 
 One tab per viewer per room: duplicate tabs from the same browser are blocked.
 
-Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, from the bar under the video, where the browser supports it. When more than one person is sharing, you choose which screen goes to Picture Mode.
+Fullscreen and Picture Mode (picture-in-picture) for both host and viewers, from the bar under the video, where the browser supports it. When more than one person is in the grid, you choose which tile goes to Picture Mode (the screen if the person has one, otherwise the camera).
 
-Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type, sharing mode and permissions. Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The new host keeps the room settings, the last 50 chat messages, the people muted and the temporary bans by viewer identifier. IP bans and any active sharing are not passed on: people who were sharing need to click Share again.
+Host recovery: if the host closes the tab, everyone in the room sees a notice with a 10-second countdown. If the host reopens the site in the same browser within 8 seconds, the home screen shows a "Back to the room" button with a countdown, and clicking it resumes the room with the same code, room type, sharing mode and permissions (screen and camera). Otherwise the person who joined the room first becomes the new host, keeping the same code and link. The new host keeps the room settings, the last 50 chat messages, the people muted, the temporary bans by viewer identifier and the screen and camera permissions. IP bans and any active sharing are not passed on: people who were sharing a screen or a camera need to turn it on again.
 
 English and Portuguese (Brazil), detected from the browser, remembered and changeable in Settings.
 
@@ -105,31 +107,39 @@ Quality levels and upload
 
 Each viewer receives a separate copy of the video, so the host's upload grows with the audience. These are approximate values per viewer:
 
+Screen
 Very light: 480p, 10 fps, about 0.3 Mbps
 Economy: 720p, 15 fps, about 0.8 Mbps
 Balanced: 720p, 24 fps, about 1.5 Mbps
 High: 1080p, 30 fps, about 3 Mbps
 QHD: 1440p, 60 fps, about 8 Mbps
 
-Example: 4 viewers at Balanced need about 6 Mbps of upload. Anyone who shares uploads one copy to every other person in the room, so 4 people sharing in a room of 16 can need far more. The actual resolution also depends on the size of the shared tab or window.
+Camera
+Light camera: 360p, 15 fps, about 0.3 Mbps
+Normal camera: 480p, 24 fps, about 0.6 Mbps
+HD camera: 720p, 30 fps, about 1.2 Mbps
 
-When the quality limit by number of viewers is on, the app keeps viewers multiplied by the bitrate of the level at or below about 13 Mbps. In practice:
+Example: 4 viewers at Balanced need about 6 Mbps of upload. With the camera on at Normal, add about 2.4 Mbps. Anyone who shares uploads one copy of each stream to every other person in the room, so 4 people sharing in a room of 16 can need far more. The actual resolution also depends on the size of the shared tab or window and on what the camera supports.
+
+When the quality limit by number of viewers is on, the app keeps viewers multiplied by the bitrate of the level at or below about 13 Mbps. For the screen, with no camera on, in practice:
 
 1 viewer: up to QHD
 2 to 4 viewers: up to High
 5 to 8 viewers: up to Balanced
 9 to 16 viewers: up to Economy
 
+When the camera is on, its bitrate is added to each viewer before the calculation, so the limits above get lower. For the camera, the same calculation uses the screen bitrate (if a screen is being shared) plus the camera level.
+
 The same calculation applies to anyone sharing from inside the room, using the number of people they send video to.
 
 
 Browser support
 
-Desktop Chrome, Edge, Firefox and Safari: can share and can watch.
-Android browsers: can only watch.
-iOS browsers: can only watch.
+Desktop Chrome, Edge, Firefox and Safari: can share a screen, turn on the camera and watch.
+Android browsers: can watch and, in rooms with permission, turn on the camera. Cannot share the screen.
+iOS browsers: can watch and, in rooms with permission, turn on the camera. Cannot share the screen.
 
-Mobile browsers do not currently support screen capture, so on phones the site only lets you watch. Audio capture also depends on the browser: sharing a tab's audio works best in Chrome and Edge, and sharing a whole window's audio is limited.
+Mobile browsers do not currently support screen capture, so on phones the site lets you watch and show the camera. Audio capture also depends on the browser: sharing a tab's audio works best in Chrome and Edge, and sharing a whole window's audio is limited. The camera needs the browser's permission to use the device, and a computer or phone without a camera cannot turn it on.
 
 
 Self-hosting
@@ -147,12 +157,12 @@ Netlify
 
 Drag the folder containing index.html into https://app.netlify.com/drop
 
-Both serve the site over HTTPS, which browsers require for screen capture.
+Both serve the site over HTTPS, which browsers require for screen capture and camera access.
 
 
 Limitations
 
-Mesh topology: everyone who shares uploads one stream per person in the room. The limit is 16 viewers, but in practice it depends on the host's upload. It is best suited to small groups, roughly 3 to 6 people at higher quality levels.
+Mesh topology: everyone who shares uploads one stream per person in the room, and a screen plus a camera count as two streams. The limit is 16 viewers, but in practice it depends on the host's upload. It is best suited to small groups, roughly 3 to 6 people at higher quality levels.
 
 Automatic quality reduction depends on what the browser reports about bandwidth and CPU limits, so it reacts after the problem has started and may not catch every case.
 
@@ -166,7 +176,9 @@ Viewers behind very restrictive networks, such as some school or company network
 
 If the host loses internet or the computer freezes instead of closing the tab, the handover can take longer than 10 seconds.
 
-The room type and the sharing mode cannot be changed after the room is created. Multi-sharing rooms ("Create room (BETA)") are a beta feature.
+The room type and the sharing mode cannot be changed after the room is created. Multi-sharing rooms ("Create room (BETA)"), including the camera, are a beta feature.
+
+The camera has no microphone, uses the device's default camera and cannot be picked from a list. Rooms created with "Share screen" have no camera.
 
 Duplicate-tab detection only works within the same browser profile. Another browser, a private window or another device counts as a different viewer.
 
@@ -184,6 +196,8 @@ No accounts, no analytics and no cookies.
 The browser stores only your settings (language, theme, the automatic quality options and the notifications option), your nickname, a flag saying you already saw the what's new notice, and a random identifier used to detect duplicate tabs and to apply temporary bans. All of them stay on your device.
 
 Because connections are peer-to-peer, the host and each viewer can see each other's IP address. Keep this in mind before sharing a room code publicly.
+
+Camera: the browser asks for permission each time the site needs the camera, and the site only turns it on after the host has allowed it. The camera image goes directly to the other people in the room, with no microphone and no recording, and stops as soon as you turn it off, leave the room or the room ends. Before turning it on, check what appears behind you.
 
 IP notice: before creating or joining a room for the first time, the site shows a message explaining what the public IP reveals (roughly the internet provider and the city or region, not the exact location) and how to protect yourself, for example with a VPN. It is shown once, after you click "I understand", and stays available at any time through the "About your IP" link in the footer.
 
