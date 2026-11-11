@@ -711,6 +711,49 @@ details[open] > :not(summary) {
   details > summary:hover::after { animation: none; }
   details[open] > :not(summary) { animation: none; }
 }
+
+.selwrap { position: relative; display: inline-flex; max-width: 100%; }
+.panel-body .selwrap { display: flex; width: 100%; }
+.selwrap select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  cursor: pointer;
+  width: 100%;
+  transition: filter 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.selwrap select:not(:disabled):hover { filter: brightness(1.15); }
+.selwrap select:focus-visible, .selwrap select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.selwrap select:disabled { opacity: 0.45; cursor: not-allowed; }
+.selwrap::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  color: var(--text);
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+.selwrap:hover::after { animation: selarrow 0.6s ease infinite; }
+.selwrap:focus-within::after { transform: translateY(-30%) rotate(225deg); animation: none; }
+@keyframes selarrow {
+  0%, 100% { transform: translateY(-70%) rotate(45deg); }
+  50% { transform: translateY(-40%) rotate(45deg); }
+}
+select.shake { animation: shake 0.4s ease; border-color: var(--danger); }
+@media (prefers-reduced-motion: reduce) {
+  .selwrap select, .selwrap::after { transition: none; }
+  .selwrap:hover::after { animation: none; }
+  select.shake { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -1071,7 +1114,7 @@ const NEWS_KEY = "newsSeen";
 const NEWS_ID = "settings1";
 const NEWS_ACTIVE = false;
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
-const APP_VERSION = "2026-11-11-2";
+const APP_VERSION = "2026-11-11-4";
 let updateReady = false;
 let updateDismissed = false;
 let lastUpdateCheck = 0;
@@ -2832,12 +2875,27 @@ function show(section) {
 let lastBtn = null;
 let lastBtnAt = 0;
 document.addEventListener("click", (e) => {
-  const b = e.target.closest("button, .btnlink");
+  const b = e.target.closest("button, .btnlink, select");
   if (b) {
     lastBtn = b;
     lastBtnAt = Date.now();
   }
 }, true);
+
+document.querySelectorAll("select").forEach((s) => {
+  if (s.parentElement.classList.contains("selwrap")) return;
+  const w = document.createElement("span");
+  w.className = "selwrap";
+  s.parentNode.insertBefore(w, s);
+  w.appendChild(s);
+  let byPointer = false;
+  s.addEventListener("pointerdown", () => { byPointer = true; });
+  s.addEventListener("change", () => {
+    if (byPointer) setTimeout(() => s.blur(), 0);
+    byPointer = false;
+  });
+  s.addEventListener("blur", () => { byPointer = false; });
+});
 
 function shakeEl(el) {
   if (!el) return;
