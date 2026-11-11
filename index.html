@@ -626,6 +626,47 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   z-index: 15;
 }
+button, .btnlink {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+button:not(:disabled):hover, .btnlink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+}
+button:not(:disabled):active, .btnlink:active {
+  transform: translateY(1px) scale(0.96);
+  box-shadow: none;
+  filter: brightness(0.92);
+}
+.linkbtn:hover, .linkbtn:active {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+.lang button:hover, .lang button:active {
+  transform: none;
+  box-shadow: none;
+}
+.lang button:not(.active):hover {
+  filter: brightness(1.15);
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+button.shake, input.shake {
+  animation: shake 0.4s ease;
+  border-color: var(--danger);
+}
+@media (prefers-reduced-motion: reduce) {
+  button, .btnlink { transition: none; }
+  button:not(:disabled):hover, .btnlink:hover,
+  button:not(:disabled):active, .btnlink:active { transform: none; }
+  button.shake, input.shake { animation: none; }
+}
 .panel-body .hint { margin: -4px 0 4px 26px; }
 </style>
 </head>
@@ -2750,6 +2791,30 @@ function show(section) {
   updateNoticeView();
 }
 
+let lastBtn = null;
+let lastBtnAt = 0;
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button, .btnlink");
+  if (b) {
+    lastBtn = b;
+    lastBtnAt = Date.now();
+  }
+}, true);
+
+function shakeEl(el) {
+  if (!el) return;
+  el.classList.remove("shake");
+  void el.offsetWidth;
+  el.classList.add("shake");
+  el.addEventListener("animationend", () => el.classList.remove("shake"), { once: true });
+}
+
+function shakeError(key) {
+  if (key === "nickRequired") return shakeEl($("nick"));
+  if (key === "codeLength") return shakeEl($("codeInput"));
+  if (lastBtn && Date.now() - lastBtnAt < 2000) shakeEl(lastBtn);
+}
+
 function setStatus(el, key, isError, vars) {
   if (key) {
     setT(el, key, vars);
@@ -2759,6 +2824,9 @@ function setStatus(el, key, isError, vars) {
     el.textContent = "";
   }
   el.className = isError ? "status error" : "status";
+  if (isError && key) shakeError(key);
+  if (el.id !== "homeStatus" && el.id !== "viewStatus") return;
+  
   if (el.id !== "homeStatus" && el.id !== "viewStatus") return;
   cancelFade(el);
   const x = $(el.id + "X");
