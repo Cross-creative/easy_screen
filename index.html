@@ -754,6 +754,40 @@ select.shake { animation: shake 0.4s ease; border-color: var(--danger); }
   .selwrap:hover::after { animation: none; }
   select.shake { animation: none; }
 }
+
+.ibtn.st-blocked {
+  filter: grayscale(1);
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--surface);
+  color: var(--muted);
+  border-color: var(--border);
+}
+.ibtn.st-blocked:hover, .ibtn.st-blocked:active {
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(1);
+}
+html[data-anim="off"] button, html[data-anim="off"] .btnlink,
+html[data-anim="off"] .selwrap select, html[data-anim="off"] .selwrap::after,
+html[data-anim="off"] details > summary::after {
+  transition: none !important;
+}
+html[data-anim="off"] button:hover, html[data-anim="off"] button:active,
+html[data-anim="off"] .btnlink:hover, html[data-anim="off"] .btnlink:active,
+html[data-anim="off"] .selwrap select:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+html[data-anim="off"] .ibtn.st-blocked, html[data-anim="off"] .ibtn.st-blocked:hover {
+  filter: grayscale(1) !important;
+}
+html[data-anim="off"] button.shake, html[data-anim="off"] input.shake, html[data-anim="off"] select.shake,
+html[data-anim="off"] .selwrap:hover::after, html[data-anim="off"] details > summary:hover::after,
+html[data-anim="off"] details[open] > :not(summary) {
+  animation: none !important;
+}
 </style>
 </head>
 <body>
@@ -1060,6 +1094,8 @@ select.shake { animation: shake 0.4s ease; border-color: var(--danger); }
       <p class="hint" data-i18n="setAutoRecoverHint">Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.</p>
       <label class="check"><input type="checkbox" id="setCap"> <span data-i18n="setCap">Limitar a qualidade pelo número de espectadores</span></label>
       <p class="hint" data-i18n="setCapHint">Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.</p>
+      <label class="check"><input type="checkbox" id="setAnim"> <span data-i18n="setAnim">Animações</span></label>
+      <p class="hint" data-i18n="setAnimHint">Desative para remover as animações de botões, seletores e menus.</p>
       <label class="check"><input type="checkbox" id="setNotify"> <span data-i18n="setNotify">Notificações do sistema</span></label>
       <p class="hint" id="setNotifyHint" data-i18n="setNotifyHint">Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.</p>
     </div>
@@ -1114,7 +1150,7 @@ const NEWS_KEY = "newsSeen";
 const NEWS_ID = "settings1";
 const NEWS_ACTIVE = false;
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
-const APP_VERSION = "2026-11-11-4";
+const APP_VERSION = "2026-11-11-1";
 let updateReady = false;
 let updateDismissed = false;
 let lastUpdateCheck = 0;
@@ -1166,6 +1202,7 @@ function loadSettings() {
     autoReduce: s.autoReduce !== false,
     autoRecover: s.autoRecover !== false,
     capByViewers: s.capByViewers !== false,
+    animations: s.animations !== false,
     notify: s.notifyV2 === true && "Notification" in window && Notification.permission === "granted"
   };
 }
@@ -1173,7 +1210,15 @@ function loadSettings() {
 let settings = loadSettings();
 
 function saveSettings() {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, notifyV2: settings.notify })); } catch (e) {}
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, animations: settings.animations, notifyV2: settings.notify })); } catch (e) {}
+}
+
+function applyAnim() {
+  if (settings.animations) {
+    document.documentElement.removeAttribute("data-anim");
+  } else {
+    document.documentElement.dataset.anim = "off";
+  }
 }
 
 function applyTheme() {
@@ -1207,6 +1252,7 @@ function renderSettings() {
   $("setAutoReduce").checked = settings.autoReduce;
   $("setAutoRecover").checked = settings.autoRecover;
   $("setCap").checked = settings.capByViewers;
+  $("setAnim").checked = settings.animations;
   $("setNotify").checked = settings.notify;
   $("setNotify").disabled = !("Notification" in window) || Notification.permission === "denied";
   const hint = $("setNotifyHint");
@@ -1528,6 +1574,10 @@ const I18N = {
     setAutoReduceHint: "Quando o upload ou o computador apertarem, o app desce um nível de qualidade sozinho.",
     setAutoRecover: "Subir a qualidade de volta automaticamente",
     setAutoRecoverHint: "Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.",
+    setAnim: "Animações",
+    setAnimHint: "Desative para remover as animações de botões, seletores e menus.",
+    tipBlockedCam: "Câmera indisponível ou bloqueada no navegador",
+    tipBlockedShare: "Compartilhar tela não é possível neste dispositivo",
     setCap: "Limitar a qualidade pelo número de espectadores",
     setCapHint: "Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.",
     autoLowered: "Qualidade reduzida automaticamente para: {q}.",
@@ -1736,6 +1786,10 @@ const I18N = {
     setAutoReduceHint: "When your upload or computer gets strained, the app drops one quality level by itself.",
     setAutoRecover: "Raise quality back automatically",
     setAutoRecoverHint: "After 1 minute without problems, it goes up one level at a time, never above the quality you picked.",
+    setAnim: "Animations",
+    setAnimHint: "Turn off to remove animations on buttons, selects and menus.",
+    tipBlockedCam: "Camera unavailable or blocked in the browser",
+    tipBlockedShare: "Screen sharing is not possible on this device",
     setCap: "Limit quality by number of viewers",
     setCapHint: "With more people in the room, high qualities are locked (🔒) so your upload is not overloaded.",
     autoLowered: "Quality lowered automatically to: {q}.",
@@ -2898,7 +2952,7 @@ document.querySelectorAll("select").forEach((s) => {
 });
 
 function shakeEl(el) {
-  if (!el) return;
+  if (!el || !settings.animations) return;
   el.classList.remove("shake");
   void el.offsetWidth;
   el.classList.add("shake");
@@ -3013,26 +3067,43 @@ async function captureCamera(q) {
   }
 }
 
-function setBar(btn, vis, state, tipKey) {
+let camPermDenied = false;
+
+function setBar(btn, vis, state, tipKey, blockedKey) {
   btn.hidden = !vis;
-  btn.classList.toggle("st-allowed", state === "allowed");
-  btn.classList.toggle("st-live", state === "live");
+  const blocked = !!blockedKey && state !== "live";
+  btn.classList.toggle("st-blocked", blocked);
+  btn.classList.toggle("st-allowed", !blocked && state === "allowed");
+  btn.classList.toggle("st-live", !blocked && state === "live");
   btn.disabled = state === "wait";
-  const txt = t(tipKey);
+  const txt = t(blocked ? blockedKey : tipKey);
   btn.dataset.tip = txt;
   btn.setAttribute("aria-label", txt);
 }
 
 function refreshBarButtons() {
-  setBar($("scrHostBtn"), hosting && canCapture, stream ? "live" : "idle", stream ? "stopShare" : "pickSurface");
-  setBar($("camHostBarBtn"), hosting && canCam, camStream ? "live" : "idle", camStream ? "camOff" : "camOn");
+  const scrBlock = canCapture ? null : "tipBlockedShare";
+  const camBlock = canCam && !camPermDenied ? null : "tipBlockedCam";
+  setBar($("scrHostBtn"), hosting, stream ? "live" : "idle", stream ? "stopShare" : "pickSurface", scrBlock);
+  setBar($("camHostBarBtn"), hosting, camStream ? "live" : "idle", camStream ? "camOff" : "camOn", camBlock);
   const inRoom = !hosting && viewMulti;
   const sMap = { none: ["idle", "reqShare"], requested: ["wait", "reqSent"], allowed: ["allowed", "shareNow"], sharing: ["live", "stopShare"] };
   const cMap = { none: ["idle", "reqCam"], requested: ["wait", "camReqSent"], allowed: ["allowed", "camOn"], sharing: ["live", "camOff"] };
   const s = sMap[shareState] || sMap.none;
   const c = cMap[camState] || cMap.none;
-  setBar($("scrViewBtn"), inRoom && canCapture, s[0], s[1]);
-  setBar($("camViewBtn"), inRoom && canCam, c[0], c[1]);
+  setBar($("scrViewBtn"), inRoom, s[0], s[1], scrBlock);
+  setBar($("camViewBtn"), inRoom, c[0], c[1], camBlock);
+}
+
+if (navigator.permissions && navigator.permissions.query) {
+  navigator.permissions.query({ name: "camera" }).then((p) => {
+    const sync = () => {
+      camPermDenied = p.state === "denied";
+      refreshBarButtons();
+    };
+    p.addEventListener("change", sync);
+    sync();
+  }).catch(() => {});
 }
 
 function setCamUI() {
@@ -5400,6 +5471,11 @@ window.addEventListener("focus", () => {
   syncNotifyState();
   if ($("settingsPanel").classList.contains("open")) renderSettings();
 });
+$("setAnim").addEventListener("change", (e) => {
+  settings.animations = e.target.checked;
+  saveSettings();
+  applyAnim();
+});
 $("setCap").addEventListener("change", (e) => {
   settings.capByViewers = e.target.checked;
   saveSettings();
@@ -5410,6 +5486,7 @@ $("langEn").addEventListener("click", () => setLang("en"));
 
 lang = detectLang();
 applyTheme();
+applyAnim();
 renderSettings();
 applyLang();
 if (NEWS_ACTIVE && !newsSeen()) $("newsBanner").hidden = false;
