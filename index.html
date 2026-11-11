@@ -626,6 +626,8 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   z-index: 15;
 }
+.panel-body .hint { margin: -4px 0 4px 26px; }
+
 button, .btnlink {
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
@@ -667,7 +669,6 @@ button.shake, input.shake {
   button:not(:disabled):active, .btnlink:active { transform: none; }
   button.shake, input.shake { animation: none; }
 }
-.panel-body .hint { margin: -4px 0 4px 26px; }
 </style>
 </head>
 <body>
@@ -1028,17 +1029,10 @@ const NEWS_KEY = "newsSeen";
 const NEWS_ID = "settings1";
 const NEWS_ACTIVE = false;
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
-let pageBase = null;
+const APP_VERSION = "2026-11-11-1";
 let updateReady = false;
 let updateDismissed = false;
 let lastUpdateCheck = 0;
-
-async function pageHash(mode) {
-  const res = await fetch(location.origin + location.pathname, { cache: mode });
-  if (!res.ok) throw new Error("status");
-  const digest = await crypto.subtle.digest("SHA-256", await res.arrayBuffer());
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 function updateNoticeView() {
   const box = $("updateNotice");
@@ -1051,26 +1045,28 @@ function updateNoticeView() {
   $("updateDismiss").hidden = !inRoom;
 }
 
+async function fetchLatestVersion() {
+  const res = await fetch(location.origin + location.pathname + "?v=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) throw new Error("status");
+  const m = (await res.text()).match(/APP_VERSION = "(\d{4}-\d{2}-\d{2}-\d+)"/);
+  if (!m) throw new Error("version");
+  return m[1];
+}
+
 async function checkUpdate() {
-  if (updateReady || pageBase === null) return;
+  if (updateReady) return;
   lastUpdateCheck = Date.now();
   try {
-    const current = await pageHash("no-store");
-    if (current !== pageBase) {
+    const latest = await fetchLatestVersion();
+    if (latest > APP_VERSION) {
       updateReady = true;
       updateNoticeView();
     }
   } catch (e) {}
 }
 
-async function startUpdateWatch() {
+function startUpdateWatch() {
   if (location.protocol !== "https:" && location.protocol !== "http:") return;
-  if (!(window.crypto && crypto.subtle)) return;
-  try {
-    pageBase = await pageHash("force-cache");
-  } catch (e) {
-    return;
-  }
   setInterval(checkUpdate, UPDATE_CHECK_MS);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && Date.now() - lastUpdateCheck > 60000) checkUpdate();
@@ -2825,8 +2821,6 @@ function setStatus(el, key, isError, vars) {
   }
   el.className = isError ? "status error" : "status";
   if (isError && key) shakeError(key);
-  if (el.id !== "homeStatus" && el.id !== "viewStatus") return;
-  
   if (el.id !== "homeStatus" && el.id !== "viewStatus") return;
   cancelFade(el);
   const x = $(el.id + "X");
