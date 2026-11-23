@@ -44,7 +44,7 @@ the copyright holder, subject to applicable law.
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob: mediastream:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://firestore.googleapis.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: https://*.klipy.com; media-src blob: mediastream:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com https://firestore.googleapis.com https://api.klipy.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tela Fácil</title>
@@ -785,6 +785,29 @@ html[data-anim="off"] .selwrap:hover::after, html[data-anim="off"] details > sum
 html[data-anim="off"] details[open] > :not(summary) {
   animation: none !important;
 }
+
+.gifbox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 46%;
+  min-height: 180px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+}
+#gifQuery { width: 100%; text-transform: none; letter-spacing: normal; }
+.gifgrid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  align-content: start;
+}
+.gifgrid button { padding: 0; border-radius: 8px; overflow: hidden; background: #000; line-height: 0; }
+.gifgrid img { width: 100%; height: 90px; object-fit: cover; display: block; }
+.gifnote { color: var(--muted); font-size: 0.8rem; min-height: 1.2em; }
+.msg img.gifmsg { display: block; max-width: 100%; max-height: 180px; border-radius: 8px; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -898,6 +921,7 @@ html[data-anim="off"] details[open] > :not(summary) {
             <select id="liveCamQuality"></select>
           </label>
         </div>
+        <label class="check"><input type="checkbox" id="gifsToggle" checked> <span data-i18n="gifsOption">Permitir GIFs no chat</span></label>
         <button id="awayBtn" data-i18n="awayBtn">Sair para o menu</button>
       </div>
     </aside>
@@ -967,7 +991,13 @@ html[data-anim="off"] details[open] > :not(summary) {
   </div>
   <div class="people" id="people" hidden></div>
   <div class="chat-list" id="chatList"></div>
+  <div class="gifbox" id="gifBox" hidden>
+    <input type="text" id="gifQuery" maxlength="50" autocomplete="off" data-i18n-ph="gifSearchPh" placeholder="Buscar GIFs">
+    <div class="gifgrid" id="gifGrid"></div>
+    <div class="gifnote"><span id="gifNote"></span> <span data-i18n="gifPowered">GIFs por KLIPY</span></div>
+  </div>
   <div class="chat-form">
+    <button id="gifBtn" type="button" hidden>GIF</button>
     <input type="text" id="chatInput" maxlength="300" autocomplete="off" placeholder="Escreva uma mensagem">
     <button id="chatSend" class="primary" data-i18n="send">Enviar</button>
   </div>
@@ -1128,6 +1158,9 @@ const PREFIX = "tcompartilha-";
 const MAX_VIEWERS = 16;
 const MAX_SHARERS = 4;
 const MAX_CAMS = 4;
+const KLIPY_KEY = "1JlESXqEw53jC3dwFuBHR897c5mLU6KN7w1WdDE3QHuqk7Z1ZYRRl0cp8EyedRbW";
+const KLIPY_API = "https://api.klipy.com/api/v1/";
+const GIF_PER_PAGE = 24;
 const CAM = "#cam";
 const AWAY_MS = 8 * 60 * 1000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -1155,7 +1188,7 @@ const AUTO_DOWN_COOLDOWN = 8000;
 const AUTO_UP_MS = 60000;
 const SETTINGS_KEY = "settings";
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
-const APP_VERSION = "2026-11-23-3";
+const APP_VERSION = "2026-11-23-2";
 let updateReady = false;
 let updateDismissed = false;
 let lastUpdateCheck = 0;
@@ -1553,6 +1586,13 @@ const I18N = {
     noPeople: "Nenhum espectador na sala.",
     chatMutedPh: "O host silenciou você",
     chat: "Chat",
+    gifSearchPh: "Buscar GIFs",
+    gifLoading: "Carregando...",
+    gifEmpty: "Nenhum GIF encontrado.",
+    gifError: "Não foi possível carregar os GIFs.",
+    gifNoKey: "Falta configurar a chave do Klipy.",
+    gifPowered: "GIFs por KLIPY",
+    gifsOption: "Permitir GIFs no chat",
     send: "Enviar",
     nickPlaceholder: "Seu apelido",
     chatPlaceholder: "Escreva uma mensagem",
@@ -1765,6 +1805,13 @@ const I18N = {
     noPeople: "No viewers in the room.",
     chatMutedPh: "The host muted you",
     chat: "Chat",
+    gifSearchPh: "Search GIFs",
+    gifLoading: "Loading...",
+    gifEmpty: "No GIFs found.",
+    gifError: "Could not load GIFs.",
+    gifNoKey: "The Klipy key is not set up.",
+    gifPowered: "GIFs by KLIPY",
+    gifsOption: "Allow GIFs in chat",
     send: "Send",
     nickPlaceholder: "Your nickname",
     chatPlaceholder: "Write a message",
@@ -1942,6 +1989,10 @@ const roomNicks = new Map();
 let roomPeople = [];
 let chatSeq = 0;
 let chatMuted = false;
+let gifsEnabled = true;
+let chatGifsOn = false;
+let gifTimer = null;
+let gifSeq = 0;
 let blockedTab = false;
 const MAX_RETRY = 8;
 const tabId = makeCode() + makeCode();
@@ -2788,6 +2839,7 @@ function openChat() {
   closePanel();
   closeViewPanel();
   closeSettings();
+  updateGifBtn();
   $("chatPanel").classList.add("open");
   $("chatPanel").setAttribute("aria-hidden", "false");
   chatUnread = 0;
@@ -2811,6 +2863,7 @@ function toggleChat() {
 
 function clearChat() {
   closeChat();
+  closeGifBox();
   roomPeople = [];
   $("chatList").innerHTML = "";
   $("people").hidden = true;
@@ -2841,6 +2894,16 @@ function addChat(m, mod) {
     del.addEventListener("click", () => deleteMessage(m.id));
     row.appendChild(del);
   }
+  const gifUrl = validGif(m.gif);
+  if (gifUrl) {
+    const img = document.createElement("img");
+    img.className = "gifmsg";
+    img.src = gifUrl;
+    img.alt = "GIF";
+    img.loading = "lazy";
+    img.referrerPolicy = "no-referrer";
+    row.appendChild(img);
+  }
   list.appendChild(row);
   while (list.children.length > 200) list.removeChild(list.firstChild);
   if (nearBottom) list.scrollTop = list.scrollHeight;
@@ -2850,8 +2913,9 @@ function addChat(m, mod) {
   }
 }
 
-function broadcastChat(nick, text) {
+function broadcastChat(nick, text, gif) {
   const m = { id: ++chatSeq, nick: nick, text: text };
+  if (gif) m.gif = gif;
   chatLog.push(m);
   if (chatLog.length > 50) chatLog.shift();
   addChat(m, true);
@@ -2859,6 +2923,118 @@ function broadcastChat(nick, text) {
     if (v.conn.open) v.conn.send({ chat: m });
   });
   syncSuccessor();
+}
+
+function validGif(u) {
+  if (typeof u !== "string" || u.length > 400) return "";
+  try {
+    const x = new URL(u);
+    if (x.protocol !== "https:" || x.username || x.password || x.port) return "";
+    if (x.hostname !== "klipy.com" && !x.hostname.endsWith(".klipy.com")) return "";
+    return x.href;
+  } catch (e) {
+    return "";
+  }
+}
+
+function gifPick(item, order) {
+  const f = item && item.file;
+  if (!f || typeof f !== "object") return "";
+  for (const k of order) {
+    const ok = validGif(f[k] && f[k].gif && f[k].gif.url);
+    if (ok) return ok;
+  }
+  return "";
+}
+
+async function gifSearch(q) {
+  const base = KLIPY_API + encodeURIComponent(KLIPY_KEY) + "/gifs/" + (q ? "search" : "trending");
+  const url = base + "?per_page=" + GIF_PER_PAGE + (q ? "&q=" + encodeURIComponent(q) : "");
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("http " + r.status);
+  const j = await r.json();
+  const list = j && j.data && Array.isArray(j.data.data) ? j.data.data : [];
+  return list
+    .filter((it) => it && it.type !== "ad")
+    .map((it) => ({ thumb: gifPick(it, ["sm", "xs", "md"]), full: gifPick(it, ["md", "sm", "hd"]) }))
+    .filter((x) => x.thumb && x.full);
+}
+
+function clearGifNote() {
+  const note = $("gifNote");
+  delete note.dataset.i18n;
+  delete note.dataset.vars;
+  note.textContent = "";
+}
+
+async function loadGifs() {
+  const grid = $("gifGrid");
+  const note = $("gifNote");
+  if (!KLIPY_KEY || KLIPY_KEY.startsWith("COLE")) {
+    grid.innerHTML = "";
+    setT(note, "gifNoKey");
+    return;
+  }
+  const mine = ++gifSeq;
+  setT(note, "gifLoading");
+  try {
+    const list = await gifSearch($("gifQuery").value.trim().slice(0, 50));
+    if (mine !== gifSeq) return;
+    grid.innerHTML = "";
+    if (!list.length) {
+      setT(note, "gifEmpty");
+      return;
+    }
+    clearGifNote();
+    list.forEach((x) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      const img = document.createElement("img");
+      img.src = x.thumb;
+      img.alt = "";
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      b.appendChild(img);
+      b.addEventListener("click", () => sendGif(x.full));
+      grid.appendChild(b);
+    });
+  } catch (e) {
+    if (mine !== gifSeq) return;
+    grid.innerHTML = "";
+    setT(note, "gifError");
+  }
+}
+
+function openGifBox() {
+  $("gifBox").hidden = false;
+  $("gifQuery").value = "";
+  loadGifs();
+  $("gifQuery").focus();
+}
+
+function closeGifBox() {
+  $("gifBox").hidden = true;
+  gifSeq++;
+  clearTimeout(gifTimer);
+}
+
+function updateGifBtn() {
+  const on = hosting || chatGifsOn;
+  $("gifBtn").hidden = !on;
+  if (!on) closeGifBox();
+}
+
+function sendGif(url) {
+  const u = validGif(url);
+  if (!u) return;
+  if (hosting) {
+    broadcastChat(myNick, "", u);
+  } else if (viewerConn && viewerConn.open && chatGifsOn) {
+    viewerConn.send({ gif: u });
+  } else {
+    return;
+  }
+  closeGifBox();
 }
 
 function sendChat() {
@@ -3443,6 +3619,8 @@ async function startHost(share, withCam) {
   if (hosting) closeRoom();
   roomPrivate = vis === "private";
   roomMulti = !share;
+  gifsEnabled = true;
+  $("gifsToggle").checked = true;
   setT($("roomType"), roomPrivate ? "roomPrivateBadge" : "roomPublicBadge");
   setT($("hostSelfName"), "hostLabel", { name: myNick });
   hosting = true;
@@ -3561,6 +3739,7 @@ function closeRoom() {
   allowed.clear();
   roomPrivate = false;
   roomMulti = false;
+  gifsEnabled = true;
   succSig = "";
   clearHostSession();
   $("hostNote").hidden = true;
@@ -3920,7 +4099,12 @@ function chatHist(a) {
   return a
     .filter((m) => m && typeof m.nick === "string" && typeof m.text === "string" && Number.isInteger(m.id))
     .slice(-50)
-    .map((m) => ({ id: m.id, nick: cleanNick(m.nick), text: m.text.slice(0, CHAT_MAX) }));
+    .map((m) => {
+      const o = { id: m.id, nick: cleanNick(m.nick), text: m.text.slice(0, CHAT_MAX) };
+      const g = validGif(m.gif);
+      if (g) o.gif = g;
+      return o;
+    });
 }
 
 function saveHostSession(closing) {
@@ -3931,6 +4115,7 @@ function saveHostSession(closing) {
       gen: hostGen,
       priv: roomPrivate,
       multi: roomMulti,
+      gifs: gifsEnabled,
       nick: myNick,
       q: qualityKey,
       fps: fpsValue,
@@ -3956,6 +4141,7 @@ function syncSuccessor() {
   const st = {
     priv: roomPrivate,
     multi: roomMulti,
+    gifs: gifsEnabled,
     allowed: [...allowed],
     grants: [...grants],
     camGrants: [...camGrants],
@@ -4102,6 +4288,7 @@ function admitNow(conn, ctx) {
     canShare: v.canShare,
     canCam: v.canCam,
     multi: roomMulti,
+    gifs: gifsEnabled,
     away: away ? Math.max(0, away.deadline - Date.now()) : null
   });
   if (v.muted) conn.send({ muted: true });
@@ -4181,6 +4368,14 @@ peer.on("connection", (conn) => {
     if (d.reqCam === true) return onCamRequest(v);
     if (d.camStart === true) return onCamStart(conn.peer, v);
     if (d.camStop === true) return onCamStop(conn.peer, v);
+    if (typeof d.gif === "string") {
+      const g = validGif(d.gif);
+      const t0 = Date.now();
+      if (!g || !gifsEnabled || v.muted || t0 - v.lastMsg < 700) return;
+      v.lastMsg = t0;
+      broadcastChat(v.nick, "", g);
+      return;
+    }
     if (v.muted || typeof d.msg !== "string") return;
     const now = Date.now();
     if (now - v.lastMsg < 700) return;
@@ -4232,6 +4427,8 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra, camG
   graceUntil = Date.now() + GRACE_MS;
   roomPrivate = priv;
   if (extra) roomMulti = extra.multi === true;
+  if (extra) gifsEnabled = extra.gifs !== false;
+  $("gifsToggle").checked = gifsEnabled;
   takeoverMode = noteKey === "nowHost";
   allowed.clear();
   allowedList.forEach((x) => allowed.add(x));
@@ -4322,6 +4519,7 @@ function resumeNow() {
   }
   const g = Number(sess.gen);
   roomMulti = sess.multi === true;
+  gifsEnabled = sess.gifs !== false;
   enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0, null, strList(sess.camGrants));
 }
 
@@ -4833,6 +5031,8 @@ function connectToRoom(code) {
             }
           }
           retry = 0;
+          chatGifsOn = d.gifs !== false;
+          updateGifBtn();
           clearTimeout(takeoverTimer);
           takeoverTimer = null;
           iAmSucc = false;
@@ -4855,6 +5055,7 @@ function connectToRoom(code) {
           succState = {
             priv: d.succState.priv === true,
             multi: d.succState.multi === true,
+            gifs: d.succState.gifs !== false,
             allowed: strList(d.succState.allowed),
             grants: strList(d.succState.grants),
             camGrants: strList(d.succState.camGrants),
@@ -4905,6 +5106,11 @@ function connectToRoom(code) {
         if (typeof d.muted === "boolean") {
           chatMuted = d.muted;
           updateChatInput();
+          return;
+        }
+        if (typeof d.gifs === "boolean") {
+          chatGifsOn = d.gifs;
+          updateGifBtn();
           return;
         }
         if (d.nickTaken === true) {
@@ -5748,6 +5954,26 @@ if (roomParam && !resumed) {
     $("nick").focus();
   }
 }
+
+$("gifBtn").addEventListener("click", () => {
+  if ($("gifBox").hidden) {
+    openGifBox();
+  } else {
+    closeGifBox();
+  }
+});
+$("gifQuery").addEventListener("input", () => {
+  clearTimeout(gifTimer);
+  gifTimer = setTimeout(loadGifs, 450);
+});
+$("gifsToggle").addEventListener("change", (e) => {
+  gifsEnabled = e.target.checked;
+  viewers.forEach((v) => {
+    if (v.conn.open) v.conn.send({ gifs: gifsEnabled });
+  });
+  syncSuccessor();
+  saveHostSession(false);
+});
 </script>
 </body>
 </html>
