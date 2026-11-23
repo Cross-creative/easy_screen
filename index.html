@@ -610,6 +610,9 @@ video { width: 100%; height: 100%; object-fit: contain; background: #000; displa
   transition-delay: 1s;
 }
 .ibtn.edge[data-tip]::after { left: auto; right: 0; transform: none; }
+.ibtn.slowtip[data-tip]:hover::after {
+  transition-delay: 2s;
+}
 .apop {
   position: absolute;
   right: 0;
@@ -871,7 +874,7 @@ html[data-anim="off"] details[open] > :not(summary) {
       <span class="badge" id="roomType"></span>
       <button id="openOptions" data-i18n="options">Opções</button>
       <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
-      <button id="closeRoom" class="stop mini" data-i18n="closeRoom">Encerrar sala</button>
+      <button id="closeRoom" class="ibtn stop slowtip" data-tipkey="closeRoom"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H11v18H5.5A2.5 2.5 0 0 1 3 18.5z" fill="currentColor"/><path d="M11 3h1a2 2 0 0 1 2 2v1.5M14 17.5V19a2 2 0 0 1-2 2h-1M12 12h9M18 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="stage" id="hostStage">
       <div class="tiles" id="hostGrid"></div>
