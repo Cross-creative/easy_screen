@@ -203,6 +203,16 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
 button.stop { background: var(--danger); color: #fff; border-color: transparent; }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 input[type="text"] { text-transform: uppercase; letter-spacing: 0.15em; width: 160px; }
+input[type="number"] {
+  font: inherit;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  width: 100px;
+}
+.panel-body input[type="number"] { width: 100%; }
 label.check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .code {
   font-size: 1.6rem;
@@ -800,6 +810,7 @@ html[data-anim="off"] details[open] > :not(summary) {
       <h2 data-i18n="shareMyScreen">Compartilhar minha tela</h2>
       <div class="row">
         <select id="quality"></select>
+        <label class="check"><span data-i18n="fpsLabel">FPS</span> <input type="number" id="fps" min="5" max="60" step="1" value="30" inputmode="numeric"></label>
       </div>
       <div class="row">
         <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
@@ -874,8 +885,11 @@ html[data-anim="off"] details[open] > :not(summary) {
         <button id="closeOptions" data-i18n="close">Fechar</button>
       </div>
       <div class="panel-body">
-        <label class="field"><span data-i18n="quality">Qualidade</span>
+        <label class="field"><span data-i18n="resolution">Resolução</span>
           <select id="liveQuality"></select>
+        </label>
+        <label class="field"><span data-i18n="fpsLabel">FPS</span>
+          <input type="number" id="liveFps" min="5" max="60" step="1" value="30" inputmode="numeric">
         </label>
         <button id="shareBtn" data-i18n="switchSurface">Trocar aba ou janela</button>
         <div class="shareopts" id="camHostBox" hidden>
@@ -928,8 +942,11 @@ html[data-anim="off"] details[open] > :not(summary) {
   </div>
   <div class="panel-body">
     <div class="shareopts" id="viewShareOpts">
-      <label class="field"><span data-i18n="quality">Qualidade</span>
+      <label class="field"><span data-i18n="resolution">Resolução</span>
         <select id="viewQuality"></select>
+      </label>
+      <label class="field"><span data-i18n="fpsLabel">FPS</span>
+        <input type="number" id="viewFps" min="5" max="60" step="1" value="30" inputmode="numeric">
       </label>
       <label class="check"><input type="checkbox" id="viewAudio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
       <button id="viewSwitch" data-i18n="switchSurface" hidden>Trocar aba ou janela</button>
@@ -1114,14 +1131,18 @@ const MAX_CAMS = 4;
 const CAM = "#cam";
 const AWAY_MS = 8 * 60 * 1000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const QUALITIES = {
-  light: { width: 854, height: 480, fps: 10, kbps: 300 },
-  eco: { width: 1280, height: 720, fps: 15, kbps: 800 },
-  mid: { width: 1280, height: 720, fps: 24, kbps: 1500 },
-  high: { width: 1920, height: 1080, fps: 30, kbps: 3000 },
-  extreme: { width: 2560, height: 1440, fps: 60, kbps: 8000 }
+const RESOLUTIONS = {
+  r480: { width: 854, height: 480, label: "480p" },
+  r720: { width: 1280, height: 720, label: "720p" },
+  r1080: { width: 1920, height: 1080, label: "1080p" },
+  r1440: { width: 2560, height: 1440, label: "1440p" },
+  r2160: { width: 3840, height: 2160, label: "4K" }
 };
-const ORDER = ["light", "eco", "mid", "high", "extreme"];
+const RES_ORDER = ["r480", "r720", "r1080", "r1440", "r2160"];
+const MIN_FPS = 5;
+const MAX_FPS = 60;
+const MIN_STREAM_KBPS = 150;
+const MAX_STREAM_KBPS = 15000;
 const CAM_QUALITIES = {
   c360: { width: 640, height: 360, fps: 15, kbps: 300 },
   c480: { width: 854, height: 480, fps: 24, kbps: 600 },
@@ -1329,16 +1350,46 @@ function uploadKbps() {
   return total;
 }
 
-function qualityCap() {
-  const top = ORDER[ORDER.length - 1];
-  if (!settings.capByViewers) return top;
+function makeQuality(resKey, fps) {
+  const r = RESOLUTIONS[resKey];
+  const px = r.width * r.height;
+  const bpp = px <= 921600 ? 0.07 : px <= 2073600 ? 0.05 : 0.04;
+  const kbps = Math.min(MAX_STREAM_KBPS, Math.max(MIN_STREAM_KBPS, Math.round(px * fps * bpp / 1000)));
+  return { width: r.width, height: r.height, fps: fps, kbps: kbps };
+}
+
+function qLabel(resKey, fps) {
+  return RESOLUTIONS[resKey].label + " · " + fps + " fps";
+}
+
+function readFps(el) {
+  let n = Math.round(Number(el.value));
+  if (!Number.isFinite(n) || n <= 0) n = fpsValue;
+  n = Math.min(MAX_FPS, Math.max(MIN_FPS, n));
+  el.value = n;
+  return n;
+}
+
+function nextDown(r, f) {
+  const i = RES_ORDER.indexOf(r);
+  if (i > 0) return { res: RES_ORDER[i - 1], fps: f };
+  if (f > 15) return { res: r, fps: Math.max(15, Math.round(f / 2)) };
+  return null;
+}
+
+function nextUp(r, f) {
+  if (f < chosenFps) return { res: r, fps: Math.min(chosenFps, f * 2) };
+  const i = RES_ORDER.indexOf(r);
+  if (i < RES_ORDER.indexOf(chosenQuality)) return { res: RES_ORDER[i + 1], fps: f };
+  return null;
+}
+
+function fitsCap(resKey, fps) {
+  if (!settings.capByViewers) return true;
   const n = roomSize();
-  if (n <= 0) return top;
+  if (n <= 0) return true;
   const camLoad = camStream ? camQuality.kbps : 0;
-  for (let i = ORDER.length - 1; i >= 0; i--) {
-    if (n * (QUALITIES[ORDER[i]].kbps + camLoad) <= MAX_UPLOAD_KBPS) return ORDER[i];
-  }
-  return ORDER[0];
+  return n * (makeQuality(resKey, fps).kbps + camLoad) <= MAX_UPLOAD_KBPS;
 }
 
 function camCap() {
@@ -1354,12 +1405,11 @@ function camCap() {
 }
 
 function refreshQualityLimits() {
-  const cap = ORDER.indexOf(qualityCap());
   [$("liveQuality"), $("viewQuality")].forEach((sel) => {
     Array.from(sel.options).forEach((o) => {
-      const over = ORDER.indexOf(o.value) > cap;
+      const over = !fitsCap(o.value, fpsValue);
       o.disabled = over;
-      o.textContent = t("q_" + o.value) + (over ? " 🔒" : "");
+      o.textContent = RESOLUTIONS[o.value].label + (over ? " 🔒" : "");
     });
   });
   const camTop = CAM_ORDER.indexOf(camCap());
@@ -1372,17 +1422,17 @@ function refreshQualityLimits() {
   });
 }
 
-function autoNote(key, q) {
-  autoNoteState = { key: key, q: q, until: Date.now() + 12000 };
+function autoNote(key, label) {
+  autoNoteState = { key: key, q: label, until: Date.now() + 12000 };
   showAutoNote();
-  notify("auto", t("title"), t(key, { q: t("q_" + q) }));
+  notify("auto", t("title"), t(key, { q: label }));
 }
 
 function showAutoNote() {
   if (!autoNoteState) return;
   const box = hosting ? $("hostWarn") : $("viewWarn");
   const text = hosting ? $("hostWarnText") : $("viewWarnText");
-  setT(text, autoNoteState.key, { q: t("q_" + autoNoteState.q) });
+  setT(text, autoNoteState.key, { q: autoNoteState.q });
   if (hosting) $("lowerQ").hidden = true;
   box.hidden = false;
 }
@@ -1390,11 +1440,19 @@ function showAutoNote() {
 function enforceCap() {
   refreshQualityLimits();
   if (stream) {
-    const cap = qualityCap();
-    if (ORDER.indexOf(qualityKey) > ORDER.indexOf(cap)) {
+    let r = qualityKey;
+    let f = fpsValue;
+    let guard = 0;
+    while (!fitsCap(r, f) && guard++ < 10) {
+      const d = nextDown(r, f);
+      if (!d) break;
+      r = d.res;
+      f = d.fps;
+    }
+    if (r !== qualityKey || f !== fpsValue) {
       lastAutoAt = Date.now();
-      setQuality(cap, true);
-      autoNote("capLowered", cap);
+      setQuality(r, f, true);
+      autoNote("capLowered", qLabel(r, f));
     }
   }
   if (camStream) {
@@ -1402,7 +1460,7 @@ function enforceCap() {
     if (CAM_ORDER.indexOf(camKey) > CAM_ORDER.indexOf(cc)) {
       lastAutoAt = Date.now();
       setCamQuality(cc, true);
-      autoNote("capLowered", cc);
+      autoNote("capLowered", t("q_" + cc));
     }
   }
 }
@@ -1427,6 +1485,8 @@ const I18N = {
     options: "Opções",
     close: "Fechar",
     quality: "Qualidade",
+    resolution: "Resolução",
+    fpsLabel: "FPS",
     muteAudio: "Desativar áudio",
     unmuteAudio: "Ativar áudio",
     switchSurface: "Trocar aba ou janela",
@@ -1637,6 +1697,8 @@ const I18N = {
     options: "Options",
     close: "Close",
     quality: "Quality",
+    resolution: "Resolution",
+    fpsLabel: "FPS",
     muteAudio: "Mute audio",
     unmuteAudio: "Unmute audio",
     switchSurface: "Switch tab or window",
@@ -1844,9 +1906,11 @@ let pendingCamStream = null;
 let camKey = "c480";
 let camQuality = CAM_QUALITIES.c480;
 let camState = "none";
-let qualityKey = "eco";
-let quality = QUALITIES.eco;
-let chosenQuality = "eco";
+let qualityKey = "r720";
+let fpsValue = 30;
+let quality = makeQuality("r720", 30);
+let chosenQuality = "r720";
+let chosenFps = 30;
 let lastAutoAt = 0;
 let lastLimitedAt = 0;
 let autoNoteState = null;
@@ -2919,15 +2983,15 @@ function setT(el, key, vars) {
 
 function fillQuality() {
   [$("quality"), $("liveQuality"), $("viewQuality")].forEach((sel) => {
-    const keep = sel.value || "eco";
+    const keep = sel.value || "r720";
     sel.innerHTML = "";
-    ORDER.forEach((k) => {
+    RES_ORDER.forEach((k) => {
       const o = document.createElement("option");
       o.value = k;
-      o.textContent = t("q_" + k);
+      o.textContent = RESOLUTIONS[k].label;
       sel.appendChild(o);
     });
-    sel.value = keep;
+    sel.value = RESOLUTIONS[keep] ? keep : "r720";
   });
   [$("liveCamQuality"), $("viewCamQuality")].forEach((sel) => {
     const keep = sel.value || camKey;
@@ -3114,7 +3178,7 @@ function closePanel() {
 }
 
 function isDetail(key) {
-  return key === "extreme";
+  return key === "r1440" || key === "r2160";
 }
 
 async function captureScreen(q, withAudio) {
@@ -3125,7 +3189,7 @@ async function captureScreen(q, withAudio) {
         displaySurface: "browser",
         width: { max: q.width },
         height: { max: q.height },
-        frameRate: { max: q.fps }
+        frameRate: { ideal: q.fps, max: q.fps }
       },
       audio: withAudio,
       systemAudio: "include"
@@ -3350,8 +3414,10 @@ async function startHost(share, withCam) {
   if (!(await ensureIpNotice())) return;
   askNotifyPermission();
   qualityKey = $("quality").value;
-  quality = QUALITIES[qualityKey];
+  fpsValue = readFps($("fps"));
+  quality = makeQuality(qualityKey, fpsValue);
   chosenQuality = qualityKey;
+  chosenFps = fpsValue;
   lastAutoAt = 0;
   lastLimitedAt = 0;
   autoNoteState = null;
@@ -3385,6 +3451,8 @@ async function startHost(share, withCam) {
   $("people").hidden = false;
   $("liveQuality").value = qualityKey;
   $("viewQuality").value = qualityKey;
+  $("liveFps").value = fpsValue;
+  $("viewFps").value = fpsValue;
   $("liveCamQuality").value = camKey;
   $("hostWarn").hidden = true;
   setSharingUI(false);
@@ -3584,19 +3652,25 @@ function limitBitrate(call, kbps) {
   }, 250);
 }
 
-function setQuality(key, auto) {
+function setQuality(key, fps, auto) {
   qualityKey = key;
-  if (!auto) chosenQuality = key;
-  quality = QUALITIES[key];
+  fpsValue = fps;
+  if (!auto) {
+    chosenQuality = key;
+    chosenFps = fps;
+  }
+  quality = makeQuality(key, fps);
   $("liveQuality").value = key;
   $("viewQuality").value = key;
+  $("liveFps").value = fps;
+  $("viewFps").value = fps;
   const track = stream && stream.getVideoTracks()[0];
   if (track) {
     track.contentHint = isDetail(key) ? "detail" : "";
     track.applyConstraints({
       width: { max: quality.width },
       height: { max: quality.height },
-      frameRate: { max: quality.fps }
+      frameRate: { ideal: quality.fps, max: quality.fps }
     }).catch(() => {});
   }
   viewers.forEach((v) => {
@@ -3671,33 +3745,34 @@ async function checkLoad() {
   const now = Date.now();
   const limited = reason === "bandwidth" || reason === "cpu";
   if (limited) lastLimitedAt = now;
-  const idx = ORDER.indexOf(qualityKey);
+  const down = stream ? nextDown(qualityKey, fpsValue) : null;
   if (settings.autoReduce && limited && now - lastAutoAt >= AUTO_DOWN_COOLDOWN) {
-    if (stream && idx > 0) {
+    if (down) {
       lastAutoAt = now;
-      setQuality(ORDER[idx - 1], true);
-      autoNote("autoLowered", ORDER[idx - 1]);
+      setQuality(down.res, down.fps, true);
+      autoNote("autoLowered", qLabel(down.res, down.fps));
       return;
     }
     const ci = CAM_ORDER.indexOf(camKey);
     if (!stream && camStream && ci > 0) {
       lastAutoAt = now;
       setCamQuality(CAM_ORDER[ci - 1], true);
-      autoNote("autoLowered", CAM_ORDER[ci - 1]);
+      autoNote("autoLowered", t("q_" + CAM_ORDER[ci - 1]));
       return;
     }
   }
+  const up = stream ? nextUp(qualityKey, fpsValue) : null;
   if (
     settings.autoRecover &&
     stream &&
     !limited &&
-    idx < ORDER.indexOf(chosenQuality) &&
-    idx < ORDER.indexOf(qualityCap()) &&
+    up &&
+    fitsCap(up.res, up.fps) &&
     now - Math.max(lastLimitedAt, lastAutoAt) >= AUTO_UP_MS
   ) {
     lastAutoAt = now;
-    setQuality(ORDER[idx + 1], true);
-    autoNote("autoRaised", ORDER[idx + 1]);
+    setQuality(up.res, up.fps, true);
+    autoNote("autoRaised", qLabel(up.res, up.fps));
     return;
   }
   if (autoNoteState && now < autoNoteState.until) {
@@ -3719,7 +3794,7 @@ async function checkLoad() {
   if (key) setT(text, key, vars);
   if ((key === "warnBandwidth" || key === "warnCpu") && key !== lastWarnKey) notify("warn", t("title"), t(key));
   lastWarnKey = key;
-  if (hosting) $("lowerQ").hidden = !stream || qualityKey === ORDER[0];
+  if (hosting) $("lowerQ").hidden = !stream || !nextDown(qualityKey, fpsValue);
   box.hidden = !key || (!stream && !camStream);
 }
 
@@ -3858,6 +3933,7 @@ function saveHostSession(closing) {
       multi: roomMulti,
       nick: myNick,
       q: qualityKey,
+      fps: fpsValue,
       allowed: [...allowed],
       grants: [...grants],
       camGrants: [...camGrants],
@@ -4197,6 +4273,8 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra, camG
   $("people").hidden = false;
   $("liveQuality").value = qualityKey;
   $("viewQuality").value = qualityKey;
+  $("liveFps").value = fpsValue;
+  $("viewFps").value = fpsValue;
   $("liveCamQuality").value = camKey;
   $("hostWarn").hidden = true;
   setSharingUI(false);
@@ -4234,10 +4312,13 @@ function resumeNow() {
   const sess = r.sess;
   myNick = cleanNick(sess.nick);
   $("nick").value = myNick;
-  if (QUALITIES[sess.q]) {
+  if (RESOLUTIONS[sess.q]) {
+    const f = Math.min(MAX_FPS, Math.max(MIN_FPS, Math.round(Number(sess.fps)) || 30));
     qualityKey = sess.q;
-    quality = QUALITIES[sess.q];
+    fpsValue = f;
+    quality = makeQuality(sess.q, f);
     chosenQuality = sess.q;
+    chosenFps = f;
   }
   const g = Number(sess.gen);
   roomMulti = sess.multi === true;
@@ -4451,8 +4532,10 @@ function callCamTarget(id) {
 async function viewerShare() {
   askNotifyPermission();
   qualityKey = $("viewQuality").value;
-  quality = QUALITIES[qualityKey];
+  fpsValue = readFps($("viewFps"));
+  quality = makeQuality(qualityKey, fpsValue);
   chosenQuality = qualityKey;
+  chosenFps = fpsValue;
   lastAutoAt = 0;
   lastLimitedAt = 0;
   autoNoteState = null;
@@ -5215,13 +5298,15 @@ $("confirmClose").addEventListener("click", () => {
   closePanel();
   closeRoom();
 });
-$("liveQuality").addEventListener("change", (e) => setQuality(e.target.value));
-$("viewQuality").addEventListener("change", (e) => setQuality(e.target.value));
+$("liveQuality").addEventListener("change", () => setQuality($("liveQuality").value, readFps($("liveFps"))));
+$("liveFps").addEventListener("change", () => setQuality($("liveQuality").value, readFps($("liveFps"))));
+$("viewQuality").addEventListener("change", () => setQuality($("viewQuality").value, readFps($("viewFps"))));
+$("viewFps").addEventListener("change", () => setQuality($("viewQuality").value, readFps($("viewFps"))));
 $("liveCamQuality").addEventListener("change", (e) => setCamQuality(e.target.value));
 $("viewCamQuality").addEventListener("change", (e) => setCamQuality(e.target.value));
 $("lowerQ").addEventListener("click", () => {
-  const i = ORDER.indexOf(qualityKey);
-  if (i > 0) setQuality(ORDER[i - 1]);
+  const d = nextDown(qualityKey, fpsValue);
+  if (d) setQuality(d.res, d.fps);
 });
 $("hostMute").addEventListener("click", () => {
   const track = stream && stream.getAudioTracks()[0];
