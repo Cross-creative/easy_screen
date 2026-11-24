@@ -37,6 +37,7 @@
   var isWebView = /; wv\)/.test(navigator.userAgent || "");
   var isNative = !!(cap && typeof cap.isNativePlatform === "function" && cap.isNativePlatform());
   if (!isNative && !(cap && isWebView)) return;
+  window.addEventListener("pagehide", function (e) { e.stopImmediatePropagation(); }, true);
 
   var PT = (navigator.language || "pt").toLowerCase().indexOf("pt") === 0;
   var TXT = {
