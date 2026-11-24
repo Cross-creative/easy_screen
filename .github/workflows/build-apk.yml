@@ -40,6 +40,19 @@ jobs:
         working-directory: android-app
         run: npm ci
 
+      - name: Gerar o ícone do app
+        working-directory: android-app
+        run: |
+          set +e
+          if [ -f ../icone.png ]; then
+            mkdir -p assets
+            convert ../icone.png -resize 1024x1024 assets/icon-only.png
+            convert ../icone.png -resize 680x680 -background none -gravity center -extent 1024x1024 assets/icon-foreground.png
+            convert -size 1024x1024 xc:'#121316' assets/icon-background.png
+            npx --yes @capacitor/assets generate --android
+          fi
+          true
+
       - name: Sincronizar o Capacitor
         working-directory: android-app
         run: npx cap sync android
