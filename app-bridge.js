@@ -324,4 +324,50 @@
       }
     }).catch(function () {});
   });
+  var PERF_KEY = "tfPerfHide";
+  var PERF_TXT = PT ? {
+    title: "Aviso de desempenho",
+    body: "Compartilhar a tela pelo celular usa bastante bateria, processamento e internet (upload). Pode haver queda de qualidade ou travamentos, principalmente em aparelhos mais fracos, em dados móveis ou com muitas pessoas na sala. Para melhor resultado, use Wi-Fi e uma qualidade menor (480p ou 720p). Ao sair do app, a transmissão pode ficar mais lenta.",
+    hide: "Não mostrar novamente",
+    ok: "Entendi"
+  } : {
+    title: "Performance notice",
+    body: "Sharing your screen from a phone uses a lot of battery, processing and internet upload. Quality may drop or stutter, especially on weaker devices, mobile data or rooms with many people. For best results, use Wi-Fi and a lower quality (480p or 720p). Leaving the app may slow the stream down.",
+    hide: "Do not show again",
+    ok: "Got it"
+  };
+
+  function showPerfNotice() {
+    try { if (localStorage.getItem(PERF_KEY) === "1") return; } catch (e) {}
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.6)";
+    var box = document.createElement("div");
+    box.style.cssText = "max-width:420px;width:100%;padding:20px;border-radius:16px;background:#1c1e23;color:#eceef1;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.5)";
+    var title = document.createElement("div");
+    title.textContent = PERF_TXT.title;
+    title.style.cssText = "font-weight:700;font-size:18px;margin-bottom:8px";
+    var body = document.createElement("div");
+    body.textContent = PERF_TXT.body;
+    body.style.cssText = "margin-bottom:14px";
+    var label = document.createElement("label");
+    label.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:14px";
+    var check = document.createElement("input");
+    check.type = "checkbox";
+    check.style.cssText = "width:22px;height:22px";
+    var text = document.createElement("span");
+    text.textContent = PERF_TXT.hide;
+    label.append(check, text);
+    var button = document.createElement("button");
+    button.textContent = PERF_TXT.ok;
+    button.style.cssText = "width:100%;min-height:48px;border:0;border-radius:12px;background:#5b8cff;color:#0b1020;font:600 16px system-ui,sans-serif";
+    button.addEventListener("click", function () {
+      if (check.checked) { try { localStorage.setItem(PERF_KEY, "1"); } catch (e) {} }
+      wrap.remove();
+    });
+    box.append(title, body, label, button);
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+  }
+
+  document.addEventListener("DOMContentLoaded", showPerfNotice);
 })();
