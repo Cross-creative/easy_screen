@@ -262,8 +262,15 @@ label.check { display: inline-flex; align-items: center; gap: 8px; cursor: point
   border-radius: 14px;
   overflow: hidden;
   aspect-ratio: 16 / 9;
-  border: 1px solid var(--border);
+  border: 2px solid var(--amb-avg, var(--border));
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow:
+    0 -8px 22px -12px var(--amb-t, transparent),
+    8px 0 22px -12px var(--amb-r, transparent),
+    0 8px 22px -12px var(--amb-b, transparent),
+    -8px 0 22px -12px var(--amb-l, transparent);
 }
+html[data-anim="off"] .stage { transition: none !important; }
 .tiles {
   position: absolute;
   inset: 0;
@@ -811,6 +818,110 @@ html[data-anim="off"] details[open] > :not(summary) {
 .gifgrid img { width: 100%; height: 90px; object-fit: cover; display: block; }
 .gifnote { color: var(--muted); font-size: 0.8rem; min-height: 1.2em; }
 .msg img.gifmsg { display: block; max-width: 100%; max-height: 180px; border-radius: 8px; margin-top: 4px; }
+
+#closeRoom.ibtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+}
+#closeRoom.ibtn svg { width: 40px; height: 40px; }
+#closeRoom.ibtn:not(:disabled):hover {
+  transform: scale(1.08);
+  box-shadow: none;
+}
+#closeRoom.ibtn:not(:disabled):active {
+  transform: scale(0.95);
+  box-shadow: none;
+  filter: none;
+}
+@keyframes livepulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.tile .tag.live::before,
+.eyename.live::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #ff2347;
+  animation: livepulse 1s ease-in-out infinite;
+}
+html[data-anim="off"] .tile .tag.live::before,
+html[data-anim="off"] .eyename.live::before {
+  animation: none !important;
+}
+#settingsPanel { width: min(400px, 94vw); }
+.setbody { gap: 20px; }
+.setgroup {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.setgroup h3 {
+  margin: 0;
+  padding: 12px 16px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.setrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  cursor: default;
+}
+label.setrow { cursor: pointer; }
+.settext { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.setname { font-weight: 600; font-size: 0.95rem; }
+.setbody .setrow .hint { margin: 0; font-size: 0.8rem; line-height: 1.35; }
+.setbody .setrow .selwrap { display: inline-flex; width: auto; flex: none; }
+.setbody .setrow .selwrap select { width: auto; min-width: 150px; }
+.setbody .setrow > select { width: auto; min-width: 150px; flex: none; }
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease;
+}
+.switch:checked { background: var(--accent); }
+.switch:checked::after { transform: translateX(18px); }
+.switch:disabled { opacity: 0.45; cursor: not-allowed; }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+html[data-anim="off"] .switch,
+html[data-anim="off"] .switch::after { transition: none !important; }
 </style>
 </head>
 <body>
@@ -874,7 +985,7 @@ html[data-anim="off"] details[open] > :not(summary) {
       <span class="badge" id="roomType"></span>
       <button id="openOptions" data-i18n="options">Opções</button>
       <button class="chatBtn"><span data-i18n="chat">Chat</span> <span class="unread" hidden>0</span></button>
-      <button id="closeRoom" class="ibtn stop slowtip" data-tipkey="closeRoom"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H11v18H5.5A2.5 2.5 0 0 1 3 18.5z" fill="currentColor"/><path d="M11 3h1a2 2 0 0 1 2 2v1.5M14 17.5V19a2 2 0 0 1-2 2h-1M12 12h9M18 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button id="closeRoom" class="ibtn stop slowtip" data-tipkey="closeRoom"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#ff2347"/><path d="M12 6V11.5" stroke="#fff" stroke-width="2.3" stroke-linecap="round" fill="none"/><path d="M8.5 9.5A5 5 0 1 0 15.5 9.5" stroke="#fff" stroke-width="2.3" stroke-linecap="round" fill="none"/></svg></button>
     </div>
     <div class="stage" id="hostStage">
       <div class="tiles" id="hostGrid"></div>
@@ -1109,33 +1220,58 @@ html[data-anim="off"] details[open] > :not(summary) {
       <h2 data-i18n="settings">Configurações</h2>
       <button id="closeSettings" data-i18n="close">Fechar</button>
     </div>
-    <div class="panel-body">
-      <div class="field">
-        <span data-i18n="language">Idioma</span>
-        <div class="lang" role="group" aria-label="Language">
-          <button id="langPt" type="button">PT</button>
-          <button id="langEn" type="button">EN</button>
-        </div>
+    <div class="panel-body setbody">
+  <section class="setgroup">
+    <h3 data-i18n="setGrpLook">Aparência</h3>
+    <div class="setrow">
+      <span class="settext"><span class="setname" data-i18n="language">Idioma</span></span>
+      <div class="lang" role="group" aria-label="Language">
+        <button id="langPt" type="button">PT</button>
+        <button id="langEn" type="button">EN</button>
       </div>
-      <label class="field"><span data-i18n="theme">Tema</span>
-        <select id="setTheme">
-          <option value="auto" data-i18n="themeAuto">Automático (do sistema)</option>
-          <option value="light" data-i18n="themeLight">Claro</option>
-          <option value="dark" data-i18n="themeDark">Escuro</option>
-        </select>
-      </label>
-      <hr>
-      <label class="check"><input type="checkbox" id="setAutoReduce"> <span data-i18n="setAutoReduce">Reduzir a qualidade automaticamente</span></label>
-      <p class="hint" data-i18n="setAutoReduceHint">Quando o upload ou o computador apertarem, o app desce um nível de qualidade sozinho.</p>
-      <label class="check"><input type="checkbox" id="setAutoRecover"> <span data-i18n="setAutoRecover">Subir a qualidade de volta automaticamente</span></label>
-      <p class="hint" data-i18n="setAutoRecoverHint">Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.</p>
-      <label class="check"><input type="checkbox" id="setCap"> <span data-i18n="setCap">Limitar a qualidade pelo número de espectadores</span></label>
-      <p class="hint" data-i18n="setCapHint">Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.</p>
-      <label class="check"><input type="checkbox" id="setAnim"> <span data-i18n="setAnim">Animações</span></label>
-      <p class="hint" data-i18n="setAnimHint">Desative para remover as animações de botões, seletores e menus.</p>
-      <label class="check"><input type="checkbox" id="setNotify"> <span data-i18n="setNotify">Notificações do sistema</span></label>
-      <p class="hint" id="setNotifyHint" data-i18n="setNotifyHint">Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.</p>
     </div>
+    <div class="setrow">
+      <span class="settext"><span class="setname" data-i18n="theme">Tema</span></span>
+      <select id="setTheme">
+        <option value="auto" data-i18n="themeAuto">Automático (do sistema)</option>
+        <option value="light" data-i18n="themeLight">Claro</option>
+        <option value="dark" data-i18n="themeDark">Escuro</option>
+      </select>
+    </div>
+    <label class="setrow">
+      <span class="settext"><span class="setname" data-i18n="setAnim">Animações</span><span class="hint" data-i18n="setAnimHint">Desative para remover as animações de botões, seletores e menus.</span></span>
+      <input type="checkbox" id="setAnim" class="switch">
+    </label>
+    <label class="setrow">
+      <span class="settext"><span class="setname" data-i18n="setAmbient">Borda reativa na transmissão</span><span class="hint" data-i18n="setAmbientHint">A borda da tela assume as cores do que está passando no vídeo.</span></span>
+      <input type="checkbox" id="setAmbient" class="switch">
+    </label>
+  </section>
+
+  <section class="setgroup">
+    <h3 data-i18n="setGrpQuality">Qualidade da transmissão</h3>
+    <label class="setrow">
+      <span class="settext"><span class="setname" data-i18n="setAutoReduce">Reduzir a qualidade automaticamente</span><span class="hint" data-i18n="setAutoReduceHint">Quando o upload ou o computador apertarem, o app desce um nível de qualidade sozinho.</span></span>
+      <input type="checkbox" id="setAutoReduce" class="switch">
+    </label>
+    <label class="setrow">
+      <span class="settext"><span class="setname" data-i18n="setAutoRecover">Subir a qualidade de volta automaticamente</span><span class="hint" data-i18n="setAutoRecoverHint">Depois de 1 minuto sem problemas, sobe um nível por vez, sem passar da qualidade que você escolheu.</span></span>
+      <input type="checkbox" id="setAutoRecover" class="switch">
+    </label>
+    <label class="setrow">
+      <span class="settext"><span class="setname" data-i18n="setCap">Limitar a qualidade pelo número de espectadores</span><span class="hint" data-i18n="setCapHint">Com mais gente na sala, as qualidades altas ficam bloqueadas (🔒) para não sobrecarregar o seu upload.</span></span>
+      <input type="checkbox" id="setCap" class="switch">
+    </label>
+  </section>
+
+  <section class="setgroup">
+    <h3 data-i18n="setGrpAlerts">Avisos</h3>
+    <label class="setrow">
+      <span class="settext"><span class="setname" data-i18n="setNotify">Notificações do sistema</span><span class="hint" id="setNotifyHint" data-i18n="setNotifyHint">Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.</span></span>
+      <input type="checkbox" id="setNotify" class="switch">
+    </label>
+  </section>
+</div>
   </aside>
   <footer class="foot">
     <button type="button" class="linkbtn" id="termsLink" data-i18n="termsLink">Termos de uso</button>
@@ -1257,6 +1393,7 @@ function loadSettings() {
     autoRecover: s.autoRecover !== false,
     capByViewers: s.capByViewers !== false,
     animations: s.animations !== false,
+    ambient: s.ambient !== false,
     notify: s.notifyV2 === true && "Notification" in window && Notification.permission === "granted"
   };
 }
@@ -1264,7 +1401,7 @@ function loadSettings() {
 let settings = loadSettings();
 
 function saveSettings() {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, animations: settings.animations, notifyV2: settings.notify })); } catch (e) {}
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, animations: settings.animations, ambient: settings.ambient, notifyV2: settings.notify })); } catch (e) {}
 }
 
 function applyAnim() {
@@ -1298,6 +1435,7 @@ function renderSettings() {
   $("setAutoRecover").checked = settings.autoRecover;
   $("setCap").checked = settings.capByViewers;
   $("setAnim").checked = settings.animations;
+  $("setAmbient").checked = settings.ambient;
   $("setNotify").checked = settings.notify;
   $("setNotify").disabled = !("Notification" in window) || Notification.permission === "denied";
   const hint = $("setNotifyHint");
@@ -1678,6 +1816,11 @@ const I18N = {
     tipAudio: "Áudio",
     setNotify: "Notificações do sistema",
     setNotifyHint: "Avisa no canto da tela do computador (pedidos para entrar ou compartilhar e problemas de upload) quando a aba da sala estiver em segundo plano.",
+    setGrpLook: "Aparência",
+    setGrpQuality: "Qualidade da transmissão",
+    setGrpAlerts: "Avisos",
+    setAmbient: "Borda reativa na transmissão",
+    setAmbientHint: "A borda da tela assume as cores do que está passando no vídeo.",
     notifyDenied: "As notificações estão bloqueadas no navegador. Libere nas permissões do site para receber os avisos.",
     notifyUnsupported: "Este navegador não suporta notificações do sistema.",
     updateHome: "O site recebeu uma atualização e precisa ser reiniciado para que ela seja aplicada.",
@@ -1897,6 +2040,11 @@ const I18N = {
     tipAudio: "Audio",
     setNotify: "System notifications",
     setNotifyHint: "Shows an alert in the corner of your computer screen (requests to join or share, and upload problems) when the room tab is in the background.",
+    setGrpLook: "Appearance",
+    setGrpQuality: "Stream quality",
+    setGrpAlerts: "Alerts",
+    setAmbient: "Reactive stream border",
+    setAmbientHint: "The screen border takes on the colors of what is playing in the video.",
     notifyDenied: "Notifications are blocked in the browser. Allow them in the site permissions to receive alerts.",
     notifyUnsupported: "This browser does not support system notifications.",
     updateHome: "The site received an update and needs to be restarted for it to be applied.",
@@ -2219,6 +2367,7 @@ function syncTile(t) {
   t.el.classList.toggle("has-cam", !!t.cam);
   t.el.classList.toggle("has-screen", !!t.screen);
   if (!t.cam || !t.screen) t.el.classList.remove("swap");
+  t.tag.classList.toggle("live", !!(t.cam || t.screen));
 }
 
 function nickFor(owner) {
@@ -2370,6 +2519,7 @@ function syncRoster(list) {
       acceptCall(st);
     }
   });
+  refreshWatchers();
   refreshOverlays();
 }
 
@@ -2750,9 +2900,10 @@ function renderWatchers(pop) {
     pop.appendChild(e);
     return;
   }
+  const live = new Set(sharerNames.values());
   list.forEach((x) => {
     const row = document.createElement("div");
-    row.className = "eyename";
+    row.className = "eyename" + (live.has(x.n) ? " live" : "");
     if (x.me) {
       setT(row, "youTag", { name: x.n });
     } else {
@@ -5913,8 +6064,73 @@ $("setCap").addEventListener("change", (e) => {
   saveSettings();
   enforceCap();
 });
+$("setAmbient").addEventListener("change", (e) => {
+  settings.ambient = e.target.checked;
+  saveSettings();
+  if (!settings.ambient) ambClear();
+});
 $("langPt").addEventListener("click", () => setLang("pt"));
 $("langEn").addEventListener("click", () => setLang("en"));
+
+const AMB = { cv: document.createElement("canvas"), cur: null };
+AMB.cv.width = 32;
+AMB.cv.height = 18;
+const ambCtx = AMB.cv.getContext("2d", { willReadFrequently: true });
+
+function ambBand(d, x0, y0, x1, y1) {
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const i = (y * 32 + x) * 4;
+      r += d[i];
+      g += d[i + 1];
+      b += d[i + 2];
+      n++;
+    }
+  }
+  return [r / n, g / n, b / n];
+}
+
+function ambClear() {
+  ["t", "r", "b", "l", "avg"].forEach((k) => {
+    [$("hostStage"), $("viewStage")].forEach((s) => s.style.removeProperty("--amb-" + k));
+  });
+  AMB.cur = null;
+}
+
+function ambTick() {
+  if (!settings.ambient || document.hidden) {
+    if (AMB.cur) ambClear();
+    return;
+  }
+  const stage = hosting ? $("hostStage") : viewerView.hidden ? null : $("viewStage");
+  const v = pickVideo();
+  if (!stage || !v || v.readyState < 2 || !v.videoWidth) {
+    if (AMB.cur) ambClear();
+    return;
+  }
+  try {
+    ambCtx.drawImage(v, 0, 0, 32, 18);
+  } catch (e) {
+    return;
+  }
+  const d = ambCtx.getImageData(0, 0, 32, 18).data;
+  const next = [
+    ambBand(d, 0, 0, 32, 2),
+    ambBand(d, 30, 0, 32, 18),
+    ambBand(d, 0, 16, 32, 18),
+    ambBand(d, 0, 0, 2, 18)
+  ];
+  AMB.cur = AMB.cur
+    ? AMB.cur.map((c, i) => c.map((x, k) => x + (next[i][k] - x) * 0.3))
+    : next;
+  const css = (c, a) => "rgba(" + c.map(Math.round).join(",") + "," + a + ")";
+  ["t", "r", "b", "l"].forEach((k, i) => stage.style.setProperty("--amb-" + k, css(AMB.cur[i], 0.4)));
+  const avg = [0, 1, 2].map((k) => AMB.cur.reduce((s, c) => s + c[k], 0) / 4);
+  stage.style.setProperty("--amb-avg", css(avg, 0.55));
+}
+
+setInterval(ambTick, 100);
 
 lang = detectLang();
 applyTheme();
