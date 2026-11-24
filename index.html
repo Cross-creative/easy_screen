@@ -721,7 +721,6 @@ details[open] > :not(summary) {
 
 .selwrap { position: relative; display: inline-flex; max-width: 100%; }
 .panel-body .selwrap { display: flex; width: 100%; }
-.setbody { padding-bottom: 32px; }
 .selwrap select {
   appearance: none;
   -webkit-appearance: none;
@@ -862,7 +861,6 @@ html[data-anim="off"] .eyename.live::before {
 .setgroup {
   display: flex;
   flex-direction: column;
-  flex: none;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--bg);
@@ -924,6 +922,53 @@ label.setrow { cursor: pointer; }
 .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 html[data-anim="off"] .switch,
 html[data-anim="off"] .switch::after { transition: none !important; }
+
+.setrow.col {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+.swatch[aria-pressed="true"] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.colorpick {
+  flex: none;
+  width: 44px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+#themeCode {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: 0.8rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  resize: vertical;
+}
+.setbtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 </style>
 </head>
 <body>
@@ -1238,6 +1283,7 @@ html[data-anim="off"] .switch::after { transition: none !important; }
         <option value="auto" data-i18n="themeAuto">Automático (do sistema)</option>
         <option value="light" data-i18n="themeLight">Claro</option>
         <option value="dark" data-i18n="themeDark">Escuro</option>
+        <option value="custom" data-i18n="themeCustom">Personalizado</option>
       </select>
     </div>
     <label class="setrow">
@@ -1248,6 +1294,27 @@ html[data-anim="off"] .switch::after { transition: none !important; }
       <span class="settext"><span class="setname" data-i18n="setAmbient">Borda reativa na transmissão</span><span class="hint" data-i18n="setAmbientHint">A borda da tela assume as cores do que está passando no vídeo.</span></span>
       <input type="checkbox" id="setAmbient" class="switch">
     </label>
+  </section>
+
+  <section class="setgroup">
+    <h3 data-i18n="setGrpColors">Cores</h3>
+    <div class="setrow col">
+      <span class="settext"><span class="setname" data-i18n="accentColor">Cor de destaque</span><span class="hint" data-i18n="accentHint">Vale por cima de qualquer tema. Toque de novo na cor escolhida para voltar ao padrão.</span></span>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div id="customBox" hidden>
+      <div id="customRows"></div>
+    </div>
+    <div class="setrow col">
+      <span class="settext"><span class="setname" data-i18n="themeShare">Compartilhar tema</span><span class="hint" data-i18n="themeShareHint">Exporte o tema atual como código ou cole um código para importar.</span></span>
+      <textarea id="themeCode" rows="3" spellcheck="false" autocomplete="off"></textarea>
+      <div class="setbtns">
+        <button id="themeExport" type="button" data-i18n="themeExport">Exportar</button>
+        <button id="themeImport" type="button" data-i18n="themeImport">Importar</button>
+        <button id="themeReset" type="button" data-i18n="themeReset">Restaurar padrão</button>
+      </div>
+      <div class="hint" id="themeMsg" aria-live="polite"></div>
+    </div>
   </section>
 
   <section class="setgroup">
@@ -1330,7 +1397,7 @@ const AUTO_DOWN_COOLDOWN = 8000;
 const AUTO_UP_MS = 60000;
 const SETTINGS_KEY = "settings";
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
-const APP_VERSION = "2026-11-24-2";
+const APP_VERSION = "2026-11-24-3";
 let updateReady = false;
 let updateDismissed = false;
 let lastUpdateCheck = 0;
@@ -1390,7 +1457,9 @@ function loadSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch (e) {}
   return {
-    theme: s.theme === "light" || s.theme === "dark" ? s.theme : "auto",
+    theme: s.theme === "light" || s.theme === "dark" || s.theme === "custom" ? s.theme : "auto",
+    accent: validHex(s.accent) ? s.accent.toLowerCase() : "",
+    colors: cleanColors(s.colors),
     autoReduce: s.autoReduce !== false,
     autoRecover: s.autoRecover !== false,
     capByViewers: s.capByViewers !== false,
@@ -1400,10 +1469,43 @@ function loadSettings() {
   };
 }
 
+const THEME_KEYS = ["bg", "surface", "text", "muted", "border", "accent", "danger"];
+const THEME_DEFAULT = {
+  bg: "#121316",
+  surface: "#1c1e23",
+  text: "#eceef1",
+  muted: "#9aa0a8",
+  border: "#2e3138",
+  accent: "#5b8cff",
+  danger: "#ff6b6b"
+};
+const PALETTES = ["#5b8cff", "#9b6bff", "#34c76b", "#ff5fa2", "#ff8a3d", "#ff4d4d", "#1fc7b6", "#f2c230"];
+
+function validHex(s) {
+  return typeof s === "string" && /^#[0-9a-fA-F]{6}$/.test(s);
+}
+
+function cleanColors(o) {
+  const out = {};
+  THEME_KEYS.forEach((k) => {
+    out[k] = o && validHex(o[k]) ? o[k].toLowerCase() : THEME_DEFAULT[k];
+  });
+  return out;
+}
+
+function lumOf(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+}
+
+function inkOn(hex) {
+  return lumOf(hex) > 0.6 ? "#0b1020" : "#ffffff";
+}
+
 let settings = loadSettings();
 
 function saveSettings() {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, animations: settings.animations, ambient: settings.ambient, notifyV2: settings.notify })); } catch (e) {}
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, accent: settings.accent, colors: settings.colors, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, animations: settings.animations, ambient: settings.ambient, notifyV2: settings.notify })); } catch (e) {}
 }
 
 function applyAnim() {
@@ -1415,10 +1517,24 @@ function applyAnim() {
 }
 
 function applyTheme() {
+  const root = document.documentElement;
+  THEME_KEYS.forEach((k) => root.style.removeProperty("--" + k));
+  root.style.removeProperty("--accent-text");
+  if (settings.theme === "custom") {
+    const c = settings.colors;
+    root.dataset.theme = lumOf(c.bg) > 0.5 ? "light" : "dark";
+    THEME_KEYS.forEach((k) => root.style.setProperty("--" + k, c[k]));
+    root.style.setProperty("--accent-text", inkOn(c.accent));
+    return;
+  }
   if (settings.theme === "auto") {
-    document.documentElement.removeAttribute("data-theme");
+    root.removeAttribute("data-theme");
   } else {
-    document.documentElement.dataset.theme = settings.theme;
+    root.dataset.theme = settings.theme;
+  }
+  if (settings.accent) {
+    root.style.setProperty("--accent", settings.accent);
+    root.style.setProperty("--accent-text", inkOn(settings.accent));
   }
 }
 
@@ -1448,6 +1564,7 @@ function renderSettings() {
   } else {
     setT(hint, "setNotifyHint");
   }
+  syncThemeUI();
 }
 
 function askNotifyPermission() {
@@ -1800,6 +1917,27 @@ const I18N = {
     themeAuto: "Automático (do sistema)",
     themeLight: "Claro",
     themeDark: "Escuro",
+    setGrpColors: "Cores",
+    accentColor: "Cor de destaque",
+    accentHint: "Vale por cima de qualquer tema. Toque de novo na cor escolhida para voltar ao padrão.",
+    themeCustom: "Personalizado",
+    colBg: "Fundo",
+    colSurface: "Superfície (cards e painéis)",
+    colText: "Texto",
+    colMuted: "Texto secundário",
+    colBorder: "Bordas",
+    colAccent: "Destaque",
+    colDanger: "Alerta e perigo",
+    themeShare: "Compartilhar tema",
+    themeShareHint: "Exporte o tema atual como código ou cole um código para importar.",
+    themeExport: "Exportar",
+    themeImport: "Importar",
+    themeReset: "Restaurar padrão",
+    themeCopied: "Código gerado e copiado.",
+    themeExported: "Código gerado. Copie o texto acima.",
+    themeImported: "Tema importado.",
+    themeBad: "Código inválido.",
+    themeResetDone: "Tema restaurado para o padrão.",
     setAutoReduce: "Reduzir a qualidade automaticamente",
     setAutoReduceHint: "Quando o upload ou o computador apertarem, o app desce um nível de qualidade sozinho.",
     setAutoRecover: "Subir a qualidade de volta automaticamente",
@@ -2024,6 +2162,27 @@ const I18N = {
     themeAuto: "Automatic (system)",
     themeLight: "Light",
     themeDark: "Dark",
+    setGrpColors: "Colors",
+    accentColor: "Accent color",
+    accentHint: "Applies on top of any theme. Tap the chosen color again to go back to default.",
+    themeCustom: "Custom",
+    colBg: "Background",
+    colSurface: "Surface (cards and panels)",
+    colText: "Text",
+    colMuted: "Secondary text",
+    colBorder: "Borders",
+    colAccent: "Accent",
+    colDanger: "Alert and danger",
+    themeShare: "Share theme",
+    themeShareHint: "Export the current theme as a code or paste a code to import.",
+    themeExport: "Export",
+    themeImport: "Import",
+    themeReset: "Restore default",
+    themeCopied: "Code generated and copied.",
+    themeExported: "Code generated. Copy the text above.",
+    themeImported: "Theme imported.",
+    themeBad: "Invalid code.",
+    themeResetDone: "Theme restored to default.",
     setAutoReduce: "Lower quality automatically",
     setAutoReduceHint: "When your upload or computer gets strained, the app drops one quality level by itself.",
     setAutoRecover: "Raise quality back automatically",
@@ -6026,6 +6185,7 @@ $("setTheme").addEventListener("change", (e) => {
   settings.theme = e.target.value;
   saveSettings();
   applyTheme();
+  renderSettings();
 });
 $("setAutoReduce").addEventListener("change", (e) => {
   settings.autoReduce = e.target.checked;
@@ -6134,9 +6294,135 @@ function ambTick() {
 
 setInterval(ambTick, 100);
 
+function themeMsg(key, err) {
+  const el = $("themeMsg");
+  setT(el, key);
+  el.style.color = err ? "var(--danger)" : "";
+}
+
+function syncThemeUI() {
+  const custom = settings.theme === "custom";
+  $("customBox").hidden = !custom;
+  const acc = custom ? settings.colors.accent : settings.accent;
+  document.querySelectorAll("#swatches .swatch").forEach((b) => {
+    b.setAttribute("aria-pressed", String(!!acc && b.dataset.hex === acc.toLowerCase()));
+  });
+  THEME_KEYS.forEach((k) => {
+    const i = $("col-" + k);
+    if (i) i.value = settings.colors[k];
+  });
+}
+
+function effectiveColors() {
+  if (settings.theme === "custom") return { ...settings.colors };
+  const cs = getComputedStyle(document.documentElement);
+  const out = {};
+  THEME_KEYS.forEach((k) => {
+    const v = cs.getPropertyValue("--" + k).trim();
+    out[k] = validHex(v) ? v.toLowerCase() : THEME_DEFAULT[k];
+  });
+  return out;
+}
+
+function buildThemeUI() {
+  const sw = $("swatches");
+  PALETTES.forEach((hex) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.dataset.hex = hex;
+    b.style.background = hex;
+    b.setAttribute("aria-label", hex);
+    b.addEventListener("click", () => {
+      if (settings.theme === "custom") {
+        settings.colors.accent = hex;
+      } else {
+        settings.accent = settings.accent === hex ? "" : hex;
+      }
+      saveSettings();
+      applyTheme();
+      syncThemeUI();
+    });
+    sw.appendChild(b);
+  });
+  const names = {
+    bg: "colBg",
+    surface: "colSurface",
+    text: "colText",
+    muted: "colMuted",
+    border: "colBorder",
+    accent: "colAccent",
+    danger: "colDanger"
+  };
+  const box = $("customRows");
+  THEME_KEYS.forEach((k) => {
+    const row = document.createElement("label");
+    row.className = "setrow";
+    const text = document.createElement("span");
+    text.className = "settext";
+    const name = document.createElement("span");
+    name.className = "setname";
+    setT(name, names[k]);
+    text.appendChild(name);
+    const input = document.createElement("input");
+    input.type = "color";
+    input.id = "col-" + k;
+    input.className = "colorpick";
+    input.addEventListener("input", () => {
+      settings.colors[k] = input.value.toLowerCase();
+      saveSettings();
+      applyTheme();
+      syncThemeUI();
+    });
+    row.append(text, input);
+    box.appendChild(row);
+  });
+}
+
+$("themeExport").addEventListener("click", () => {
+  const code = "TF1:" + btoa(JSON.stringify(effectiveColors()));
+  $("themeCode").value = code;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => themeMsg("themeCopied"), () => themeMsg("themeExported"));
+  } else {
+    themeMsg("themeExported");
+  }
+});
+
+$("themeImport").addEventListener("click", () => {
+  const raw = $("themeCode").value.trim();
+  if (!raw.startsWith("TF1:")) {
+    themeMsg("themeBad", true);
+    return;
+  }
+  try {
+    const obj = JSON.parse(atob(raw.slice(4)));
+    if (!obj || typeof obj !== "object" || !THEME_KEYS.every((k) => validHex(obj[k]))) throw new Error("bad");
+    settings.colors = cleanColors(obj);
+    settings.theme = "custom";
+    saveSettings();
+    applyTheme();
+    renderSettings();
+    themeMsg("themeImported");
+  } catch (e) {
+    themeMsg("themeBad", true);
+  }
+});
+
+$("themeReset").addEventListener("click", () => {
+  settings.theme = "auto";
+  settings.accent = "";
+  settings.colors = { ...THEME_DEFAULT };
+  saveSettings();
+  applyTheme();
+  renderSettings();
+  themeMsg("themeResetDone");
+});
+
 lang = detectLang();
 applyTheme();
 applyAnim();
+buildThemeUI();
 renderSettings();
 applyLang();
 startUpdateWatch();
