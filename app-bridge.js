@@ -6,7 +6,12 @@
     { urls: "stun:stun1.l.google.com:19302" }
   ];
 
-  var TURN_SERVERS = [];
+  var TURN_SERVERS = [
+  { urls: "turn:global.relay.metered.ca:80", username: "f44d99d0d393261e2ecde3bb", credential: "HtG9eyNudaXk/2Fk" },
+  { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: "f44d99d0d393261e2ecde3bb", credential: "HtG9eyNudaXk/2Fk" },
+  { urls: "turn:global.relay.metered.ca:443", username: "f44d99d0d393261e2ecde3bb", credential: "SUA_SENHA_AQUI" },
+  { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "f44d99d0d393261e2ecde3bb", credential: "HtG9eyNudaXk/2Fk" }
+];
 
   function installIce() {
     var Original = window.Peer;
