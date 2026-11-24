@@ -1,0 +1,9 @@
+{
+	"appId": "com.crosscreative.telafacil",
+	"appName": "Tela Fácil",
+	"webDir": "www",
+	"android": {
+		"adjustMarginsForEdgeToEdge": "auto",
+		"allowMixedContent": false
+	}
+}
