@@ -2,6 +2,9 @@
   "appId": "com.crosscreative.telafacil",
   "appName": "Tela Fácil",
   "webDir": "www",
+  "server": {
+    "url": "https://cross-creative.github.io/easy_screen/"
+  },
   "android": {
     "adjustMarginsForEdgeToEdge": "auto",
     "allowMixedContent": false
