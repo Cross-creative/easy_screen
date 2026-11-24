@@ -857,15 +857,25 @@ html[data-anim="off"] .eyename.live::before {
   animation: none !important;
 }
 #settingsPanel { width: min(400px, 94vw); }
-.setbody { gap: 20px; }
+
+.setbody {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 18px 40px;
+}
+.setbody > .setgroup + .setgroup { margin-top: 20px; }
 .setgroup {
-  display: flex;
-  flex-direction: column;
+  display: block;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--bg);
   overflow: hidden;
 }
+.setgroup > * { flex: none; }
+
 .setgroup h3 {
   margin: 0;
   padding: 12px 16px 8px;
