@@ -22,7 +22,6 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: android-app/package-lock.json
-
       - name: Instalar Java
         uses: actions/setup-java@v4
         with:
@@ -37,7 +36,6 @@ jobs:
             [ "$f" = "app-bridge.js" ] || cp "$f" android-app/www/
           done
           if [ -f icone.png ]; then cp icone.png android-app/www/icone.png; fi
-
       - name: Instalar dependências
         working-directory: android-app
         run: npm ci
@@ -52,7 +50,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
           bash make-icons.sh ../icone.png
-
       - name: Compilar o APK
         working-directory: android-app/android
         run: |
@@ -67,7 +64,6 @@ jobs:
         with:
           name: tela-facil-apk
           path: tela-facil.apk
-
       - name: Publicar na aba Releases
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
