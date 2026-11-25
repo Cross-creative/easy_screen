@@ -991,7 +991,7 @@ html[data-anim="off"] .switch::after { transition: none !important; }
   <p class="sub" data-i18n="sub">Transmissão direta entre navegadores, sem cadastro.</p>
 
   <section id="home">
-  <p class="about" data-i18n="about">Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar a tela ou ligar a câmera, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.</p>
+  <p class="about" data-i18n="about">Junte até 16 pessoas em uma sala pelo navegador para compartilhar sua tela de forma rápida e fácil. Quer mais interação? No modo “Criar sala (BETA)”, seus convidados podem pedir para compartilhar a tela ou ligar a câmera (tudo com a sua permissão). Não precisa instalar nada nem criar conta: envie o link e quem receber assiste na hora, com chat integrado para todo mundo participar.</p>
   <div class="card highlight" id="awayHome" hidden>
     <p class="away-text" id="awayHomeText"></p>
     <button id="backToRoom" class="primary" data-i18n="backToRoom">Voltar para a sala</button>
@@ -1008,7 +1008,7 @@ html[data-anim="off"] .switch::after { transition: none !important; }
       </div>
       <div class="row">
         <label class="check"><input type="checkbox" id="audio" checked> <span data-i18n="shareAudio">Compartilhar áudio</span></label>
-        <p class="hint" data-i18n="audioTip">Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.</p>
+        <p class="hint" data-i18n="audioTip">Quer passar o som? Marque “Compartilhar áudio do sistema” na janela do navegador.</p>
       </div>
       <div class="row">
         <button id="startHost" class="primary" data-i18n="pickSurface">Compartilhar tela</button>
@@ -1025,7 +1025,7 @@ html[data-anim="off"] .switch::after { transition: none !important; }
     </div>
 
     <div class="card notice" id="shareNotice" hidden>
-      <p id="noShareText"><span id="noShareMsg" data-i18n="noShare">Compartilhar a tela só funciona no computador, mas você pode compartilhar a</span> <button type="button" class="linkbtn camlink" id="camHome" data-i18n="noShareCam">câmera</button><span id="noShareDot">.</span></p>
+      <p id="noShareText"><span id="noShareMsg" data-i18n="noShare">Compartilhar tela só funciona no computador, mas você pode compartilhar a</span> <button type="button" class="linkbtn camlink" id="camHome" data-i18n="noShareCam">câmera</button><span id="noShareDot">.</span></p>
     </div>
   </div>
   <div class="statuswrap"><div class="status" id="homeStatus" aria-live="polite"></div><button class="xclose" id="homeStatusX" type="button" hidden>✕</button></div>
@@ -1065,7 +1065,7 @@ html[data-anim="off"] .switch::after { transition: none !important; }
     </div>
     <div class="status" id="hostNote" aria-live="polite" hidden></div>
     <div class="statusrow">
-    <div class="status error" id="audioNote" data-i18n="audioMissing" aria-live="polite" hidden>O áudio não está sendo compartilhado.</div>
+    <div class="status error" id="audioNote" data-i18n="audioMissing" aria-live="polite" hidden>O áudio não está sendo compartilhado. Clique em “Trocar aba ou janela” e marque “Compartilhar áudio do sistema”.</div>
   <div class="statusline">
   <div class="status" id="hostStatus" aria-live="polite"></div>
   <span class="info" id="uploadInfo" tabindex="0" hidden>🛈<span class="tip" role="tooltip" data-i18n="uploadHelp">Upload é a velocidade com que seu computador envia dados pela internet.</span></span>
@@ -1177,9 +1177,9 @@ html[data-anim="off"] .switch::after { transition: none !important; }
   <div class="backdrop" id="nickBackdrop" hidden></div>
   <div class="dialog" id="nickDialog" role="dialog" aria-modal="true" aria-labelledby="nickDialogTitle" hidden>
     <h2 id="nickDialogTitle" data-i18n="nickTakenTitle">Apelido já em uso</h2>
-    <p data-i18n="nickTakenAsk">Já existe alguém com esse apelido nesta sala. Escolha outro para entrar.</p>
+    <p data-i18n="nickTakenAsk">Alguém na sala já usa esse apelido. Escolha outro para entrar.</p>
     <input type="text" id="nickNew" maxlength="20" autocomplete="off" placeholder="Seu apelido">
-    <div class="status error" id="nickDialogError" data-i18n="nickStillTaken" hidden>Esse apelido também está em uso. Escolha outro.</div>
+    <div class="status error" id="nickDialogError" data-i18n="nickStillTaken" hidden>Esse também está em uso. Tente outro.</div>
     <div class="row">
       <button id="nickConfirm" class="primary" data-i18n="join">Entrar</button>
       <button id="nickCancel" data-i18n="leave">Sair</button>
@@ -1362,68 +1362,68 @@ html[data-anim="off"] .switch::after { transition: none !important; }
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" integrity="sha256-rV2IcNHjiZFPnLqNNb4xPEMnxp7goiHkgum/diETb+U=" crossorigin="anonymous"></script>
 <script src="app-bridge.js"></script>
 <script>
-const OFFICIAL_URL = "https://cross-creative.github.io/easy_screen/";
+const OFFICIAL = "https://cross-creative.github.io/easy_screen/";
 
-function checkOfficial() {
+function chkOfficial() {
   const h = location.hostname;
   const local = h === "" || h === "localhost" || h === "127.0.0.1";
-  if (local || h === new URL(OFFICIAL_URL).hostname) return;
+  if (local || h === new URL(OFFICIAL).hostname) return;
   const a = $("officialLink");
-  a.href = OFFICIAL_URL;
-  a.textContent = OFFICIAL_URL;
+  a.href = OFFICIAL;
+  a.textContent = OFFICIAL;
   $("fakeBanner").hidden = false;
 }
-const PREFIX = "tcompartilha-";
-const MAX_VIEWERS = 16;
-const MAX_SHARERS = 4;
-const MAX_CAMS = 4;
-const KLIPY_KEY = "1JlESXqEw53jC3dwFuBHR897c5mLU6KN7w1WdDE3QHuqk7Z1ZYRRl0cp8EyedRbW";
-const KLIPY_API = "https://api.klipy.com/api/v1/";
-const GIF_PER_PAGE = 24;
+const PFX = "tcompartilha-";
+const MAX_VIEW = 16;
+const MAX_SHR = 4;
+const MAX_CAM = 4;
+const GIF_KEY = "1JlESXqEw53jC3dwFuBHR897c5mLU6KN7w1WdDE3QHuqk7Z1ZYRRl0cp8EyedRbW";
+const GIF_API = "https://api.klipy.com/api/v1/";
+const GIF_N = 24;
 const CAM = "#cam";
-const AWAY_MS = 8 * 60 * 1000;
-const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const RESOLUTIONS = {
+const AFK_MS = 8 * 60 * 1000;
+const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const RES = {
   r480: { width: 854, height: 480, label: "480p" },
   r720: { width: 1280, height: 720, label: "720p" },
   r1080: { width: 1920, height: 1080, label: "1080p" },
   r1440: { width: 2560, height: 1440, label: "1440p" },
   r2160: { width: 3840, height: 2160, label: "4K" }
 };
-const RES_ORDER = ["r480", "r720", "r1080", "r1440", "r2160"];
-const MIN_FPS = 5;
-const MAX_FPS = 60;
-const MIN_STREAM_KBPS = 150;
-const MAX_STREAM_KBPS = 15000;
-const CAM_QUALITIES = {
+const RES_LIST = ["r480", "r720", "r1080", "r1440", "r2160"];
+const FPS_MIN = 5;
+const FPS_MAX = 60;
+const KB_MIN = 150;
+const KB_MAX = 15000;
+const CAM_QS = {
   c360: { width: 640, height: 360, fps: 15, kbps: 300 },
   c480: { width: 854, height: 480, fps: 24, kbps: 600 },
   c720: { width: 1280, height: 720, fps: 30, kbps: 1200 },
   c720f60: { width: 1280, height: 720, fps: 60, kbps: 2000 }
 };
-const CAM_ORDER = ["c360", "c480", "c720", "c720f60"];
-const MAX_UPLOAD_KBPS = 13000;
-const AUTO_DOWN_COOLDOWN = 8000;
-const AUTO_UP_MS = 60000;
-const SETTINGS_KEY = "settings";
-const UPDATE_CHECK_MS = 5 * 60 * 1000;
-const APP_VERSION = "2026-11-24-3";
-let updateReady = false;
-let updateDismissed = false;
-let lastUpdateCheck = 0;
+const CAM_LIST = ["c360", "c480", "c720", "c720f60"];
+const UP_MAX = 13000;
+const DOWN_WAIT = 8000;
+const UP_WAIT = 60000;
+const CFG_KEY = "settings";
+const UPD_MS = 5 * 60 * 1000;
+const VER = "2026-11-24-3";
+let updReady = false;
+let updHide = false;
+let updLast = 0;
 
-function updateNoticeView() {
+function updView() {
   const box = $("updateNotice");
   const inRoom = hosting || !viewerView.hidden;
-  if (!inRoom) updateDismissed = false;
-  box.hidden = !updateReady || (inRoom && updateDismissed);
+  if (!inRoom) updHide = false;
+  box.hidden = !updReady || (inRoom && updHide);
   if (box.hidden) return;
   setT($("updateText"), inRoom ? "updateRoom" : "updateHome");
   $("updateReload").hidden = inRoom;
   $("updateDismiss").hidden = !inRoom;
 }
 
-function versionNewer(a, b) {
+function isNewer(a, b) {
   const x = String(a).split("-").map(Number);
   const y = String(b).split("-").map(Number);
   for (let i = 0; i < Math.max(x.length, y.length); i++) {
@@ -1434,7 +1434,7 @@ function versionNewer(a, b) {
   return false;
 }
 
-async function fetchLatestVersion() {
+async function getLatest() {
   const url = new URL("version.json", location.href).href + "?v=" + Date.now();
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("status");
@@ -1443,44 +1443,44 @@ async function fetchLatestVersion() {
   return data.version;
 }
 
-async function checkUpdate() {
-  if (updateReady) return;
-  lastUpdateCheck = Date.now();
+async function chkUpd() {
+  if (updReady) return;
+  updLast = Date.now();
   try {
-    const latest = await fetchLatestVersion();
-    if (versionNewer(latest, APP_VERSION)) {
-      updateReady = true;
-      updateNoticeView();
+    const latest = await getLatest();
+    if (isNewer(latest, VER)) {
+      updReady = true;
+      updView();
     }
   } catch (e) {}
 }
 
-function startUpdateWatch() {
+function watchUpd() {
   if (location.protocol !== "https:" && location.protocol !== "http:") return;
-  setInterval(checkUpdate, UPDATE_CHECK_MS);
+  setInterval(chkUpd, UPD_MS);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && Date.now() - lastUpdateCheck > 60000) checkUpdate();
+    if (!document.hidden && Date.now() - updLast > 60000) chkUpd();
   });
 }
 
-function loadSettings() {
+function loadCfg() {
   let s = {};
-  try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch (e) {}
+  try { s = JSON.parse(localStorage.getItem(CFG_KEY) || "{}") || {}; } catch (e) {}
   return {
     theme: s.theme === "light" || s.theme === "dark" || s.theme === "custom" ? s.theme : "auto",
-    accent: validHex(s.accent) ? s.accent.toLowerCase() : "",
-    colors: cleanColors(s.colors),
+    accent: isHex(s.accent) ? s.accent.toLowerCase() : "",
+    colors: fixColors(s.colors),
     autoReduce: s.autoReduce !== false,
     autoRecover: s.autoRecover !== false,
     capByViewers: s.capByViewers !== false,
     animations: s.animations !== false,
-    ambient: s.ambient !== false,
+    glow: s.ambient !== false,
     notify: s.notifyV2 === true && "Notification" in window && Notification.permission === "granted"
   };
 }
 
-const THEME_KEYS = ["bg", "surface", "text", "muted", "border", "accent", "danger"];
-const THEME_DEFAULT = {
+const TH_KEYS = ["bg", "surface", "text", "muted", "border", "accent", "danger"];
+const TH_DEF = {
   bg: "#121316",
   surface: "#1c1e23",
   text: "#eceef1",
@@ -1489,37 +1489,37 @@ const THEME_DEFAULT = {
   accent: "#5b8cff",
   danger: "#ff6b6b"
 };
-const PALETTES = ["#5b8cff", "#9b6bff", "#34c76b", "#ff5fa2", "#ff8a3d", "#ff4d4d", "#1fc7b6", "#f2c230"];
+const PALS = ["#5b8cff", "#9b6bff", "#34c76b", "#ff5fa2", "#ff8a3d", "#ff4d4d", "#1fc7b6", "#f2c230"];
 
-function validHex(s) {
+function isHex(s) {
   return typeof s === "string" && /^#[0-9a-fA-F]{6}$/.test(s);
 }
 
-function cleanColors(o) {
+function fixColors(o) {
   const out = {};
-  THEME_KEYS.forEach((k) => {
-    out[k] = o && validHex(o[k]) ? o[k].toLowerCase() : THEME_DEFAULT[k];
+  TH_KEYS.forEach((k) => {
+    out[k] = o && isHex(o[k]) ? o[k].toLowerCase() : TH_DEF[k];
   });
   return out;
 }
 
-function lumOf(hex) {
+function lum(hex) {
   const n = parseInt(hex.slice(1), 16);
   return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
 }
 
-function inkOn(hex) {
-  return lumOf(hex) > 0.6 ? "#0b1020" : "#ffffff";
+function inkFor(hex) {
+  return lum(hex) > 0.6 ? "#0b1020" : "#ffffff";
 }
 
-let settings = loadSettings();
+let cfg = loadCfg();
 
-function saveSettings() {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: settings.theme, accent: settings.accent, colors: settings.colors, autoReduce: settings.autoReduce, autoRecover: settings.autoRecover, capByViewers: settings.capByViewers, animations: settings.animations, ambient: settings.ambient, notifyV2: settings.notify })); } catch (e) {}
+function saveCfg() {
+  try { localStorage.setItem(CFG_KEY, JSON.stringify({ theme: cfg.theme, accent: cfg.accent, colors: cfg.colors, autoReduce: cfg.autoReduce, autoRecover: cfg.autoRecover, capByViewers: cfg.capByViewers, animations: cfg.animations, ambient: cfg.glow, notifyV2: cfg.notify })); } catch (e) {}
 }
 
 function applyAnim() {
-  if (settings.animations) {
+  if (cfg.animations) {
     document.documentElement.removeAttribute("data-anim");
   } else {
     document.documentElement.dataset.anim = "off";
@@ -1528,43 +1528,43 @@ function applyAnim() {
 
 function applyTheme() {
   const root = document.documentElement;
-  THEME_KEYS.forEach((k) => root.style.removeProperty("--" + k));
+  TH_KEYS.forEach((k) => root.style.removeProperty("--" + k));
   root.style.removeProperty("--accent-text");
-  if (settings.theme === "custom") {
-    const c = settings.colors;
-    root.dataset.theme = lumOf(c.bg) > 0.5 ? "light" : "dark";
-    THEME_KEYS.forEach((k) => root.style.setProperty("--" + k, c[k]));
-    root.style.setProperty("--accent-text", inkOn(c.accent));
+  if (cfg.theme === "custom") {
+    const c = cfg.colors;
+    root.dataset.theme = lum(c.bg) > 0.5 ? "light" : "dark";
+    TH_KEYS.forEach((k) => root.style.setProperty("--" + k, c[k]));
+    root.style.setProperty("--accent-text", inkFor(c.accent));
     return;
   }
-  if (settings.theme === "auto") {
+  if (cfg.theme === "auto") {
     root.removeAttribute("data-theme");
   } else {
-    root.dataset.theme = settings.theme;
+    root.dataset.theme = cfg.theme;
   }
-  if (settings.accent) {
-    root.style.setProperty("--accent", settings.accent);
-    root.style.setProperty("--accent-text", inkOn(settings.accent));
+  if (cfg.accent) {
+    root.style.setProperty("--accent", cfg.accent);
+    root.style.setProperty("--accent-text", inkFor(cfg.accent));
   }
 }
 
-function syncNotifyState() {
+function syncNotif() {
   const ok = "Notification" in window && Notification.permission === "granted";
-  if (!ok && settings.notify) {
-    settings.notify = false;
-    saveSettings();
+  if (!ok && cfg.notify) {
+    cfg.notify = false;
+    saveCfg();
   }
 }
 
-function renderSettings() {
-  syncNotifyState();
-  $("setTheme").value = settings.theme;
-  $("setAutoReduce").checked = settings.autoReduce;
-  $("setAutoRecover").checked = settings.autoRecover;
-  $("setCap").checked = settings.capByViewers;
-  $("setAnim").checked = settings.animations;
-  $("setAmbient").checked = settings.ambient;
-  $("setNotify").checked = settings.notify;
+function drawCfg() {
+  syncNotif();
+  $("setTheme").value = cfg.theme;
+  $("setAutoReduce").checked = cfg.autoReduce;
+  $("setAutoRecover").checked = cfg.autoRecover;
+  $("setCap").checked = cfg.capByViewers;
+  $("setAnim").checked = cfg.animations;
+  $("setAmbient").checked = cfg.glow;
+  $("setNotify").checked = cfg.notify;
   $("setNotify").disabled = !("Notification" in window) || Notification.permission === "denied";
   const hint = $("setNotifyHint");
   if (!("Notification" in window)) {
@@ -1574,18 +1574,18 @@ function renderSettings() {
   } else {
     setT(hint, "setNotifyHint");
   }
-  syncThemeUI();
+  syncTh();
 }
 
-function askNotifyPermission() {
-  if (!settings.notify || !("Notification" in window) || Notification.permission !== "default") return;
-  requestNotifyPermission();
+function askNotif() {
+  if (!cfg.notify || !("Notification" in window) || Notification.permission !== "default") return;
+  reqNotif();
 }
 
-function requestNotifyPermission() {
+function reqNotif() {
   const done = () => {
-    syncNotifyState();
-    renderSettings();
+    syncNotif();
+    drawCfg();
   };
   try {
     const r = Notification.requestPermission(done);
@@ -1596,7 +1596,7 @@ function requestNotifyPermission() {
 }
 
 function notify(tag, title, body) {
-  if (!settings.notify || !("Notification" in window) || Notification.permission !== "granted") return;
+  if (!cfg.notify || !("Notification" in window) || Notification.permission !== "granted") return;
   if (document.hasFocus() && !document.hidden) return;
   try {
     const n = new Notification(title, { body: body, tag: tag });
@@ -1608,17 +1608,17 @@ function notify(tag, title, body) {
   } catch (e) {}
 }
 
-function openSettings() {
+function openCfg() {
   closeChat();
-  closePanel();
+  closeOpts();
   closeViewPanel();
-  renderSettings();
+  drawCfg();
   $("settingsPanel").classList.add("open");
   $("settingsPanel").setAttribute("aria-hidden", "false");
   $("settingsBackdrop").hidden = false;
 }
 
-function closeSettings() {
+function closeCfg() {
   $("settingsPanel").classList.remove("open");
   $("settingsPanel").setAttribute("aria-hidden", "true");
   $("settingsBackdrop").hidden = true;
@@ -1628,143 +1628,143 @@ function ownerOf(sid) {
   return sid.endsWith(CAM) ? sid.slice(0, -CAM.length) : sid;
 }
 
-function isCamSid(sid) {
+function isCam(sid) {
   return sid.endsWith(CAM);
 }
 
-function callSid(call) {
+function sidOf(call) {
   const m = call.metadata;
   return call.peer + (m && m.cam === true ? CAM : "");
 }
 
-function roomSize() {
+function roomN() {
   if (hosting) return viewers.size;
-  if (shareState === "sharing" || camState === "sharing") return new Set([...outCalls.keys()].map(ownerOf)).size;
-  return roomCount;
+  if (scrState === "sharing" || camState === "sharing") return new Set([...outC.keys()].map(ownerOf)).size;
+  return nWatch;
 }
 
-function uploadKbps() {
+function upKbps() {
   if (hosting) {
-    return viewers.size * ((stream ? quality.kbps : 0) + (camStream ? camQuality.kbps : 0));
+    return viewers.size * ((stream ? quality.kbps : 0) + (camStream ? camQ.kbps : 0));
   }
   let total = 0;
-  outCalls.forEach((c, k) => {
-    total += isCamSid(k) ? camQuality.kbps : quality.kbps;
+  outC.forEach((c, k) => {
+    total += isCam(k) ? camQ.kbps : quality.kbps;
   });
   return total;
 }
 
-function makeQuality(resKey, fps) {
-  const r = RESOLUTIONS[resKey];
+function mkQ(resKey, fps) {
+  const r = RES[resKey];
   const px = r.width * r.height;
   const bpp = px <= 921600 ? 0.07 : px <= 2073600 ? 0.05 : 0.04;
-  const kbps = Math.min(MAX_STREAM_KBPS, Math.max(MIN_STREAM_KBPS, Math.round(px * fps * bpp / 1000)));
+  const kbps = Math.min(KB_MAX, Math.max(KB_MIN, Math.round(px * fps * bpp / 1000)));
   return { width: r.width, height: r.height, fps: fps, kbps: kbps };
 }
 
-function qLabel(resKey, fps) {
-  return RESOLUTIONS[resKey].label + " · " + fps + " fps";
+function qTxt(resKey, fps) {
+  return RES[resKey].label + " · " + fps + " fps";
 }
 
-function readFps(el) {
+function getFps(el) {
   let n = Math.round(Number(el.value));
   if (!Number.isFinite(n) || n <= 0) n = fpsValue;
-  n = Math.min(MAX_FPS, Math.max(MIN_FPS, n));
+  n = Math.min(FPS_MAX, Math.max(FPS_MIN, n));
   el.value = n;
   return n;
 }
 
-function nextDown(r, f) {
-  const i = RES_ORDER.indexOf(r);
-  if (i > 0) return { res: RES_ORDER[i - 1], fps: f };
+function stepDown(r, f) {
+  const i = RES_LIST.indexOf(r);
+  if (i > 0) return { res: RES_LIST[i - 1], fps: f };
   if (f > 15) return { res: r, fps: Math.max(15, Math.round(f / 2)) };
   return null;
 }
 
-function nextUp(r, f) {
-  if (f < chosenFps) return { res: r, fps: Math.min(chosenFps, f * 2) };
-  const i = RES_ORDER.indexOf(r);
-  if (i < RES_ORDER.indexOf(chosenQuality)) return { res: RES_ORDER[i + 1], fps: f };
+function stepUp(r, f) {
+  if (f < pickFps) return { res: r, fps: Math.min(pickFps, f * 2) };
+  const i = RES_LIST.indexOf(r);
+  if (i < RES_LIST.indexOf(pickQ)) return { res: RES_LIST[i + 1], fps: f };
   return null;
 }
 
-function fitsCap(resKey, fps) {
-  if (!settings.capByViewers) return true;
-  const n = roomSize();
+function fits(resKey, fps) {
+  if (!cfg.capByViewers) return true;
+  const n = roomN();
   if (n <= 0) return true;
-  const camLoad = camStream ? camQuality.kbps : 0;
-  return n * (makeQuality(resKey, fps).kbps + camLoad) <= MAX_UPLOAD_KBPS;
+  const camLoad = camStream ? camQ.kbps : 0;
+  return n * (mkQ(resKey, fps).kbps + camLoad) <= UP_MAX;
 }
 
-function camCap() {
-  const top = CAM_ORDER[CAM_ORDER.length - 1];
-  if (!settings.capByViewers) return top;
-  const n = roomSize();
+function camMax() {
+  const top = CAM_LIST[CAM_LIST.length - 1];
+  if (!cfg.capByViewers) return top;
+  const n = roomN();
   if (n <= 0) return top;
   const base = stream ? quality.kbps : 0;
-  for (let i = CAM_ORDER.length - 1; i >= 0; i--) {
-    if (n * (base + CAM_QUALITIES[CAM_ORDER[i]].kbps) <= MAX_UPLOAD_KBPS) return CAM_ORDER[i];
+  for (let i = CAM_LIST.length - 1; i >= 0; i--) {
+    if (n * (base + CAM_QS[CAM_LIST[i]].kbps) <= UP_MAX) return CAM_LIST[i];
   }
-  return CAM_ORDER[0];
+  return CAM_LIST[0];
 }
 
-function refreshQualityLimits() {
+function refreshLocks() {
   [$("liveQuality"), $("viewQuality")].forEach((sel) => {
     Array.from(sel.options).forEach((o) => {
-      const over = !fitsCap(o.value, fpsValue);
+      const over = !fits(o.value, fpsValue);
       o.disabled = over;
-      o.textContent = RESOLUTIONS[o.value].label + (over ? " 🔒" : "");
+      o.textContent = RES[o.value].label + (over ? " 🔒" : "");
     });
   });
-  const camTop = CAM_ORDER.indexOf(camCap());
+  const camTop = CAM_LIST.indexOf(camMax());
   [$("liveCamQuality"), $("viewCamQuality")].forEach((sel) => {
     Array.from(sel.options).forEach((o) => {
-      const over = CAM_ORDER.indexOf(o.value) > camTop;
+      const over = CAM_LIST.indexOf(o.value) > camTop;
       o.disabled = over;
       o.textContent = t("q_" + o.value) + (over ? " 🔒" : "");
     });
   });
 }
 
-function autoNote(key, label) {
-  autoNoteState = { key: key, q: label, until: Date.now() + 12000 };
-  showAutoNote();
+function autoMsg(key, label) {
+  autoMsgSt = { key: key, q: label, until: Date.now() + 12000 };
+  showAutoMsg();
   notify("auto", t("title"), t(key, { q: label }));
 }
 
-function showAutoNote() {
-  if (!autoNoteState) return;
+function showAutoMsg() {
+  if (!autoMsgSt) return;
   const box = hosting ? $("hostWarn") : $("viewWarn");
   const text = hosting ? $("hostWarnText") : $("viewWarnText");
-  setT(text, autoNoteState.key, { q: autoNoteState.q });
+  setT(text, autoMsgSt.key, { q: autoMsgSt.q });
   if (hosting) $("lowerQ").hidden = true;
   box.hidden = false;
 }
 
-function enforceCap() {
-  refreshQualityLimits();
+function capNow() {
+  refreshLocks();
   if (stream) {
-    let r = qualityKey;
+    let r = qKey;
     let f = fpsValue;
     let guard = 0;
-    while (!fitsCap(r, f) && guard++ < 10) {
-      const d = nextDown(r, f);
+    while (!fits(r, f) && guard++ < 10) {
+      const d = stepDown(r, f);
       if (!d) break;
       r = d.res;
       f = d.fps;
     }
-    if (r !== qualityKey || f !== fpsValue) {
-      lastAutoAt = Date.now();
-      setQuality(r, f, true);
-      autoNote("capLowered", qLabel(r, f));
+    if (r !== qKey || f !== fpsValue) {
+      lastAuto = Date.now();
+      setQ(r, f, true);
+      autoMsg("capLowered", qTxt(r, f));
     }
   }
   if (camStream) {
-    const cc = camCap();
-    if (CAM_ORDER.indexOf(camKey) > CAM_ORDER.indexOf(cc)) {
-      lastAutoAt = Date.now();
-      setCamQuality(cc, true);
-      autoNote("capLowered", t("q_" + cc));
+    const cc = camMax();
+    if (CAM_LIST.indexOf(camKey) > CAM_LIST.indexOf(cc)) {
+      lastAuto = Date.now();
+      setCamQ(cc, true);
+      autoMsg("capLowered", t("q_" + cc));
     }
   }
 }
@@ -1774,7 +1774,7 @@ const I18N = {
     title: "Tela Fácil",
     heading: "Tela Fácil",
     sub: "Transmissão direta entre navegadores, sem cadastro.",
-    about: "Crie uma sala e compartilhe uma aba ou janela do seu computador com até 16 pessoas, direto pelo navegador. Em salas criadas com “Criar sala (BETA)”, quem estiver na sala também pode pedir para compartilhar a tela ou ligar a câmera, com a sua permissão. Não precisa de cadastro nem de instalação: envie o código ou o link e quem receber assiste na hora, com chat incluso.",
+    about: "Junte até 16 pessoas em uma sala pelo navegador para compartilhar sua tela de forma rápida e fácil. Quer mais interação? No modo “Criar sala (BETA)”, seus convidados podem pedir para compartilhar a tela ou ligar a câmera (tudo com a sua permissão). Não precisa instalar nada nem criar conta: envie o link e quem receber assiste na hora, com chat integrado para todo mundo participar.",
     shareMyScreen: "Compartilhar minha tela",
     shareAudio: "Compartilhar áudio",
     pickSurface: "Compartilhamento Único",
@@ -1820,35 +1820,35 @@ const I18N = {
     connecting: "Conectando...",
     reconnecting: "Reconectando... ({n}/{max})",
     waiting: "Aguardando transmissão...",
-    shareFailed: "Compartilhamento cancelado, bloqueado ou não suportado.",
+    shareFailed: "Não rolou compartilhar: foi cancelado, bloqueado ou o navegador não suporta.",
     roomEndedHome: "Sala encerrada.",
     roomExpired: "A sala foi encerrada porque o host não voltou a tempo.",
-    codeLength: "Digite o código de 6 caracteres.",
-    hostWaiting: "Aguardando espectadores. Compartilhe o código ou o link.",
-    hostPausedStatus: "Você não está compartilhando. A sala continua aberta.",
-    hostUpload: "Upload estimado: cerca de {m} Mbps.",
+    codeLength: "O código tem 6 caracteres.",
+    hostWaiting: "Esperando gente entrar. Mande o código ou o link.",
+    hostPausedStatus: "Você não está compartilhando, mas a sala continua aberta.",
+    hostUpload: "Upload estimado: ~{m} Mbps.",
     connError: "Erro de conexão: {e}",
-    warnBandwidth: "Seu upload está no limite e o vídeo pode travar para os espectadores.",
-    warnCpu: "Seu computador está sobrecarregado e o vídeo pode travar.",
-    warnEstimate: "Upload estimado em cerca de {m} Mbps. Pode pesar na sua conexão.",
-    roomEndedByHost: "A sala foi encerrada pelo host.",
+    warnBandwidth: "Seu upload chegou no limite e o vídeo pode travar para quem assiste.",
+    warnCpu: "Seu computador está no limite e o vídeo pode travar.",
+    warnEstimate: "Upload estimado em ~{m} Mbps. Pode pesar na sua conexão.",
+    roomEndedByHost: "O host encerrou a sala.",
     connLost: "Conexão perdida.",
-    cantConnect: "Não foi possível conectar. Confira o código e tente de novo.",
-    noVideo: "Conectou à sala, mas o vídeo não chegou. Tente entrar de novo.",
+    cantConnect: "Não deu para conectar. Confira o código e tente de novo.",
+    noVideo: "Entrou na sala, mas o vídeo não chegou. Tente entrar de novo.",
     roomNotFound: "Sala não encontrada. Confira o código.",
     roomSuspicious: "Conflito detectado: mais de um host respondeu a este código. Por segurança, a conexão foi encerrada.",
-    audioTip: "Para compartilhar o som, ative “Compartilhar com áudio do sistema” na janela de seleção do navegador.",
-    audioMissing: "O áudio não está sendo compartilhado. Clique em “Trocar aba ou janela” e, na janela de seleção, ative “Compartilhar com áudio do sistema”.",
+    audioTip: "Quer passar o som? Marque “Compartilhar áudio do sistema” na janela do navegador.",
+    audioMissing: "O áudio não está sendo compartilhado. Clique em “Trocar aba ou janela” e marque “Compartilhar áudio do sistema”.",
     eyeCount: "👁 {n}",
     watchingNow: "Assistindo agora",
     noWatchers: "Ninguém assistindo no momento.",
     soundBlocked: "O navegador bloqueou o som automático. Toque em “Ativar som” para ouvir.",
     soundOn: "Ativar som",
     volume: "Volume",
-    nickTaken: "Esse apelido já está em uso nesta sala. Escolha outro.",
+    nickTaken: "Esse apelido já está em uso na sala. Escolha outro.",
     nickTakenTitle: "Apelido já em uso",
-    nickTakenAsk: "Já existe alguém com esse apelido nesta sala. Escolha outro para entrar.",
-    nickStillTaken: "Esse apelido também está em uso. Escolha outro.",
+    nickTakenAsk: "Alguém na sala já usa esse apelido. Escolha outro para entrar.",
+    nickStillTaken: "Esse também está em uso. Tente outro.",
     kicked: "Você foi removido da sala. Tente de novo em {min} min.",
     muteUser: "Silenciar",
     unmuteUser: "Reativar",
@@ -1871,26 +1871,26 @@ const I18N = {
     nickToJoin: "Escolha um apelido e clique em Entrar.",
     pipFail: "Não foi possível abrir o Modo Retrato.",
     pipPick: "Escolha a tela para o Modo Retrato",
-    nowHost: "O host saiu. Agora você é o host da sala.",
-    resumedHost: "Sala retomada. Quem estava na sala reconecta sozinho.",
+    nowHost: "O host saiu e agora você comanda a sala.",
+    resumedHost: "Sala retomada. Quem estava nela reconecta sozinho.",
     resumeHome: "Sua sala {code} perdeu a conexão com você. Volte em {time} ou outra pessoa assume a sala.",
     hostLost: "O host saiu ou perdeu a conexão. Se ele não voltar em {time}, outra pessoa assume a sala.",
     hostHandover: "O host não voltou. Passando o comando para outra pessoa...",
     unofficial: "Atenção: este não é o site oficial. Use apenas o endereço oficial:",
-    roomFull: "A sala está cheia.",
-    duplicateTab: "Você já está assistindo esta sala em outra aba. Feche a outra aba para assistir aqui.",
+    roomFull: "A sala está lotada.",
+    duplicateTab: "Você já está nessa sala em outra aba. Feche a outra para assistir aqui.",
     uploadHelp: "Upload é a velocidade com que seu computador envia dados pela internet, medida em Mbps (megabits por segundo). Cada espectador recebe um vídeo separado, então o número cresce com a quantidade de pessoas. Se passar do seu upload real, o vídeo pode travar.",
-    noShare: "Compartilhar a tela só funciona no computador, mas você pode compartilhar a",
+    noShare: "Compartilhar tela só funciona no computador, mas você pode compartilhar a",
     noShareCam: "câmera",
-    noShareOnly: "Compartilhar a tela só funciona no computador.",
+    noShareOnly: "Compartilhar tela só funciona no computador.",
     noFullscreen: "Seu aparelho não suporta tela cheia aqui (comum no iPhone).",
     reqShare: "Pedir para compartilhar",
     reqSent: "Pedido enviado...",
     shareNow: "Compartilhar",
-    shareReqDenied: "O host recusou o seu pedido.",
-    shareLimit: "Já há {n} pessoas compartilhando. Tente de novo quando alguém parar.",
-    shareRevoked: "O host removeu a sua permissão de compartilhar.",
-    shareAllowed: "O host permitiu que você compartilhe.",
+    shareReqDenied: "O host recusou seu pedido.",
+    shareLimit: "Já tem {n} pessoas compartilhando. Tente de novo quando alguém parar.",
+    shareRevoked: "O host tirou sua permissão de compartilhar.",
+    shareAllowed: "O host liberou você para compartilhar.",
     requestText: "{name} quer compartilhar a tela.",
     allow: "Permitir",
     deny: "Negar",
@@ -1901,11 +1901,11 @@ const I18N = {
     reqCam: "Pedir para ligar a câmera",
     camReqSent: "Pedido de câmera enviado...",
     camQuality: "Qualidade da câmera",
-    camFailed: "Não foi possível abrir a câmera. Confira a permissão do navegador.",
-    camLimit: "Já há {n} câmeras ligadas. Tente de novo quando alguém desligar.",
-    camReqDenied: "O host recusou o seu pedido de câmera.",
-    camRevoked: "O host removeu a sua permissão de câmera.",
-    camAllowed: "O host permitiu que você ligue a câmera.",
+    camFailed: "Não foi possível abrir a câmera. Veja a permissão do navegador.",
+    camLimit: "Já tem {n} câmeras ligadas. Tente de novo quando alguém desligar.",
+    camReqDenied: "O host recusou seu pedido de câmera.",
+    camRevoked: "O host tirou sua permissão de câmera.",
+    camAllowed: "O host liberou você para ligar a câmera.",
     camRequestText: "{name} quer ligar a câmera.",
     q_c360: "Câmera leve (360p, 15 fps)",
     q_c480: "Câmera normal (480p, 24 fps)",
@@ -1914,8 +1914,8 @@ const I18N = {
     youTag: "{name} (você)",
     awayBtn: "Sair para o menu",
     backToRoom: "Voltar para a sala",
-    awayHome: "Sua sala {code} continua aberta e fecha em {time}. Iniciar uma nova sala fecha esta.",
-    awayViewer: "O host saiu para o menu. A sala fecha em {time} se ele não voltar.",
+    awayHome: "Sua sala {code} continua aberta e fecha em {time}. Abrir outra sala encerra esta.",
+    awayViewer: "O host foi para o menu. A sala fecha em {time} se ele não voltar.",
     q_light: "Muito leve (480p, 10 fps)",
     q_eco: "Econômica (720p, 15 fps)",
     q_mid: "Equilibrada (720p, 24 fps)",
@@ -1987,10 +1987,10 @@ const I18N = {
     reportLink: "Denunciar uso indevido",
     reportSubject: "Denúncia - Tela Fácil",
     reportSend: "Enviar denúncia",
-    reportSent: "Denúncia enviada. Obrigado por avisar.",
-    reportFail: "Não foi possível enviar agora. Use uma das opções por e-mail.",
-    reportWait: "Aguarde alguns segundos antes de enviar outra denúncia.",
-    reportEmpty: "Descreva o que aconteceu antes de enviar.",
+    reportSent: "Denúncia enviada. Valeu por avisar.",
+    reportFail: "Não consegui enviar agora. Use uma das opções por e-mail.",
+    reportWait: "Espere alguns segundos antes de enviar outra denúncia.",
+    reportEmpty: "Conte o que aconteceu antes de enviar.",
     reportWho: "Pessoas que estiveram nas suas duas últimas salas (toque para escolher):",
     reportRoom: "Sala {code}",
     reportCurrent: "atual",
@@ -2012,14 +2012,14 @@ const I18N = {
     reportMail: "App de e-mail",
     reportCopy: "Copiar texto",
     reportAddr: "Se nenhuma opção abrir, copie o texto e envie para {mail}.",
-    queueWait: "Aguardando a sua vez de entrar (posição {n})...",
-    roomBusy: "A sala está recebendo muitas entradas. Tente de novo em instantes."
+    queueWait: "Aguardando sua vez de entrar (posição {n})...",
+    roomBusy: "A sala está recebendo muita gente. Tente de novo daqui a pouco."
   },
   en: {
     title: "Easy Screen",
     heading: "Easy Screen",
     sub: "Direct browser-to-browser streaming, no sign-up.",
-    about: "Create a room and share a tab or window from your computer with up to 16 people, straight from the browser. In rooms created with “Create room (BETA)”, people in the room can also ask to share their screen or turn on their camera, with your permission. No sign-up or install needed: send the code or the link and whoever receives it watches right away, with chat included.",
+    about: "Get up to 16 people in a room and share your screen straight from the browser, fast and easy. Want more interaction? In “Create room (BETA)” mode, your guests can ask to share their screen or turn on their camera (always with your permission). No install, no account: send the link and whoever gets it watches right away, with built-in chat so everyone can join in.",
     shareMyScreen: "Share my screen",
     shareAudio: "Share audio",
     pickSurface: "Single Share",
@@ -2065,35 +2065,35 @@ const I18N = {
     connecting: "Connecting...",
     reconnecting: "Reconnecting... ({n}/{max})",
     waiting: "Waiting for the stream...",
-    shareFailed: "Sharing was cancelled, blocked or is not supported.",
+    shareFailed: "Sharing didn’t start: it was cancelled, blocked or isn’t supported.",
     roomEndedHome: "Room ended.",
     roomExpired: "The room was closed because the host did not return in time.",
-    codeLength: "Enter the 6-character code.",
-    hostWaiting: "Waiting for viewers. Share the code or the link.",
-    hostPausedStatus: "You are not sharing. The room stays open.",
-    hostUpload: "Estimated upload: about {m} Mbps.",
+    codeLength: "The code has 6 characters.",
+    hostWaiting: "Waiting for people to join. Send the code or the link.",
+    hostPausedStatus: "You’re not sharing, but the room is still open.",
+    hostUpload: "Estimated upload: ~{m} Mbps.",
     connError: "Connection error: {e}",
-    warnBandwidth: "Your upload is at its limit and the video may stutter for viewers.",
-    warnCpu: "Your computer is overloaded and the video may stutter.",
-    warnEstimate: "Estimated upload of about {m} Mbps. This may strain your connection.",
-    roomEndedByHost: "The room was ended by the host.",
+    warnBandwidth: "Your upload hit its limit and the video may stutter for viewers.",
+    warnCpu: "Your computer is maxed out and the video may stutter.",
+    warnEstimate: "Estimated upload of ~{m} Mbps. This may strain your connection.",
+    roomEndedByHost: "The host ended the room.",
     connLost: "Connection lost.",
-    cantConnect: "Could not connect. Check the code and try again.",
-    noVideo: "Connected to the room, but the video did not arrive. Try joining again.",
+    cantConnect: "Couldn’t connect. Check the code and try again.",
+    noVideo: "You’re in the room, but the video didn’t arrive. Try joining again.",
     roomNotFound: "Room not found. Check the code.",
     roomSuspicious: "Conflict detected: more than one host answered this code. The connection was closed for safety.",
-    audioTip: "To share sound, turn on “Share system audio” in the browser’s selection window.",
-    audioMissing: "Audio is not being shared. Click “Switch tab or window” and turn on “Share system audio” in the selection window.",
+    audioTip: "Want to share sound? Check “Share system audio” in the browser’s picker window.",
+    audioMissing: "Audio is not being shared. Click “Switch tab or window” and check “Share system audio”.",
     eyeCount: "👁 {n}",
     watchingNow: "Watching now",
     noWatchers: "Nobody watching right now.",
     soundBlocked: "The browser blocked automatic sound. Tap “Turn on sound” to listen.",
     soundOn: "Turn on sound",
     volume: "Volume",
-    nickTaken: "That nickname is already in use in this room. Pick another one.",
+    nickTaken: "That nickname is already taken in this room. Pick another one.",
     nickTakenTitle: "Nickname already in use",
-    nickTakenAsk: "Someone in this room already has that nickname. Pick another one to join.",
-    nickStillTaken: "That nickname is also in use. Pick another one.",
+    nickTakenAsk: "Someone in this room already uses that nickname. Pick another one to join.",
+    nickStillTaken: "That one is taken too. Try another.",
     kicked: "You were removed from the room. Try again in {min} min.",
     muteUser: "Mute",
     unmuteUser: "Unmute",
@@ -2114,28 +2114,28 @@ const I18N = {
     chatPlaceholder: "Write a message",
     nickRequired: "Pick a nickname to continue.",
     nickToJoin: "Pick a nickname and click Join.",
-    pipFail: "Could not open Picture Mode.",
+    pipFail: "Couldn’t open Picture Mode.",
     pipPick: "Choose the screen for Picture Mode",
-    nowHost: "The host left. You are now the host of this room.",
-    resumedHost: "Room resumed. People who were in the room will reconnect on their own.",
+    nowHost: "The host left and you’re now running the room.",
+    resumedHost: "Room resumed. People who were in it will reconnect on their own.",
     resumeHome: "Your room {code} lost its connection to you. Come back within {time} or someone else takes over the room.",
     hostLost: "The host left or lost connection. If they do not return within {time}, someone else takes over the room.",
     hostHandover: "The host did not return. Handing the room over to someone else...",
     unofficial: "Warning: this is not the official site. Only use the official address:",
     roomFull: "The room is full.",
-    duplicateTab: "You are already watching this room in another tab. Close the other tab to watch here.",
+    duplicateTab: "You’re already in this room in another tab. Close it to watch here.",
     uploadHelp: "Upload is how fast your computer sends data over the internet, measured in Mbps (megabits per second). Each viewer gets a separate video, so the number grows with the audience. If it goes above your real upload, the video may stutter.",
     noShare: "Screen sharing only works on a computer, but you can share your",
     noShareCam: "camera",
     noShareOnly: "Screen sharing only works on a computer.",
-    noFullscreen: "Your device does not support fullscreen here (common on iPhone).",
+    noFullscreen: "Your device doesn’t support fullscreen here (common on iPhone).",
     reqShare: "Ask to share",
     reqSent: "Request sent...",
     shareNow: "Share",
     shareReqDenied: "The host declined your request.",
     shareLimit: "{n} people are already sharing. Try again when someone stops.",
     shareRevoked: "The host removed your permission to share.",
-    shareAllowed: "The host allowed you to share.",
+    shareAllowed: "The host let you share.",
     requestText: "{name} wants to share their screen.",
     allow: "Allow",
     deny: "Deny",
@@ -2146,11 +2146,11 @@ const I18N = {
     reqCam: "Ask to turn on camera",
     camReqSent: "Camera request sent...",
     camQuality: "Camera quality",
-    camFailed: "Could not open the camera. Check the browser permission.",
+    camFailed: "Couldn’t open the camera. Check the browser permission.",
     camLimit: "{n} cameras are already on. Try again when someone turns theirs off.",
     camReqDenied: "The host declined your camera request.",
-    camRevoked: "The host removed your permission to use the camera.",
-    camAllowed: "The host allowed you to turn on the camera.",
+    camRevoked: "The host removed your camera permission.",
+    camAllowed: "The host let you turn on the camera.",
     camRequestText: "{name} wants to turn on their camera.",
     q_c360: "Light camera (360p, 15 fps)",
     q_c480: "Normal camera (480p, 24 fps)",
@@ -2159,8 +2159,8 @@ const I18N = {
     youTag: "{name} (you)",
     awayBtn: "Leave to menu",
     backToRoom: "Back to the room",
-    awayHome: "Your room {code} is still open and closes in {time}. Starting a new room closes this one.",
-    awayViewer: "The host went to the menu. The room closes in {time} if they do not return.",
+    awayHome: "Your room {code} is still open and closes in {time}. Opening another room ends this one.",
+    awayViewer: "The host went to the menu. The room closes in {time} if they don’t come back.",
     q_light: "Very light (480p, 10 fps)",
     q_eco: "Economy (720p, 15 fps)",
     q_mid: "Balanced (720p, 24 fps)",
@@ -2232,10 +2232,10 @@ const I18N = {
     reportLink: "Report misuse",
     reportSubject: "Report - Easy Screen",
     reportSend: "Send report",
-    reportSent: "Report sent. Thank you for letting us know.",
-    reportFail: "Could not send right now. Use one of the email options.",
+    reportSent: "Report sent. Thanks for letting us know.",
+    reportFail: "Couldn’t send right now. Use one of the email options.",
     reportWait: "Wait a few seconds before sending another report.",
-    reportEmpty: "Describe what happened before sending.",
+    reportEmpty: "Tell us what happened before sending.",
     reportWho: "People who were in your last two rooms (tap to choose):",
     reportRoom: "Room {code}",
     reportCurrent: "current",
@@ -2258,7 +2258,7 @@ const I18N = {
     reportCopy: "Copy text",
     reportAddr: "If no option opens, copy the text and send it to {mail}.",
     queueWait: "Waiting for your turn to join (position {n})...",
-    roomBusy: "The room is receiving many entries. Try again in a moment."
+    roomBusy: "The room is getting a lot of people. Try again in a bit."
   }
 };
 
@@ -2272,160 +2272,160 @@ const canCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
 let peer = null;
 let stream = null;
 let camStream = null;
-let pendingCamStream = null;
+let pendCam = null;
 let camKey = "c480";
-let camQuality = CAM_QUALITIES.c480;
+let camQ = CAM_QS.c480;
 let camState = "none";
-let qualityKey = "r720";
+let qKey = "r720";
 let fpsValue = 30;
-let quality = makeQuality("r720", 30);
-let chosenQuality = "r720";
-let chosenFps = 30;
-let lastAutoAt = 0;
-let lastLimitedAt = 0;
-let autoNoteState = null;
-let roomCount = 0;
-let lastWarnKey = "";
-let roomMulti = false;
-let viewMulti = false;
+let quality = mkQ("r720", 30);
+let pickQ = "r720";
+let pickFps = 30;
+let lastAuto = 0;
+let lastLim = 0;
+let autoMsgSt = null;
+let nWatch = 0;
+let lastWarn = "";
+let isMulti = false;
+let inMulti = false;
 let viewers = new Map();
-let currentCode = "";
-let viewerTimeout = null;
-let monitorTimer = null;
+let roomCode = "";
+let vTimer = null;
+let monTimer = null;
 let lang = "pt";
-const CHAT_MAX = 300;
+const MSG_MAX = 300;
 let myNick = "";
-let viewerConn = null;
-let chatUnread = 0;
-const BAN_MS = 5 * 60 * 1000;
-const BAN_IP_MS = 2 * 60 * 1000;
-const NICK_WAIT_MS = 60 * 1000;
-const NICK_MAX_TRIES = 5;
+let vConn = null;
+let unreadN = 0;
+const BAN = 5 * 60 * 1000;
+const BAN_IP = 2 * 60 * 1000;
+const NICK_MS = 60 * 1000;
+const NICK_TRIES = 5;
 const pending = new Map();
-let lastNickTry = "";
+let nickTry = "";
 const bans = new Map();
 const grants = new Set();
 const camGrants = new Set();
 const mutedVids = new Set();
-const chatLog = [];
-const roomNicks = new Map();
-let roomPeople = [];
-let chatSeq = 0;
-let chatMuted = false;
-let gifsEnabled = true;
-let chatGifsOn = false;
+const chatBuf = [];
+const nickHist = new Map();
+let roomWho = [];
+let msgSeq = 0;
+let chatMute = false;
+let gifsOn = true;
+let vGifs = false;
 let gifTimer = null;
 let gifSeq = 0;
-let blockedTab = false;
-const MAX_RETRY = 8;
-const tabId = makeCode() + makeCode();
+let dupTab = false;
+const MAX_RT = 8;
+const tabId = rndCode() + rndCode();
 let retry = 0;
-let retryTimer = null;
-let retryPending = false;
-let intentionalEnd = false;
-let activeCode = "";
+let rtTimer = null;
+let rtWait = false;
+let manualEnd = false;
+let joinCode = "";
 let hosting = false;
 let away = null;
-let awayView = null;
-let viewerLive = false;
-let activeGrid = null;
+let awayV = null;
+let vLive = false;
+let gridEl = null;
 const tiles = new Map();
-const inCalls = new Map();
-const outCalls = new Map();
-const stashed = new Map();
-let sharerIds = new Set();
-let sharerNames = new Map();
-let shareState = "none";
-let pendingStream = null;
-let viewMuted = false;
-let viewVolume = 1;
-let roomPrivate = false;
+const inC = new Map();
+const outC = new Map();
+const held = new Map();
+let shrIds = new Set();
+let shrNames = new Map();
+let scrState = "none";
+let pendScr = null;
+let vMuted = false;
+let vVol = 1;
+let isPriv = false;
 const approvals = new Map();
 const allowed = new Set();
-const audioPrefs = new Map();
-let audioSig = "";
-let visResolve = null;
-let infoResolve = null;
-let ipSeenMem = false;
-const ADMIT_GAP_MS = 5000;
-const ADMIT_QUEUE_MAX = 8;
-const GRACE_MS = 90000;
-const admitQueue = [];
-let nextAdmitAt = 0;
-let admitTimer = null;
-let graceUntil = 0;
-let takeoverTimer = null;
-let iAmSucc = false;
+const audPrefs = new Map();
+let audSig = "";
+let visRes = null;
+let infoRes = null;
+let ipMem = false;
+const ADM_GAP = 5000;
+const ADM_Q = 8;
+const GRACE = 90000;
+const admitQ = [];
+let nextAdm = 0;
+let admTimer = null;
+let grace = 0;
+let tkTimer = null;
+let amSucc = false;
 let succState = null;
 let succSig = "";
-let hostGen = 0;
-let hostPeerId = "";
-let roomGen = 0;
-let leavingPage = false;
-let takeoverMode = false;
-let pendingResume = null;
-let lostView = null;
-const TAKEOVER_MS = 10000;
-const RESUME_MS = 8000;
-const ROOM_GENS = 4;
-const HS_KEY = "hostSession";
+let hGen = 0;
+let hostPid = "";
+let rGen = 0;
+let unloading = false;
+let tkMode = false;
+let pendRes = null;
+let lostV = null;
+const TK_MS = 10000;
+const RES_MS = 8000;
+const GENS = 4;
+const HS = "hostSession";
 
 function fmtTime(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
 }
 
-function pickVideo() {
-  if (!activeGrid) return null;
+function topVideo() {
+  if (!gridEl) return null;
   const pick = (root) => [...root.querySelectorAll("video")].find((v) => v.srcObject) || null;
-  const big = activeGrid.querySelector(".tile.big");
-  return (big && pick(big)) || pick(activeGrid);
+  const big = gridEl.querySelector(".tile.big");
+  return (big && pick(big)) || pick(gridEl);
 }
 
-function layoutTiles() {
-  const g = activeGrid;
+function relayout() {
+  const g = gridEl;
   if (!g) return;
   g.style.setProperty("--cols", tiles.size <= 1 ? 1 : 2);
   g.classList.toggle("has-big", !!g.querySelector(".tile.big"));
   g.classList.toggle("single", tiles.size <= 1);
 }
 
-function prefOf(id) {
-  let p = audioPrefs.get(id);
+function prefFor(id) {
+  let p = audPrefs.get(id);
   if (!p) {
     p = { vol: 1, muted: false };
-    audioPrefs.set(id, p);
+    audPrefs.set(id, p);
   }
   return p;
 }
 
-function applyAudio() {
+function applyVol() {
   tiles.forEach((t, id) => {
-    const pr = audioPrefs.get(id) || { vol: 1, muted: false };
-    t.video.muted = t.local || viewMuted || pr.muted;
-    t.video.volume = viewVolume * pr.vol;
+    const pr = audPrefs.get(id) || { vol: 1, muted: false };
+    t.video.muted = t.local || vMuted || pr.muted;
+    t.video.volume = vVol * pr.vol;
   });
 }
 
-function renderAudioTabs() {
+function drawAudio() {
   const me = hosting ? hostId() : peer ? peer.id : "";
   const list = [];
-  sharerNames.forEach((nick, id) => {
-    if (!isCamSid(id) && id !== me) list.push([id, nick]);
+  shrNames.forEach((nick, id) => {
+    if (!isCam(id) && id !== me) list.push([id, nick]);
   });
-  const screens = [...sharerIds].filter((s) => !isCamSid(s)).length;
+  const screens = [...shrIds].filter((s) => !isCam(s)).length;
   const show = screens > 1 && list.length > 0;
   const sig = show ? list.map((x) => x[0] + "|" + x[1]).join(";") : "";
   $("audioTabHost").hidden = !show;
   $("audioTabView").hidden = !show;
-  if (sig === audioSig) return;
-  audioSig = sig;
+  if (sig === audSig) return;
+  audSig = sig;
   ["audioListHost", "audioListView"].forEach((boxId) => {
     const box = $(boxId);
     box.innerHTML = "";
     if (!show) return;
     list.forEach(([id, nick]) => {
-      const pr = prefOf(id);
+      const pr = prefFor(id);
       const row = document.createElement("div");
       row.className = "audiorow";
       const name = document.createElement("span");
@@ -2444,12 +2444,12 @@ function renderAudioTabs() {
       setT(btn, pr.muted ? "unmute" : "mute");
       range.addEventListener("input", () => {
         pr.vol = Number(range.value);
-        applyAudio();
+        applyVol();
       });
       btn.addEventListener("click", () => {
         pr.muted = !pr.muted;
         setT(btn, pr.muted ? "unmute" : "mute");
-        applyAudio();
+        applyVol();
       });
       ctl.append(range, btn);
       row.append(name, ctl);
@@ -2458,30 +2458,30 @@ function renderAudioTabs() {
   });
 }
 
-function refreshOverlays() {
-  renderAudioTabs();
+function refreshOv() {
+  drawAudio();
   if (hosting) {
     $("hostOverlay").hidden = tiles.size > 0;
     return;
   }
-  if (!viewerLive) return;
+  if (!vLive) return;
   if (tiles.size) {
     $("viewOverlay").hidden = true;
     return;
   }
   $("viewOverlay").hidden = false;
-  setT($("viewOverlay"), sharerIds.size ? "connecting" : "waiting");
+  setT($("viewOverlay"), shrIds.size ? "connecting" : "waiting");
 }
 
 function toggleBig(el) {
-  if (!activeGrid) return;
+  if (!gridEl) return;
   const was = el.classList.contains("big");
-  activeGrid.querySelectorAll(".tile.big").forEach((x) => x.classList.remove("big"));
+  gridEl.querySelectorAll(".tile.big").forEach((x) => x.classList.remove("big"));
   if (!was) el.classList.add("big");
-  layoutTiles();
+  relayout();
 }
 
-function makeTile(owner, local) {
+function newTile(owner, local) {
   const el = document.createElement("div");
   el.className = "tile";
   el.tabIndex = 0;
@@ -2528,30 +2528,30 @@ function makeTile(owner, local) {
       activate();
     }
   });
-  activeGrid.appendChild(el);
+  gridEl.appendChild(el);
   const t = { el, video, camVideo, tag, local, screen: null, cam: null };
   tiles.set(owner, t);
   return t;
 }
 
-function syncTile(t) {
+function fixTile(t) {
   t.el.classList.toggle("has-cam", !!t.cam);
   t.el.classList.toggle("has-screen", !!t.screen);
   if (!t.cam || !t.screen) t.el.classList.remove("swap");
   t.tag.classList.toggle("live", !!(t.cam || t.screen));
 }
 
-function nickFor(owner) {
-  return sharerNames.get(owner) || sharerNames.get(owner + CAM) || "";
+function nickOf(owner) {
+  return shrNames.get(owner) || shrNames.get(owner + CAM) || "";
 }
 
-function showSoundWarn() {
+function warnSound() {
   if (!hosting) $("soundWarn").hidden = false;
 }
 
-function setSource(owner, cam, nick, mediaStream, local) {
-  if (!activeGrid) return;
-  const t = tiles.get(owner) || makeTile(owner, local);
+function putSrc(owner, cam, nick, mediaStream, local) {
+  if (!gridEl) return;
+  const t = tiles.get(owner) || newTile(owner, local);
   t.local = local;
   const vid = cam ? t.camVideo : t.video;
   if (cam) {
@@ -2569,26 +2569,26 @@ function setSource(owner, cam, nick, mediaStream, local) {
   }
   t.el.setAttribute("aria-label", t.tag.textContent);
   if (vid.srcObject !== mediaStream) vid.srcObject = mediaStream;
-  syncTile(t);
-  applyAudio();
+  fixTile(t);
+  applyVol();
   const started = vid.play();
   if (started && started.catch) {
     started.catch((err) => {
       if (!err || err.name !== "NotAllowedError") return;
-      viewMuted = true;
-      applyAudio();
+      vMuted = true;
+      applyVol();
       updateMuteBtn();
-      showSoundWarn();
+      warnSound();
       const again = vid.play();
       if (again && again.catch) again.catch(() => {});
     });
   }
   setupAutoPip(true);
-  layoutTiles();
-  refreshOverlays();
+  relayout();
+  refreshOv();
 }
 
-function removeSource(owner, cam) {
+function delSrc(owner, cam) {
   const t = tiles.get(owner);
   if (!t) return;
   if (cam) {
@@ -2602,81 +2602,81 @@ function removeSource(owner, cam) {
     t.el.remove();
     tiles.delete(owner);
   } else {
-    syncTile(t);
+    fixTile(t);
   }
-  layoutTiles();
-  refreshOverlays();
+  relayout();
+  refreshOv();
 }
 
-function clearTiles() {
+function wipeTiles() {
   tiles.forEach((t) => {
     t.video.srcObject = null;
     t.camVideo.srcObject = null;
     t.el.remove();
   });
   tiles.clear();
-  audioPrefs.clear();
-  audioSig = "";
-  layoutTiles();
-  refreshOverlays();
+  audPrefs.clear();
+  audSig = "";
+  relayout();
+  refreshOv();
 }
 
-function acceptCall(call) {
-  const sid = callSid(call);
+function takeCall(call) {
+  const sid = sidOf(call);
   const owner = call.peer;
-  const cam = isCamSid(sid);
-  const old = inCalls.get(sid);
-  inCalls.set(sid, call);
+  const cam = isCam(sid);
+  const old = inC.get(sid);
+  inC.set(sid, call);
   if (old) old.close();
   call.answer();
   call.on("stream", (remote) => {
-    if (inCalls.get(sid) !== call) return;
-    clearTimeout(viewerTimeout);
-    setSource(owner, cam, nickFor(owner), remote, false);
+    if (inC.get(sid) !== call) return;
+    clearTimeout(vTimer);
+    putSrc(owner, cam, nickOf(owner), remote, false);
   });
   call.on("close", () => {
-    if (inCalls.get(sid) === call) {
-      inCalls.delete(sid);
-      removeSource(owner, cam);
+    if (inC.get(sid) === call) {
+      inC.delete(sid);
+      delSrc(owner, cam);
     }
   });
 }
 
-function handleIncomingCall(call) {
-  const sid = callSid(call);
-  if (sharerIds.has(sid)) {
-    acceptCall(call);
+function onCall(call) {
+  const sid = sidOf(call);
+  if (shrIds.has(sid)) {
+    takeCall(call);
     return;
   }
-  const prev = stashed.get(sid);
+  const prev = held.get(sid);
   if (prev) prev.close();
-  stashed.set(sid, call);
+  held.set(sid, call);
   setTimeout(() => {
-    if (stashed.get(sid) === call) {
-      stashed.delete(sid);
+    if (held.get(sid) === call) {
+      held.delete(sid);
       call.close();
     }
   }, 10000);
 }
 
-function syncRoster(list) {
+function setRoster(list) {
   const next = new Map();
   list.forEach((s) => {
     if (s && typeof s.id === "string" && typeof s.nick === "string") next.set(s.id, cleanNick(s.nick));
   });
-  sharerNames = next;
-  sharerIds = new Set(next.keys());
-  inCalls.forEach((call, sid) => {
+  shrNames = next;
+  shrIds = new Set(next.keys());
+  inC.forEach((call, sid) => {
     if (!next.has(sid)) {
-      inCalls.delete(sid);
+      inC.delete(sid);
       call.close();
-      removeSource(ownerOf(sid), isCamSid(sid));
+      delSrc(ownerOf(sid), isCam(sid));
     }
   });
   [...tiles].forEach(([id, t]) => {
     if (t.local) return;
-    if (t.screen && !next.has(id)) removeSource(id, false);
-    if (t.cam && !next.has(id + CAM)) removeSource(id, true);
+    if (t.screen && !next.has(id)) delSrc(id, false);
+    if (t.cam && !next.has(id + CAM)) delSrc(id, true);
   });
   next.forEach((nick, sid) => {
     const t = tiles.get(ownerOf(sid));
@@ -2684,19 +2684,19 @@ function syncRoster(list) {
       t.tag.textContent = nick;
       t.el.setAttribute("aria-label", nick);
     }
-    const st = stashed.get(sid);
+    const st = held.get(sid);
     if (st) {
-      stashed.delete(sid);
-      acceptCall(st);
+      held.delete(sid);
+      takeCall(st);
     }
   });
-  refreshWatchers();
-  refreshOverlays();
+  refreshWatch();
+  refreshOv();
 }
 
 function openViewPanel() {
   closeChat();
-  closeSettings();
+  closeCfg();
   $("viewPanel").classList.add("open");
   $("viewPanel").setAttribute("aria-hidden", "false");
   $("viewBackdrop").hidden = false;
@@ -2708,16 +2708,16 @@ function closeViewPanel() {
   $("viewBackdrop").hidden = true;
 }
 
-function sameNick(a, b) {
+function eqNick(a, b) {
   return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 }
 
-function refuse(conn, msg) {
+function bounce(conn, msg) {
   conn.send(msg);
   setTimeout(() => conn.close(), 500);
 }
 
-async function remoteIp(conn) {
+async function getIp(conn) {
   try {
     const pc = conn.peerConnection;
     if (!pc) return null;
@@ -2736,7 +2736,7 @@ async function remoteIp(conn) {
   }
 }
 
-function banActive(key) {
+function banLeft(key) {
   const until = bans.get(key);
   if (!until) return 0;
   if (until <= Date.now()) {
@@ -2746,28 +2746,28 @@ function banActive(key) {
   return until;
 }
 
-function updateChatInput() {
-  $("chatInput").disabled = chatMuted;
-  $("chatSend").disabled = chatMuted;
-  $("chatInput").placeholder = t(chatMuted ? "chatMutedPh" : "chatPlaceholder");
+function fixChatIn() {
+  $("chatInput").disabled = chatMute;
+  $("chatSend").disabled = chatMute;
+  $("chatInput").placeholder = t(chatMute ? "chatMutedPh" : "chatPlaceholder");
 }
 
-function removeMessage(id) {
+function rmMsg(id) {
   const row = $("chatList").querySelector('[data-id="' + id + '"]');
   if (row) row.remove();
 }
 
-function deleteMessage(id) {
-  removeMessage(id);
-  const i = chatLog.findIndex((m) => m.id === id);
-  if (i >= 0) chatLog.splice(i, 1);
+function dropMsg(id) {
+  rmMsg(id);
+  const i = chatBuf.findIndex((m) => m.id === id);
+  if (i >= 0) chatBuf.splice(i, 1);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ del: id });
   });
-  syncSuccessor();
+  syncSucc();
 }
 
-function toggleMuteUser(id) {
+function toggleMute(id) {
   const v = viewers.get(id);
   if (!v) return;
   v.muted = !v.muted;
@@ -2776,32 +2776,32 @@ function toggleMuteUser(id) {
     else mutedVids.delete(v.vid);
   }
   if (v.conn.open) v.conn.send({ muted: v.muted });
-  renderPeople();
-  syncSuccessor();
+  drawPeople();
+  syncSucc();
 }
 
-function kickViewer(id) {
+function boot(id) {
   const v = viewers.get(id);
   if (!v) return;
   if (v.vid) {
-    bans.set("vid:" + v.vid, Date.now() + BAN_MS);
+    bans.set("vid:" + v.vid, Date.now() + BAN);
     allowed.delete(v.vid);
   }
-  if (v.ip) bans.set("ip:" + v.ip, Date.now() + BAN_IP_MS);
-  if (v.conn.open) v.conn.send({ kicked: true, wait: BAN_MS / 1000 });
+  if (v.ip) bans.set("ip:" + v.ip, Date.now() + BAN_IP);
+  if (v.conn.open) v.conn.send({ kicked: true, wait: BAN / 1000 });
   setTimeout(() => v.conn.close(), 500);
-  dropViewer(id);
+  dropView(id);
 }
 
-function peerIdFor(code, g) {
-  return PREFIX + code + (g ? "-" + g : "");
+function pid(code, g) {
+  return PFX + code + (g ? "-" + g : "");
 }
 
 function hostId() {
-  return hostPeerId;
+  return hostPid;
 }
 
-function sharerList() {
+function shrList() {
   const list = [];
   if (stream) list.push({ id: hostId(), nick: myNick });
   if (camStream) list.push({ id: hostId() + CAM, nick: myNick });
@@ -2812,61 +2812,61 @@ function sharerList() {
   return list;
 }
 
-function countSharers(cam) {
-  return sharerList().filter((s) => isCamSid(s.id) === cam).length;
+function countShr(cam) {
+  return shrList().filter((s) => isCam(s.id) === cam).length;
 }
 
-function broadcastSharers() {
-  const list = sharerList();
-  syncRoster(list);
+function bcastShr() {
+  const list = shrList();
+  setRoster(list);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ sharers: list });
   });
 }
 
-function dropScreenMedia(id) {
-  const c = inCalls.get(id);
+function dropScr(id) {
+  const c = inC.get(id);
   if (c) {
-    inCalls.delete(id);
+    inC.delete(id);
     c.close();
   }
-  removeSource(id, false);
+  delSrc(id, false);
 }
 
-function dropCamMedia(id) {
+function dropCamM(id) {
   const k = id + CAM;
-  const c = inCalls.get(k);
+  const c = inC.get(k);
   if (c) {
-    inCalls.delete(k);
+    inC.delete(k);
     c.close();
   }
-  removeSource(id, true);
+  delSrc(id, true);
 }
 
-function dropSharerMedia(id) {
-  dropScreenMedia(id);
-  dropCamMedia(id);
+function dropShr(id) {
+  dropScr(id);
+  dropCamM(id);
 }
 
-function approveShare(id) {
+function okShare(id) {
   const v = viewers.get(id);
   if (!v) return;
   v.canShare = true;
   v.wantsShare = false;
   if (v.vid) grants.add(v.vid);
   if (v.conn.open) v.conn.send({ canShare: true });
-  updateHostCount();
+  hostCount();
 }
 
-function denyShare(id) {
+function rejShare(id) {
   const v = viewers.get(id);
   if (!v) return;
   v.wantsShare = false;
   if (v.conn.open) v.conn.send({ shareDenied: "denied" });
-  updateHostCount();
+  hostCount();
 }
 
-function revokeShare(id) {
+function pullShare(id) {
   const v = viewers.get(id);
   if (!v) return;
   const was = v.sharing;
@@ -2874,31 +2874,31 @@ function revokeShare(id) {
   v.wantsShare = false;
   v.sharing = false;
   if (v.vid) grants.delete(v.vid);
-  if (was) dropScreenMedia(id);
+  if (was) dropScr(id);
   if (v.conn.open) v.conn.send({ canShare: false });
-  if (was) broadcastSharers();
-  updateHostCount();
+  if (was) bcastShr();
+  hostCount();
 }
 
-function approveCam(id) {
+function okCam(id) {
   const v = viewers.get(id);
   if (!v) return;
   v.canCam = true;
   v.wantsCam = false;
   if (v.vid) camGrants.add(v.vid);
   if (v.conn.open) v.conn.send({ canCam: true });
-  updateHostCount();
+  hostCount();
 }
 
-function denyCam(id) {
+function rejCam(id) {
   const v = viewers.get(id);
   if (!v) return;
   v.wantsCam = false;
   if (v.conn.open) v.conn.send({ camDenied: "denied" });
-  updateHostCount();
+  hostCount();
 }
 
-function revokeCam(id) {
+function pullCam(id) {
   const v = viewers.get(id);
   if (!v) return;
   const was = v.camSharing;
@@ -2906,23 +2906,23 @@ function revokeCam(id) {
   v.wantsCam = false;
   v.camSharing = false;
   if (v.vid) camGrants.delete(v.vid);
-  if (was) dropCamMedia(id);
+  if (was) dropCamM(id);
   if (v.conn.open) v.conn.send({ canCam: false });
-  if (was) broadcastSharers();
-  updateHostCount();
+  if (was) bcastShr();
+  hostCount();
 }
 
 function onShareRequest(v) {
-  if (!roomMulti || v.canShare || v.wantsShare) return;
+  if (!isMulti || v.canShare || v.wantsShare) return;
   v.wantsShare = true;
-  renderRequests();
+  drawReqs();
   notify("share-" + v.nick, t("title"), t("requestText", { name: v.nick }));
 }
 
 function onCamRequest(v) {
-  if (!roomMulti || v.canCam || v.wantsCam) return;
+  if (!isMulti || v.canCam || v.wantsCam) return;
   v.wantsCam = true;
-  renderRequests();
+  drawReqs();
   notify("cam-" + v.nick, t("title"), t("camRequestText", { name: v.nick }));
 }
 
@@ -2935,54 +2935,54 @@ function peerTargets(skip) {
 }
 
 function onShareStart(id, v) {
-  if (!roomMulti || !v.canShare) {
+  if (!isMulti || !v.canShare) {
     if (v.conn.open) v.conn.send({ shareDenied: "noperm" });
     return;
   }
   if (v.sharing) return;
-  if (countSharers(false) >= MAX_SHARERS) {
+  if (countShr(false) >= MAX_SHR) {
     if (v.conn.open) v.conn.send({ shareDenied: "limit" });
     return;
   }
   v.sharing = true;
-  broadcastSharers();
+  bcastShr();
   if (v.conn.open) v.conn.send({ targets: peerTargets(id) });
-  updateHostCount();
+  hostCount();
 }
 
 function onCamStart(id, v) {
-  if (!roomMulti || !v.canCam) {
+  if (!isMulti || !v.canCam) {
     if (v.conn.open) v.conn.send({ camDenied: "noperm" });
     return;
   }
   if (v.camSharing) return;
-  if (countSharers(true) >= MAX_CAMS) {
+  if (countShr(true) >= MAX_CAM) {
     if (v.conn.open) v.conn.send({ camDenied: "limit" });
     return;
   }
   v.camSharing = true;
-  broadcastSharers();
+  bcastShr();
   if (v.conn.open) v.conn.send({ camTargets: peerTargets(id) });
-  updateHostCount();
+  hostCount();
 }
 
 function onShareStop(id, v) {
   if (!v.sharing) return;
   v.sharing = false;
-  dropScreenMedia(id);
-  broadcastSharers();
-  updateHostCount();
+  dropScr(id);
+  bcastShr();
+  hostCount();
 }
 
 function onCamStop(id, v) {
   if (!v.camSharing) return;
   v.camSharing = false;
-  dropCamMedia(id);
-  broadcastSharers();
-  updateHostCount();
+  dropCamM(id);
+  bcastShr();
+  hostCount();
 }
 
-function requestRow(textKey, name, onYes, onNo) {
+function reqRow(textKey, name, onYes, onNo) {
   const row = document.createElement("div");
   row.className = "request";
   const text = document.createElement("span");
@@ -2998,16 +2998,16 @@ function requestRow(textKey, name, onYes, onNo) {
   return row;
 }
 
-function renderRequests() {
+function drawReqs() {
   const box = $("shareRequests");
   box.innerHTML = "";
   viewers.forEach((v, id) => {
-    if (v.wantsShare) box.appendChild(requestRow("requestText", v.nick, () => approveShare(id), () => denyShare(id)));
-    if (v.wantsCam) box.appendChild(requestRow("camRequestText", v.nick, () => approveCam(id), () => denyCam(id)));
+    if (v.wantsShare) box.appendChild(reqRow("requestText", v.nick, () => okShare(id), () => rejShare(id)));
+    if (v.wantsCam) box.appendChild(reqRow("camRequestText", v.nick, () => okCam(id), () => rejCam(id)));
   });
 }
 
-function renderPeople() {
+function drawPeople() {
   const box = $("people");
   if (box.hidden) return;
   box.innerHTML = "";
@@ -3029,41 +3029,41 @@ function renderPeople() {
       const rev = document.createElement("button");
       rev.className = "mini";
       setT(rev, "revokeShare");
-      rev.addEventListener("click", () => revokeShare(id));
+      rev.addEventListener("click", () => pullShare(id));
       row.appendChild(rev);
     }
     if (v.canCam) {
       const rev = document.createElement("button");
       rev.className = "mini";
       setT(rev, "revokeCam");
-      rev.addEventListener("click", () => revokeCam(id));
+      rev.addEventListener("click", () => pullCam(id));
       row.appendChild(rev);
     }
     const mute = document.createElement("button");
     mute.className = "mini";
     setT(mute, v.muted ? "unmuteUser" : "muteUser");
-    mute.addEventListener("click", () => toggleMuteUser(id));
+    mute.addEventListener("click", () => toggleMute(id));
     const kick = document.createElement("button");
     kick.className = "mini stop";
     setT(kick, "kickUser");
-    kick.addEventListener("click", () => kickViewer(id));
+    kick.addEventListener("click", () => boot(id));
     row.append(mute, kick);
     box.appendChild(row);
   });
 }
 
-function watcherNames() {
+function watchNames() {
   if (hosting) return [...viewers.values()].map((v) => ({ n: v.nick, me: false }));
-  return roomPeople.slice(1).map((x) => ({ n: x.n, me: !!x.m }));
+  return roomWho.slice(1).map((x) => ({ n: x.n, me: !!x.m }));
 }
 
-function renderWatchers(pop) {
+function drawWatch(pop) {
   pop.innerHTML = "";
   const head = document.createElement("div");
   head.className = "eyehead";
   setT(head, "watchingNow");
   pop.appendChild(head);
-  const list = watcherNames();
+  const list = watchNames();
   if (!list.length) {
     const e = document.createElement("div");
     e.className = "eyeempty";
@@ -3071,7 +3071,7 @@ function renderWatchers(pop) {
     pop.appendChild(e);
     return;
   }
-  const live = new Set(sharerNames.values());
+  const live = new Set(shrNames.values());
   list.forEach((x) => {
     const row = document.createElement("div");
     row.className = "eyename" + (live.has(x.n) ? " live" : "");
@@ -3084,13 +3084,13 @@ function renderWatchers(pop) {
   });
 }
 
-function refreshWatchers() {
+function refreshWatch() {
   document.querySelectorAll(".eyepop").forEach((pop) => {
-    if (!pop.hidden) renderWatchers(pop);
+    if (!pop.hidden) drawWatch(pop);
   });
 }
 
-function closeWatchers() {
+function closeWatch() {
   document.querySelectorAll(".eyepop").forEach((pop) => {
     pop.hidden = true;
     delete pop.dataset.by;
@@ -3102,7 +3102,7 @@ function setupEye(wrapId) {
   const badge = wrap.querySelector(".eye");
   const pop = wrap.querySelector(".eyepop");
   const open = (by) => {
-    renderWatchers(pop);
+    drawWatch(pop);
     pop.dataset.by = by;
     pop.hidden = false;
   };
@@ -3145,7 +3145,7 @@ function saveNick(n) {
 function requireNick() {
   const n = cleanNick($("nick").value);
   if (!n) {
-    setStatus($("homeStatus"), "nickRequired", true);
+    setSt($("homeStatus"), "nickRequired", true);
     $("nick").focus();
     return false;
   }
@@ -3156,19 +3156,19 @@ function requireNick() {
 
 function updateUnread() {
   document.querySelectorAll(".unread").forEach((el) => {
-    el.textContent = chatUnread > 99 ? "99+" : String(chatUnread);
-    el.hidden = chatUnread === 0;
+    el.textContent = unreadN > 99 ? "99+" : String(unreadN);
+    el.hidden = unreadN === 0;
   });
 }
 
 function openChat() {
-  closePanel();
+  closeOpts();
   closeViewPanel();
-  closeSettings();
+  closeCfg();
   updateGifBtn();
   $("chatPanel").classList.add("open");
   $("chatPanel").setAttribute("aria-hidden", "false");
-  chatUnread = 0;
+  unreadN = 0;
   updateUnread();
   $("chatList").scrollTop = $("chatList").scrollHeight;
   $("chatInput").focus();
@@ -3190,13 +3190,13 @@ function toggleChat() {
 function clearChat() {
   closeChat();
   closeGifBox();
-  roomPeople = [];
+  roomWho = [];
   $("chatList").innerHTML = "";
   $("people").hidden = true;
   $("people").innerHTML = "";
-  chatMuted = false;
-  chatUnread = 0;
-  updateChatInput();
+  chatMute = false;
+  unreadN = 0;
+  fixChatIn();
   updateUnread();
 }
 
@@ -3210,14 +3210,14 @@ function addChat(m, mod) {
   const who = document.createElement("strong");
   who.textContent = m.nick.slice(0, 20) + ":";
   const body = document.createElement("span");
-  body.textContent = " " + m.text.slice(0, CHAT_MAX);
+  body.textContent = " " + m.text.slice(0, MSG_MAX);
   row.appendChild(who);
   row.appendChild(body);
   if (mod && Number.isInteger(m.id)) {
     const del = document.createElement("button");
     del.className = "mini";
     setT(del, "delMsg");
-    del.addEventListener("click", () => deleteMessage(m.id));
+    del.addEventListener("click", () => dropMsg(m.id));
     row.appendChild(del);
   }
   const gifUrl = validGif(m.gif);
@@ -3234,21 +3234,21 @@ function addChat(m, mod) {
   while (list.children.length > 200) list.removeChild(list.firstChild);
   if (nearBottom) list.scrollTop = list.scrollHeight;
   if (!$("chatPanel").classList.contains("open")) {
-    chatUnread++;
+    unreadN++;
     updateUnread();
   }
 }
 
 function broadcastChat(nick, text, gif) {
-  const m = { id: ++chatSeq, nick: nick, text: text };
+  const m = { id: ++msgSeq, nick: nick, text: text };
   if (gif) m.gif = gif;
-  chatLog.push(m);
-  if (chatLog.length > 50) chatLog.shift();
+  chatBuf.push(m);
+  if (chatBuf.length > 50) chatBuf.shift();
   addChat(m, true);
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ chat: m });
   });
-  syncSuccessor();
+  syncSucc();
 }
 
 function validGif(u) {
@@ -3274,8 +3274,8 @@ function gifPick(item, order) {
 }
 
 async function gifSearch(q) {
-  const base = KLIPY_API + encodeURIComponent(KLIPY_KEY) + "/gifs/" + (q ? "search" : "trending");
-  const url = base + "?per_page=" + GIF_PER_PAGE + (q ? "&q=" + encodeURIComponent(q) : "");
+  const base = GIF_API + encodeURIComponent(GIF_KEY) + "/gifs/" + (q ? "search" : "trending");
+  const url = base + "?per_page=" + GIF_N + (q ? "&q=" + encodeURIComponent(q) : "");
   const r = await fetch(url);
   if (!r.ok) throw new Error("http " + r.status);
   const j = await r.json();
@@ -3296,7 +3296,7 @@ function clearGifNote() {
 async function loadGifs() {
   const grid = $("gifGrid");
   const note = $("gifNote");
-  if (!KLIPY_KEY || KLIPY_KEY.startsWith("COLE")) {
+  if (!GIF_KEY || GIF_KEY.startsWith("COLE")) {
     grid.innerHTML = "";
     setT(note, "gifNoKey");
     return;
@@ -3345,7 +3345,7 @@ function closeGifBox() {
 }
 
 function updateGifBtn() {
-  const on = hosting || chatGifsOn;
+  const on = hosting || vGifs;
   $("gifBtn").hidden = !on;
   if (!on) closeGifBox();
 }
@@ -3355,8 +3355,8 @@ function sendGif(url) {
   if (!u) return;
   if (hosting) {
     broadcastChat(myNick, "", u);
-  } else if (viewerConn && viewerConn.open && chatGifsOn) {
-    viewerConn.send({ gif: u });
+  } else if (vConn && vConn.open && vGifs) {
+    vConn.send({ gif: u });
   } else {
     return;
   }
@@ -3365,12 +3365,12 @@ function sendGif(url) {
 
 function sendChat() {
   const input = $("chatInput");
-  const text = input.value.trim().slice(0, CHAT_MAX);
+  const text = input.value.trim().slice(0, MSG_MAX);
   if (!text) return;
   if (hosting) {
     broadcastChat(myNick, text);
-  } else if (viewerConn && viewerConn.open) {
-    viewerConn.send({ msg: text });
+  } else if (vConn && vConn.open) {
+    vConn.send({ msg: text });
   } else {
     return;
   }
@@ -3391,7 +3391,7 @@ async function enterPip(video, statusEl) {
       video.webkitSetPresentationMode("picture-in-picture");
     }
   } catch (e) {
-    setStatus(statusEl, "pipFail", true);
+    setSt(statusEl, "pipFail", true);
   }
 }
 
@@ -3430,7 +3430,7 @@ async function togglePip(statusEl) {
     openPipDialog(statusEl);
     return;
   }
-  enterPip(pickVideo(), statusEl);
+  enterPip(topVideo(), statusEl);
 }
 
 function setupAutoPip(active) {
@@ -3439,7 +3439,7 @@ function setupAutoPip(active) {
     navigator.mediaSession.setActionHandler(
       "enterpictureinpicture",
       active ? () => {
-        const v = pickVideo();
+        const v = topVideo();
         if (v) v.requestPictureInPicture().catch(() => {});
       } : null
     );
@@ -3455,7 +3455,7 @@ function getViewerId() {
   let id = null;
   try { id = localStorage.getItem("viewerId"); } catch (e) {}
   if (!id) {
-    id = makeCode() + makeCode();
+    id = rndCode() + rndCode();
     try { localStorage.setItem("viewerId", id); } catch (e) {}
   }
   return id;
@@ -3487,26 +3487,26 @@ function fillQuality() {
   [$("quality"), $("liveQuality"), $("viewQuality")].forEach((sel) => {
     const keep = sel.value || "r720";
     sel.innerHTML = "";
-    RES_ORDER.forEach((k) => {
+    RES_LIST.forEach((k) => {
       const o = document.createElement("option");
       o.value = k;
-      o.textContent = RESOLUTIONS[k].label;
+      o.textContent = RES[k].label;
       sel.appendChild(o);
     });
-    sel.value = RESOLUTIONS[keep] ? keep : "r720";
+    sel.value = RES[keep] ? keep : "r720";
   });
   [$("liveCamQuality"), $("viewCamQuality")].forEach((sel) => {
     const keep = sel.value || camKey;
     sel.innerHTML = "";
-    CAM_ORDER.forEach((k) => {
+    CAM_LIST.forEach((k) => {
       const o = document.createElement("option");
       o.value = k;
       o.textContent = t("q_" + k);
       sel.appendChild(o);
     });
-    sel.value = CAM_QUALITIES[keep] ? keep : camKey;
+    sel.value = CAM_QS[keep] ? keep : camKey;
   });
-  refreshQualityLimits();
+  refreshLocks();
 }
 
 function applyLang() {
@@ -3528,12 +3528,12 @@ function applyLang() {
     el.dataset.tip = txt;
     el.setAttribute("aria-label", txt);
   });
-  refreshBarButtons();
+  refreshBtns();
   $("settingsBtn").title = t("settings");
   $("settingsBtn").setAttribute("aria-label", t("settings"));
-  updateChatInput();
+  fixChatIn();
   fillQuality();
-  refreshWatchers();
+  refreshWatch();
   $("langPt").classList.toggle("active", lang === "pt");
   $("langEn").classList.toggle("active", lang === "en");
 }
@@ -3569,11 +3569,11 @@ function updateHostAudioIcon() {
 
 function show(section) {
   closeAudioPops();
-  closeWatchers();
+  closeWatch();
   home.hidden = section !== home;
   hostView.hidden = section !== hostView;
   viewerView.hidden = section !== viewerView;
-  updateNoticeView();
+  updView();
 }
 
 let lastBtn = null;
@@ -3601,21 +3601,21 @@ document.querySelectorAll("select").forEach((s) => {
   s.addEventListener("blur", () => { byPointer = false; });
 });
 
-function shakeEl(el) {
-  if (!el || !settings.animations) return;
+function wiggle(el) {
+  if (!el || !cfg.animations) return;
   el.classList.remove("shake");
   void el.offsetWidth;
   el.classList.add("shake");
   el.addEventListener("animationend", () => el.classList.remove("shake"), { once: true });
 }
 
-function shakeError(key) {
-  if (key === "nickRequired") return shakeEl($("nick"));
-  if (key === "codeLength") return shakeEl($("codeInput"));
-  if (lastBtn && Date.now() - lastBtnAt < 2000) shakeEl(lastBtn);
+function wiggleErr(key) {
+  if (key === "nickRequired") return wiggle($("nick"));
+  if (key === "codeLength") return wiggle($("codeInput"));
+  if (lastBtn && Date.now() - lastBtnAt < 2000) wiggle(lastBtn);
 }
 
-function setStatus(el, key, isError, vars) {
+function setSt(el, key, isError, vars) {
   if (key) {
     setT(el, key, vars);
   } else {
@@ -3624,22 +3624,22 @@ function setStatus(el, key, isError, vars) {
     el.textContent = "";
   }
   el.className = isError ? "status error" : "status";
-  if (isError && key) shakeError(key);
+  if (isError && key) wiggleErr(key);
   if (el.id !== "homeStatus" && el.id !== "viewStatus") return;
-  cancelFade(el);
+  stopFade(el);
   const x = $(el.id + "X");
   if (x) x.hidden = !(key && isError);
   if (key && !isError && key !== "nickToJoin" && key !== "hostUpload") {
-    el._ft = setTimeout(() => startFade(el), 2000);
+    el._ft = setTimeout(() => fadeOut(el), 2000);
   }
 }
 
-function cancelFade(el) {
+function stopFade(el) {
   clearTimeout(el._ft);
   clearInterval(el._fi);
 }
 
-function startFade(el) {
+function fadeOut(el) {
   const text = el.textContent;
   if (!text) return;
   delete el.dataset.i18n;
@@ -3665,25 +3665,25 @@ function startFade(el) {
   }, step);
 }
 
-function openPanel() {
+function openOpts() {
   closeChat();
-  closeSettings();
+  closeCfg();
   $("panel").classList.add("open");
   $("panel").setAttribute("aria-hidden", "false");
   $("backdrop").hidden = false;
 }
 
-function closePanel() {
+function closeOpts() {
   $("panel").classList.remove("open");
   $("panel").setAttribute("aria-hidden", "true");
   $("backdrop").hidden = true;
 }
 
-function isDetail(key) {
+function isSharp(key) {
   return key === "r1440" || key === "r2160";
 }
 
-async function captureScreen(q, withAudio) {
+async function grabScr(q, withAudio) {
   if (!canCapture) return null;
   try {
     return await navigator.mediaDevices.getDisplayMedia({
@@ -3701,7 +3701,7 @@ async function captureScreen(q, withAudio) {
   }
 }
 
-async function captureCamera(q) {
+async function grabCam(q) {
   if (!canCam) return null;
   try {
     return await navigator.mediaDevices.getUserMedia({
@@ -3717,9 +3717,9 @@ async function captureCamera(q) {
   }
 }
 
-let camPermDenied = false;
+let camBlocked = false;
 
-function setBar(btn, vis, state, tipKey, blockedKey) {
+function setBtn(btn, vis, state, tipKey, blockedKey) {
   btn.hidden = !vis;
   const blocked = !!blockedKey && state !== "live";
   btn.classList.toggle("st-blocked", blocked);
@@ -3731,135 +3731,135 @@ function setBar(btn, vis, state, tipKey, blockedKey) {
   btn.setAttribute("aria-label", txt);
 }
 
-function refreshBarButtons() {
+function refreshBtns() {
   const scrBlock = canCapture ? null : "tipBlockedShare";
-  const camBlock = canCam && !camPermDenied ? null : "tipBlockedCam";
-  setBar($("scrHostBtn"), hosting, stream ? "live" : "idle", stream ? "stopShare" : "pickSurface", scrBlock);
-  setBar($("camHostBarBtn"), hosting, camStream ? "live" : "idle", camStream ? "camOff" : "camOn", camBlock);
-  const inRoom = !hosting && viewMulti;
+  const camBlock = canCam && !camBlocked ? null : "tipBlockedCam";
+  setBtn($("scrHostBtn"), hosting, stream ? "live" : "idle", stream ? "stopShare" : "pickSurface", scrBlock);
+  setBtn($("camHostBarBtn"), hosting, camStream ? "live" : "idle", camStream ? "camOff" : "camOn", camBlock);
+  const inRoom = !hosting && inMulti;
   const sMap = { none: ["idle", "reqShare"], requested: ["wait", "reqSent"], allowed: ["allowed", "shareNow"], sharing: ["live", "stopShare"] };
   const cMap = { none: ["idle", "reqCam"], requested: ["wait", "camReqSent"], allowed: ["allowed", "camOn"], sharing: ["live", "camOff"] };
-  const s = sMap[shareState] || sMap.none;
+  const s = sMap[scrState] || sMap.none;
   const c = cMap[camState] || cMap.none;
-  setBar($("scrViewBtn"), inRoom, s[0], s[1], scrBlock);
-  setBar($("camViewBtn"), inRoom, c[0], c[1], camBlock);
+  setBtn($("scrViewBtn"), inRoom, s[0], s[1], scrBlock);
+  setBtn($("camViewBtn"), inRoom, c[0], c[1], camBlock);
 }
 
 if (navigator.permissions && navigator.permissions.query) {
   navigator.permissions.query({ name: "camera" }).then((p) => {
     const sync = () => {
-      camPermDenied = p.state === "denied";
-      refreshBarButtons();
+      camBlocked = p.state === "denied";
+      refreshBtns();
     };
     p.addEventListener("change", sync);
     sync();
   }).catch(() => {});
 }
 
-function setCamUI() {
+function camUI() {
   $("camHostBox").hidden = !hosting || !canCam;
-  refreshBarButtons();
+  refreshBtns();
 }
 
-function setSharingUI(on) {
+function shareUI(on) {
   $("shareBtn").hidden = !canCapture || !on;
   setT($("shareBtn"), "switchSurface");
   $("hostMute").disabled = !on || !stream || !stream.getAudioTracks().length;
   setT($("hostMute"), "muteAudio");
   updateHostAudioIcon();
-  setCamUI();
+  camUI();
 }
 
-function sendStream(id, v) {
+function sendScr(id, v) {
   if (v.call) v.call.close();
   v.call = peer.call(id, stream);
-  limitBitrate(v.call, quality.kbps);
+  capBitrate(v.call, quality.kbps);
 }
 
 function sendCam(id, v) {
   if (v.camCall) v.camCall.close();
   v.camCall = peer.call(id, camStream, { metadata: { cam: true } });
-  limitBitrate(v.camCall, camQuality.kbps);
+  capBitrate(v.camCall, camQ.kbps);
 }
 
-function applyStream(newStream) {
+function useScr(newStream) {
   const old = stream;
   stream = newStream;
   const track = newStream.getVideoTracks()[0];
-  track.contentHint = isDetail(qualityKey) ? "detail" : "";
+  track.contentHint = isSharp(qKey) ? "detail" : "";
   track.addEventListener("ended", () => {
-    if (stream === newStream) stopShare();
+    if (stream === newStream) stopScr();
   });
-  setSource("me", false, myNick, newStream, true);
+  putSrc("me", false, myNick, newStream, true);
   if (old) old.getTracks().forEach((tr) => tr.stop());
-  setSharingUI(true);
-  broadcastSharers();
-  viewers.forEach((v, id) => sendStream(id, v));
-  updateHostCount();
+  shareUI(true);
+  bcastShr();
+  viewers.forEach((v, id) => sendScr(id, v));
+  hostCount();
   $("audioNote").hidden = !($("audio").checked && !newStream.getAudioTracks().length);
 }
 
-function applyCam(newStream) {
+function useCam(newStream) {
   camStream = newStream;
   const track = newStream.getVideoTracks()[0];
   track.addEventListener("ended", () => {
-    if (camStream === newStream) stopHostCam();
+    if (camStream === newStream) hostCamOff();
   });
-  setSource("me", true, myNick, newStream, true);
-  setCamUI();
-  broadcastSharers();
+  putSrc("me", true, myNick, newStream, true);
+  camUI();
+  bcastShr();
   viewers.forEach((v, id) => sendCam(id, v));
-  updateHostCount();
+  hostCount();
 }
 
-async function startHostCam() {
+async function hostCamOn() {
   if (camStream || !hosting) return;
-  if (countSharers(true) >= MAX_CAMS) {
-    setStatus($("hostStatus"), "camLimit", true, { n: MAX_CAMS });
+  if (countShr(true) >= MAX_CAM) {
+    setSt($("hostStatus"), "camLimit", true, { n: MAX_CAM });
     return;
   }
-  const s = await captureCamera(camQuality);
+  const s = await grabCam(camQ);
   if (!s) {
-    setStatus($("hostStatus"), "camFailed", true);
+    setSt($("hostStatus"), "camFailed", true);
     return;
   }
   if (!hosting || camStream) {
     s.getTracks().forEach((tr) => tr.stop());
     return;
   }
-  applyCam(s);
+  useCam(s);
 }
 
-function stopHostCam() {
+function hostCamOff() {
   if (!camStream) return;
   camStream.getTracks().forEach((tr) => tr.stop());
   camStream = null;
-  removeSource("me", true);
+  delSrc("me", true);
   viewers.forEach((v) => {
     if (v.camCall) {
       v.camCall.close();
       v.camCall = null;
     }
   });
-  setCamUI();
-  broadcastSharers();
-  updateHostCount();
+  camUI();
+  bcastShr();
+  hostCount();
 }
 
-function ipSeen() {
-  if (ipSeenMem) return true;
+function seenIp() {
+  if (ipMem) return true;
   try { return localStorage.getItem("ipSeen") === "1"; } catch (e) { return false; }
 }
 
-function markIpSeen() {
-  ipSeenMem = true;
+function markIp() {
+  ipMem = true;
   try { localStorage.setItem("ipSeen", "1"); } catch (e) {}
 }
 
-function showInfo(titleKey, bodyKey, gate) {
+function openInfo(titleKey, bodyKey, gate) {
   return new Promise((res) => {
-    if (infoResolve) infoResolve(false);
-    infoResolve = res;
+    if (infoRes) infoRes(false);
+    infoRes = res;
     setT($("infoTitle"), titleKey);
     const box = $("infoBody");
     box.innerHTML = "";
@@ -3879,23 +3879,23 @@ function showInfo(titleKey, bodyKey, gate) {
 function closeInfo(val) {
   $("infoDialog").hidden = true;
   $("infoBackdrop").hidden = true;
-  const r = infoResolve;
-  infoResolve = null;
+  const r = infoRes;
+  infoRes = null;
   if (r) r(val);
 }
 
-function ensureIpNotice() {
-  if (ipSeen()) return Promise.resolve(true);
-  return showInfo("ipTitle", "ipBody", true).then((ok) => {
-    if (ok) markIpSeen();
+function needIp() {
+  if (seenIp()) return Promise.resolve(true);
+  return openInfo("ipTitle", "ipBody", true).then((ok) => {
+    if (ok) markIp();
     return ok;
   });
 }
 
-function askVisibility() {
+function askVis() {
   return new Promise((res) => {
-    if (visResolve) visResolve(null);
-    visResolve = res;
+    if (visRes) visRes(null);
+    visRes = res;
     document.querySelector('input[name="vis"][value="public"]').checked = true;
     $("visBackdrop").hidden = false;
     $("visDialog").hidden = false;
@@ -3906,83 +3906,83 @@ function askVisibility() {
 function closeVis(val) {
   $("visDialog").hidden = true;
   $("visBackdrop").hidden = true;
-  const r = visResolve;
-  visResolve = null;
+  const r = visRes;
+  visRes = null;
   if (r) r(val);
 }
 
-async function startHost(share, withCam) {
+async function hostStart(share, withCam) {
   if (!requireNick()) return;
-  if (!(await ensureIpNotice())) return;
-  askNotifyPermission();
-  qualityKey = $("quality").value;
-  fpsValue = readFps($("fps"));
-  quality = makeQuality(qualityKey, fpsValue);
-  chosenQuality = qualityKey;
-  chosenFps = fpsValue;
-  lastAutoAt = 0;
-  lastLimitedAt = 0;
-  autoNoteState = null;
-  const vis = await askVisibility();
+  if (!(await needIp())) return;
+  askNotif();
+  qKey = $("quality").value;
+  fpsValue = getFps($("fps"));
+  quality = mkQ(qKey, fpsValue);
+  pickQ = qKey;
+  pickFps = fpsValue;
+  lastAuto = 0;
+  lastLim = 0;
+  autoMsgSt = null;
+  const vis = await askVis();
   if (!vis) return;
   let s = null;
   if (share) {
-    s = await captureScreen(quality, $("audio").checked);
+    s = await grabScr(quality, $("audio").checked);
     if (!s) {
-      setStatus($("homeStatus"), "shareFailed", true);
+      setSt($("homeStatus"), "shareFailed", true);
       return;
     }
   }
   let cs = null;
   if (withCam) {
-    cs = await captureCamera(camQuality);
+    cs = await grabCam(camQ);
     if (!cs) {
-      setStatus($("homeStatus"), "camFailed", true);
+      setSt($("homeStatus"), "camFailed", true);
       return;
     }
   }
-  stopPendingResume(true);
+  stopRes(true);
   if (hosting) closeRoom();
-  roomPrivate = vis === "private";
-  roomMulti = !share;
-  gifsEnabled = true;
+  isPriv = vis === "private";
+  isMulti = !share;
+  gifsOn = true;
   $("gifsToggle").checked = true;
-  setT($("roomType"), roomPrivate ? "roomPrivateBadge" : "roomPublicBadge");
+  setT($("roomType"), isPriv ? "roomPrivateBadge" : "roomPublicBadge");
   setT($("hostSelfName"), "hostLabel", { name: myNick });
   hosting = true;
-  activeGrid = $("hostGrid");
+  gridEl = $("hostGrid");
   show(hostView);
   $("people").hidden = false;
-  $("liveQuality").value = qualityKey;
-  $("viewQuality").value = qualityKey;
+  $("liveQuality").value = qKey;
+  $("viewQuality").value = qKey;
   $("liveFps").value = fpsValue;
   $("viewFps").value = fpsValue;
   $("liveCamQuality").value = camKey;
   $("hostWarn").hidden = true;
-  setSharingUI(false);
-  refreshOverlays();
-  startMonitor();
-  startPeerHost(0);
-  if (s) applyStream(s);
-  if (cs) applyCam(cs);
+  shareUI(false);
+  refreshOv();
+  monStart();
+  peerHost(0);
+  if (s) useScr(s);
+  if (cs) useCam(cs);
 }
 
-async function reshare() {
-  if (!stream && countSharers(false) >= MAX_SHARERS) {
-    setStatus($("hostStatus"), "shareLimit", true, { n: MAX_SHARERS });
+async function swapScr() {
+  if (!stream && countShr(false) >= MAX_SHR) {
+    setSt($("hostStatus"), "shareLimit", true, { n: MAX_SHR });
     return;
   }
-  const s = await captureScreen(quality, $("audio").checked);
-  if (s) applyStream(s);
+  const s = await grabScr(quality, $("audio").checked);
+  if (s) useScr(s);
 }
 
-function stopShare() {
+function stopScr() {
   if (!stream) return;
   leavePip();
   stream.getTracks().forEach((tr) => tr.stop());
   stream = null;
   $("audioNote").hidden = true;
-  removeSource("me", false);
+  delSrc("me", false);
   viewers.forEach((v) => {
     if (v.call) {
       v.call.close();
@@ -3990,12 +3990,12 @@ function stopShare() {
     }
   });
   $("hostWarn").hidden = true;
-  setSharingUI(false);
-  broadcastSharers();
-  updateHostCount();
+  shareUI(false);
+  bcastShr();
+  hostCount();
 }
 
-function broadcastAway() {
+function bcastAway() {
   const ms = away ? Math.max(0, away.deadline - Date.now()) : null;
   viewers.forEach((v) => {
     if (v.conn.open) v.conn.send({ away: ms });
@@ -4007,11 +4007,11 @@ function tickAway() {
   const left = away.deadline - Date.now();
   if (left <= 0) {
     closeRoom();
-    setStatus($("homeStatus"), "roomExpired");
+    setSt($("homeStatus"), "roomExpired");
     return;
   }
   $("awayHome").hidden = false;
-  setT($("awayHomeText"), "awayHome", { code: currentCode, time: fmtTime(left) });
+  setT($("awayHomeText"), "awayHome", { code: roomCode, time: fmtTime(left) });
 }
 
 function stopAway() {
@@ -4022,25 +4022,25 @@ function stopAway() {
 
 function goAway() {
   if (!hosting || away) return;
-  closePanel();
+  closeOpts();
   closeChat();
-  away = { deadline: Date.now() + AWAY_MS, tick: null };
+  away = { deadline: Date.now() + AFK_MS, tick: null };
   show(home);
-  setStatus($("homeStatus"), "");
-  broadcastAway();
+  setSt($("homeStatus"), "");
+  bcastAway();
   away.tick = setInterval(tickAway, 1000);
   tickAway();
 }
 
 function backToRoom() {
-  if (pendingResume) {
+  if (pendRes) {
     resumeNow();
     return;
   }
   if (!away) return;
   stopAway();
   show(hostView);
-  broadcastAway();
+  bcastAway();
 }
 
 function closeRoom() {
@@ -4049,9 +4049,9 @@ function closeRoom() {
   stopAway();
   bans.clear();
   mutedVids.clear();
-  chatLog.length = 0;
-  chatSeq = 0;
-  roomNicks.clear();
+  chatBuf.length = 0;
+  msgSeq = 0;
+  nickHist.clear();
   grants.clear();
   camGrants.clear();
   approvals.forEach((a) => {
@@ -4061,17 +4061,17 @@ function closeRoom() {
   });
   approvals.clear();
   clearQueue();
-  graceUntil = 0;
+  grace = 0;
   allowed.clear();
-  roomPrivate = false;
-  roomMulti = false;
-  gifsEnabled = true;
+  isPriv = false;
+  isMulti = false;
+  gifsOn = true;
   succSig = "";
-  clearHostSession();
+  clearHS();
   $("hostNote").hidden = true;
   $("joinRequests").innerHTML = "";
   clearChat();
-  stopMonitor();
+  monStop();
   $("audioNote").hidden = true;
   $("hostWarn").hidden = true;
   $("shareRequests").innerHTML = "";
@@ -4096,49 +4096,49 @@ function closeRoom() {
     v.conn.close();
   });
   viewers.clear();
-  inCalls.forEach((c) => c.close());
-  inCalls.clear();
-  stashed.forEach((c) => c.close());
-  stashed.clear();
-  sharerIds = new Set();
-  sharerNames = new Map();
+  inC.forEach((c) => c.close());
+  inC.clear();
+  held.forEach((c) => c.close());
+  held.clear();
+  shrIds = new Set();
+  shrNames = new Map();
   if (peer) {
     peer.destroy();
     peer = null;
   }
   hosting = false;
-  clearTiles();
-  activeGrid = null;
+  wipeTiles();
+  gridEl = null;
   if (document.fullscreenElement) document.exitFullscreen();
   if (myNick) $("nick").value = myNick;
   show(home);
-  setStatus($("homeStatus"), "roomEndedHome");
+  setSt($("homeStatus"), "roomEndedHome");
 }
 
-function makeCode() {
+function rndCode() {
   let c = "";
   const buf = new Uint32Array(6);
   crypto.getRandomValues(buf);
-  for (let i = 0; i < 6; i++) c += ALPHABET[buf[i] % ALPHABET.length];
+  for (let i = 0; i < 6; i++) c += CHARS[buf[i] % CHARS.length];
   return c;
 }
 
-function fsTarget(stage) {
+function fsEl(stage) {
   const big = stage.querySelector(".tile.big");
   return big || stage;
 }
 
-function toggleFullscreen(el) {
+function toggleFs(el) {
   if (document.fullscreenElement) {
     document.exitFullscreen();
   } else if (el.requestFullscreen) {
     el.requestFullscreen().catch(() => {});
   } else {
-    setStatus($("viewStatus"), "noFullscreen", true);
+    setSt($("viewStatus"), "noFullscreen", true);
   }
 }
 
-function limitBitrate(call, kbps) {
+function capBitrate(call, kbps) {
   let tries = 0;
   const timer = setInterval(() => {
     const pc = call.peerConnection;
@@ -4157,21 +4157,21 @@ function limitBitrate(call, kbps) {
   }, 250);
 }
 
-function setQuality(key, fps, auto) {
-  qualityKey = key;
+function setQ(key, fps, auto) {
+  qKey = key;
   fpsValue = fps;
   if (!auto) {
-    chosenQuality = key;
-    chosenFps = fps;
+    pickQ = key;
+    pickFps = fps;
   }
-  quality = makeQuality(key, fps);
+  quality = mkQ(key, fps);
   $("liveQuality").value = key;
   $("viewQuality").value = key;
   $("liveFps").value = fps;
   $("viewFps").value = fps;
   const track = stream && stream.getVideoTracks()[0];
   if (track) {
-    track.contentHint = isDetail(key) ? "detail" : "";
+    track.contentHint = isSharp(key) ? "detail" : "";
     track.applyConstraints({
       width: { max: quality.width },
       height: { max: quality.height },
@@ -4179,47 +4179,47 @@ function setQuality(key, fps, auto) {
     }).catch(() => {});
   }
   viewers.forEach((v) => {
-    if (v.call) limitBitrate(v.call, quality.kbps);
+    if (v.call) capBitrate(v.call, quality.kbps);
   });
-  outCalls.forEach((c, k) => {
-    if (!isCamSid(k)) limitBitrate(c, quality.kbps);
+  outC.forEach((c, k) => {
+    if (!isCam(k)) capBitrate(c, quality.kbps);
   });
   if (hosting) {
-    updateHostCount();
-    if (!auto) checkLoad();
+    hostCount();
+    if (!auto) chkLoad();
   } else {
-    updateViewerUpload();
+    viewUp();
   }
 }
 
-function setCamQuality(key) {
+function setCamQ(key) {
   camKey = key;
-  camQuality = CAM_QUALITIES[key];
+  camQ = CAM_QS[key];
   $("liveCamQuality").value = key;
   $("viewCamQuality").value = key;
   const track = camStream && camStream.getVideoTracks()[0];
   if (track) {
     track.applyConstraints({
-      width: { ideal: camQuality.width },
-      height: { ideal: camQuality.height },
-      frameRate: { ideal: camQuality.fps }
+      width: { ideal: camQ.width },
+      height: { ideal: camQ.height },
+      frameRate: { ideal: camQ.fps }
     }).catch(() => {});
   }
   viewers.forEach((v) => {
-    if (v.camCall) limitBitrate(v.camCall, camQuality.kbps);
+    if (v.camCall) capBitrate(v.camCall, camQ.kbps);
   });
-  outCalls.forEach((c, k) => {
-    if (isCamSid(k)) limitBitrate(c, camQuality.kbps);
+  outC.forEach((c, k) => {
+    if (isCam(k)) capBitrate(c, camQ.kbps);
   });
   if (hosting) {
-    updateHostCount();
+    hostCount();
   } else {
-    updateViewerUpload();
+    viewUp();
   }
 }
 
-async function checkLoad() {
-  const calls = hosting ? [...viewers.values()].flatMap((v) => [v.call, v.camCall]) : [...outCalls.values()];
+async function chkLoad() {
+  const calls = hosting ? [...viewers.values()].flatMap((v) => [v.call, v.camCall]) : [...outC.values()];
   const box = hosting ? $("hostWarn") : $("viewWarn");
   const text = hosting ? $("hostWarnText") : $("viewWarnText");
   if (!stream && !camStream) {
@@ -4249,43 +4249,43 @@ async function checkLoad() {
   if (!stream && !camStream) return;
   const now = Date.now();
   const limited = reason === "bandwidth" || reason === "cpu";
-  if (limited) lastLimitedAt = now;
-  const down = stream ? nextDown(qualityKey, fpsValue) : null;
-  if (settings.autoReduce && limited && now - lastAutoAt >= AUTO_DOWN_COOLDOWN) {
+  if (limited) lastLim = now;
+  const down = stream ? stepDown(qKey, fpsValue) : null;
+  if (cfg.autoReduce && limited && now - lastAuto >= DOWN_WAIT) {
     if (down) {
-      lastAutoAt = now;
-      setQuality(down.res, down.fps, true);
-      autoNote("autoLowered", qLabel(down.res, down.fps));
+      lastAuto = now;
+      setQ(down.res, down.fps, true);
+      autoMsg("autoLowered", qTxt(down.res, down.fps));
       return;
     }
-    const ci = CAM_ORDER.indexOf(camKey);
+    const ci = CAM_LIST.indexOf(camKey);
     if (!stream && camStream && ci > 0) {
-      lastAutoAt = now;
-      setCamQuality(CAM_ORDER[ci - 1], true);
-      autoNote("autoLowered", t("q_" + CAM_ORDER[ci - 1]));
+      lastAuto = now;
+      setCamQ(CAM_LIST[ci - 1], true);
+      autoMsg("autoLowered", t("q_" + CAM_LIST[ci - 1]));
       return;
     }
   }
-  const up = stream ? nextUp(qualityKey, fpsValue) : null;
+  const up = stream ? stepUp(qKey, fpsValue) : null;
   if (
-    settings.autoRecover &&
+    cfg.autoRecover &&
     stream &&
     !limited &&
     up &&
-    fitsCap(up.res, up.fps) &&
-    now - Math.max(lastLimitedAt, lastAutoAt) >= AUTO_UP_MS
+    fits(up.res, up.fps) &&
+    now - Math.max(lastLim, lastAuto) >= UP_WAIT
   ) {
-    lastAutoAt = now;
-    setQuality(up.res, up.fps, true);
-    autoNote("autoRaised", qLabel(up.res, up.fps));
+    lastAuto = now;
+    setQ(up.res, up.fps, true);
+    autoMsg("autoRaised", qTxt(up.res, up.fps));
     return;
   }
-  if (autoNoteState && now < autoNoteState.until) {
-    showAutoNote();
+  if (autoMsgSt && now < autoMsgSt.until) {
+    showAutoMsg();
     return;
   }
-  autoNoteState = null;
-  const estimate = uploadKbps() / 1000;
+  autoMsgSt = null;
+  const estimate = upKbps() / 1000;
   let key = "";
   let vars = null;
   if (reason === "bandwidth") {
@@ -4297,93 +4297,93 @@ async function checkLoad() {
     vars = { m: estimate.toFixed(0) };
   }
   if (key) setT(text, key, vars);
-  if ((key === "warnBandwidth" || key === "warnCpu") && key !== lastWarnKey) notify("warn", t("title"), t(key));
-  lastWarnKey = key;
-  if (hosting) $("lowerQ").hidden = !stream || !nextDown(qualityKey, fpsValue);
+  if ((key === "warnBandwidth" || key === "warnCpu") && key !== lastWarn) notify("warn", t("title"), t(key));
+  lastWarn = key;
+  if (hosting) $("lowerQ").hidden = !stream || !stepDown(qKey, fpsValue);
   box.hidden = !key || (!stream && !camStream);
 }
 
-function startMonitor() {
-  stopMonitor();
-  monitorTimer = setInterval(checkLoad, 3000);
+function monStart() {
+  monStop();
+  monTimer = setInterval(chkLoad, 3000);
 }
 
-function stopMonitor() {
-  clearInterval(monitorTimer);
-  monitorTimer = null;
+function monStop() {
+  clearInterval(monTimer);
+  monTimer = null;
 }
-function noteNick(vid, nick) {
+function logNick(vid, nick) {
   if (!vid || !nick) return;
-  const list = roomNicks.get(vid) || [];
+  const list = nickHist.get(vid) || [];
   const i = list.indexOf(nick);
   if (i >= 0) list.splice(i, 1);
   list.push(nick);
   while (list.length > 6) list.shift();
-  roomNicks.set(vid, list);
+  nickHist.set(vid, list);
 }
 
-function peopleList(forPeer) {
+function whoList(forPeer) {
   const out = [];
   const mine = getViewerId();
-  noteNick(mine, myNick);
+  logNick(mine, myNick);
   const entries = [{ vid: mine, nick: myNick, m: forPeer === undefined }];
   viewers.forEach((v, id) => {
     if (v.vid) {
-      noteNick(v.vid, v.nick);
+      logNick(v.vid, v.nick);
       entries.push({ vid: v.vid, nick: v.nick, m: id === forPeer });
     }
   });
   const nowNicks = new Set(entries.map((e) => e.nick));
   entries.forEach((e) => {
-    const list = roomNicks.get(e.vid) || [e.nick];
+    const list = nickHist.get(e.vid) || [e.nick];
     out.push({ g: e.vid.slice(0, 8), n: e.nick, m: e.m ? 1 : 0, p: list.filter((x) => !nowNicks.has(x)).slice(-5) });
   });
   return out;
 }
 
-function updateHostCount() {
+function hostCount() {
   const n = viewers.size;
   setT($("count"), "viewersMany", { n: n });
   if (!stream && !camStream) {
-    setStatus($("hostStatus"), "hostPausedStatus");
+    setSt($("hostStatus"), "hostPausedStatus");
   } else if (n) {
-    setStatus($("hostStatus"), "hostUpload", false, { m: (uploadKbps() / 1000).toFixed(1) });
+    setSt($("hostStatus"), "hostUpload", false, { m: (upKbps() / 1000).toFixed(1) });
   } else {
-    setStatus($("hostStatus"), "hostWaiting");
+    setSt($("hostStatus"), "hostWaiting");
   }
   $("uploadInfo").hidden = !((stream || camStream) && n);
-  rememberRoom(currentCode, peopleList().filter((x) => !x.m));
+  rememberRoom(roomCode, whoList().filter((x) => !x.m));
   viewers.forEach((v, id) => {
-    if (v.conn.open) v.conn.send({ count: n, people: peopleList(id) });
+    if (v.conn.open) v.conn.send({ count: n, people: whoList(id) });
   });
-  renderPeople();
-  renderRequests();
-  refreshWatchers();
-  syncSuccessor();
-  enforceCap();
-  saveHostSession(false);
+  drawPeople();
+  drawReqs();
+  refreshWatch();
+  syncSucc();
+  capNow();
+  saveHS(false);
 }
 
-function dropViewer(id) {
+function dropView(id) {
   const v = viewers.get(id);
   if (!v) return;
   viewers.delete(id);
   if (v.call) v.call.close();
   if (v.camCall) v.camCall.close();
   const was = v.sharing || v.camSharing;
-  if (was) dropSharerMedia(id);
+  if (was) dropShr(id);
   viewers.forEach((o) => {
     if ((o.sharing || o.camSharing) && o.conn.open) o.conn.send({ left: id });
   });
-  if (was) broadcastSharers();
-  updateHostCount();
+  if (was) bcastShr();
+  hostCount();
 }
 
-function nickInUse(n) {
-  return sameNick(n, myNick) || [...viewers.values()].some((o) => sameNick(o.nick, n));
+function nickUsed(n) {
+  return eqNick(n, myNick) || [...viewers.values()].some((o) => eqNick(o.nick, n));
 }
 
-function dropPending(id) {
+function dropPend(id) {
   const p = pending.get(id);
   if (!p) return;
   clearTimeout(p.timer);
@@ -4391,28 +4391,28 @@ function dropPending(id) {
 }
 
 function askNick(conn, ctx, tries) {
-  if (!pending.has(conn.peer) && pending.size >= ADMIT_QUEUE_MAX) return refuse(conn, { busy: true });
+  if (!pending.has(conn.peer) && pending.size >= ADM_Q) return bounce(conn, { busy: true });
   const prev = pending.get(conn.peer);
   if (prev) clearTimeout(prev.timer);
-  if (!ctx.deadline) ctx.deadline = Date.now() + NICK_WAIT_MS;
+  if (!ctx.deadline) ctx.deadline = Date.now() + NICK_MS;
   const left = ctx.deadline - Date.now();
-  if (tries >= NICK_MAX_TRIES || left <= 0) {
+  if (tries >= NICK_TRIES || left <= 0) {
     pending.delete(conn.peer);
-    return refuse(conn, { nickTaken: true });
+    return bounce(conn, { nickTaken: true });
   }
   const timer = setTimeout(() => {
     pending.delete(conn.peer);
-    refuse(conn, { nickTaken: true });
+    bounce(conn, { nickTaken: true });
   }, left);
   pending.set(conn.peer, { conn, ctx, tries, timer });
   conn.send({ askNick: true, retry: tries > 0 });
 }
 
-function strList(a) {
+function strArr(a) {
   return Array.isArray(a) ? a.filter((x) => typeof x === "string" && /^[A-Z0-9]{12}$/.test(x)).slice(0, 64) : [];
 }
 
-function banList(a) {
+function banArr(a) {
   if (!Array.isArray(a)) return [];
   return a
     .filter((b) => Array.isArray(b) && typeof b[0] === "string" && /^vid:[A-Z0-9]{12}$/.test(b[0]) && Number.isFinite(b[1]))
@@ -4420,30 +4420,30 @@ function banList(a) {
     .map((b) => [b[0], b[1]]);
 }
 
-function chatHist(a) {
+function histArr(a) {
   if (!Array.isArray(a)) return [];
   return a
     .filter((m) => m && typeof m.nick === "string" && typeof m.text === "string" && Number.isInteger(m.id))
     .slice(-50)
     .map((m) => {
-      const o = { id: m.id, nick: cleanNick(m.nick), text: m.text.slice(0, CHAT_MAX) };
+      const o = { id: m.id, nick: cleanNick(m.nick), text: m.text.slice(0, MSG_MAX) };
       const g = validGif(m.gif);
       if (g) o.gif = g;
       return o;
     });
 }
 
-function saveHostSession(closing) {
-  if (!hosting || !currentCode) return;
+function saveHS(closing) {
+  if (!hosting || !roomCode) return;
   try {
-    localStorage.setItem(HS_KEY, JSON.stringify({
-      code: currentCode,
-      gen: hostGen,
-      priv: roomPrivate,
-      multi: roomMulti,
-      gifs: gifsEnabled,
+    localStorage.setItem(HS, JSON.stringify({
+      code: roomCode,
+      gen: hGen,
+      priv: isPriv,
+      multi: isMulti,
+      gifs: gifsOn,
       nick: myNick,
-      q: qualityKey,
+      q: qKey,
       fps: fpsValue,
       allowed: [...allowed],
       grants: [...grants],
@@ -4454,27 +4454,27 @@ function saveHostSession(closing) {
   } catch (e) {}
 }
 
-function clearHostSession() {
-  try { localStorage.removeItem(HS_KEY); } catch (e) {}
+function clearHS() {
+  try { localStorage.removeItem(HS); } catch (e) {}
 }
 
-function syncSuccessor() {
-  if (leavingPage) return;
+function syncSucc() {
+  if (unloading) return;
   let first = null;
   viewers.forEach((v, id) => {
     if (!first && v.conn.open) first = id;
   });
   const st = {
-    priv: roomPrivate,
-    multi: roomMulti,
-    gifs: gifsEnabled,
+    priv: isPriv,
+    multi: isMulti,
+    gifs: gifsOn,
     allowed: [...allowed],
     grants: [...grants],
     camGrants: [...camGrants],
     bans: [...bans].filter((b) => b[1] > Date.now() && b[0].startsWith("vid:")),
     muted: [...mutedVids],
-    chat: chatLog.slice(),
-    nicks: [...roomNicks].map((e) => [e[0], e[1].slice(-6)])
+    chat: chatBuf.slice(),
+    nicks: [...nickHist].map((e) => [e[0], e[1].slice(-6)])
   };
   const sig = JSON.stringify([first, st]);
   if (sig === succSig) return;
@@ -4485,7 +4485,7 @@ function syncSuccessor() {
   if (first) viewers.get(first).conn.send({ succState: st });
 }
 
-function renderJoinRequests() {
+function drawJoin() {
   const box = $("joinRequests");
   box.innerHTML = "";
   approvals.forEach((a, id) => {
@@ -4496,10 +4496,10 @@ function renderJoinRequests() {
     const yes = document.createElement("button");
     yes.className = "primary";
     setT(yes, "allow");
-    yes.addEventListener("click", () => resolveEntry(id, true));
+    yes.addEventListener("click", () => decide(id, true));
     const no = document.createElement("button");
     setT(no, "deny");
-    no.addEventListener("click", () => resolveEntry(id, false));
+    no.addEventListener("click", () => decide(id, false));
     row.append(text, yes, no);
     box.appendChild(row);
   });
@@ -4510,49 +4510,49 @@ function dropApproval(id) {
   if (!a) return null;
   clearTimeout(a.timer);
   approvals.delete(id);
-  renderJoinRequests();
+  drawJoin();
   return a;
 }
 
-function resolveEntry(id, ok) {
+function decide(id, ok) {
   const a = dropApproval(id);
   if (!a || !a.conn.open) return;
-  if (!ok) return refuse(a.conn, { denied: true });
+  if (!ok) return bounce(a.conn, { denied: true });
   const ctx = { ...a.ctx, approved: true };
-  if (nickInUse(ctx.nick)) return askNick(a.conn, ctx, 0);
+  if (nickUsed(ctx.nick)) return askNick(a.conn, ctx, 0);
   admit(a.conn, ctx);
 }
 
-function requestEntry(conn, ctx) {
-  if (approvals.size >= 8) return refuse(conn, { denied: true });
-  const timer = setTimeout(() => resolveEntry(conn.peer, false), 90000);
+function askEntry(conn, ctx) {
+  if (approvals.size >= 8) return bounce(conn, { denied: true });
+  const timer = setTimeout(() => decide(conn.peer, false), 90000);
   approvals.set(conn.peer, { conn, ctx, timer });
   conn.send({ waiting: true });
-  renderJoinRequests();
+  drawJoin();
   notify("join-" + conn.peer, t("title"), t("joinRequestText", { name: ctx.nick }));
 }
 
 function dropQueued(id) {
-  const i = admitQueue.findIndex((q) => q.conn.peer === id);
+  const i = admitQ.findIndex((q) => q.conn.peer === id);
   if (i < 0) return;
-  admitQueue.splice(i, 1);
+  admitQ.splice(i, 1);
   notifyQueue();
 }
 
 function notifyQueue() {
-  admitQueue.forEach((q, i) => {
+  admitQ.forEach((q, i) => {
     if (q.conn.open) q.conn.send({ queued: i + 1 });
   });
 }
 
 function pumpQueue() {
-  if (admitTimer || !admitQueue.length) return;
-  const wait = Math.max(0, nextAdmitAt - Date.now());
-  admitTimer = setTimeout(() => {
-    admitTimer = null;
-    const q = admitQueue.shift();
+  if (admTimer || !admitQ.length) return;
+  const wait = Math.max(0, nextAdm - Date.now());
+  admTimer = setTimeout(() => {
+    admTimer = null;
+    const q = admitQ.shift();
     if (q && q.conn.open && hosting) {
-      nextAdmitAt = Date.now() + ADMIT_GAP_MS;
+      nextAdm = Date.now() + ADM_GAP;
       admitNow(q.conn, q.ctx);
     }
     notifyQueue();
@@ -4561,33 +4561,33 @@ function pumpQueue() {
 }
 
 function clearQueue() {
-  clearTimeout(admitTimer);
-  admitTimer = null;
-  nextAdmitAt = 0;
-  admitQueue.splice(0).forEach((q) => {
+  clearTimeout(admTimer);
+  admTimer = null;
+  nextAdm = 0;
+  admitQ.splice(0).forEach((q) => {
     if (q.conn.open) q.conn.send({ closed: true });
     q.conn.close();
   });
 }
 
 function admit(conn, ctx) {
-  if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+  if (viewers.size >= MAX_VIEW) return bounce(conn, { full: true });
   const known = !!(ctx.vid && allowed.has(ctx.vid));
-  if (roomPrivate && !ctx.approved && !known) return requestEntry(conn, ctx);
-  if (Date.now() < graceUntil) return admitNow(conn, ctx);
-  if (admitQueue.some((q) => q.conn.peer === conn.peer)) return;
-  if (!admitQueue.length && !admitTimer && Date.now() >= nextAdmitAt) {
-    nextAdmitAt = Date.now() + ADMIT_GAP_MS;
+  if (isPriv && !ctx.approved && !known) return askEntry(conn, ctx);
+  if (Date.now() < grace) return admitNow(conn, ctx);
+  if (admitQ.some((q) => q.conn.peer === conn.peer)) return;
+  if (!admitQ.length && !admTimer && Date.now() >= nextAdm) {
+    nextAdm = Date.now() + ADM_GAP;
     return admitNow(conn, ctx);
   }
-  if (admitQueue.length >= ADMIT_QUEUE_MAX) return refuse(conn, { busy: true });
-  admitQueue.push({ conn, ctx });
+  if (admitQ.length >= ADM_Q) return bounce(conn, { busy: true });
+  admitQ.push({ conn, ctx });
   notifyQueue();
   pumpQueue();
 }
 
 function admitNow(conn, ctx) {
-  if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+  if (viewers.size >= MAX_VIEW) return bounce(conn, { full: true });
   if (ctx.vid) allowed.add(ctx.vid);
   const v = {
     conn,
@@ -4599,10 +4599,10 @@ function admitNow(conn, ctx) {
     nick: ctx.nick,
     muted: !!(ctx.vid && mutedVids.has(ctx.vid)),
     lastMsg: 0,
-    canShare: roomMulti && !!(ctx.vid && grants.has(ctx.vid)),
+    canShare: isMulti && !!(ctx.vid && grants.has(ctx.vid)),
     wantsShare: false,
     sharing: false,
-    canCam: roomMulti && !!(ctx.vid && camGrants.has(ctx.vid)),
+    canCam: isMulti && !!(ctx.vid && camGrants.has(ctx.vid)),
     wantsCam: false,
     camSharing: false
   };
@@ -4610,58 +4610,58 @@ function admitNow(conn, ctx) {
   conn.send({
     hostNick: myNick,
     yourNick: ctx.nick,
-    sharers: sharerList(),
+    sharers: shrList(),
     canShare: v.canShare,
     canCam: v.canCam,
-    multi: roomMulti,
-    gifs: gifsEnabled,
+    multi: isMulti,
+    gifs: gifsOn,
     away: away ? Math.max(0, away.deadline - Date.now()) : null
   });
   if (v.muted) conn.send({ muted: true });
-  if (chatLog.length) conn.send({ history: chatLog });
-  if (stream) sendStream(conn.peer, v);
+  if (chatBuf.length) conn.send({ history: chatBuf });
+  if (stream) sendScr(conn.peer, v);
   if (camStream) sendCam(conn.peer, v);
   viewers.forEach((o, oid) => {
     if (oid === conn.peer || !o.conn.open) return;
     if (o.sharing) o.conn.send({ callNew: conn.peer });
     if (o.camSharing) o.conn.send({ camCallNew: conn.peer });
   });
-  updateHostCount();
+  hostCount();
 }
 
-function startPeerHost(attempt, fixed, gen) {
-  currentCode = fixed || makeCode();
-  hostGen = gen || 0;
-  hostPeerId = peerIdFor(currentCode, hostGen);
-  peer = new Peer(hostPeerId);
+function peerHost(attempt, fixed, gen) {
+  roomCode = fixed || rndCode();
+  hGen = gen || 0;
+  hostPid = pid(roomCode, hGen);
+  peer = new Peer(hostPid);
   const me = peer;
 
   peer.on("open", () => {
-    $("hostCode").textContent = currentCode;
-    updateHostCount();
+    $("hostCode").textContent = roomCode;
+    hostCount();
   });
 
-peer.on("call", handleIncomingCall);
+peer.on("call", onCall);
 
 peer.on("connection", (conn) => {
   conn.on("open", async () => {
-    const ip = await remoteIp(conn);
+    const ip = await getIp(conn);
     if (!conn.open) return;
     const meta = conn.metadata || {};
     const vid = typeof meta.vid === "string" && /^[A-Z0-9]{12}$/.test(meta.vid) ? meta.vid : null;
     const tab = typeof meta.tab === "string" && /^[A-Z0-9]{12}$/.test(meta.tab) ? meta.tab : null;
     const nick = cleanNick(meta.nick);
-    const ban = Math.max(vid ? banActive("vid:" + vid) : 0, ip ? banActive("ip:" + ip) : 0);
+    const ban = Math.max(vid ? banLeft("vid:" + vid) : 0, ip ? banLeft("ip:" + ip) : 0);
     if (ban) {
-      return refuse(conn, { kicked: true, wait: Math.ceil((ban - Date.now()) / 1000) });
+      return bounce(conn, { kicked: true, wait: Math.ceil((ban - Date.now()) / 1000) });
     }
     for (const [oid, other] of [...viewers]) {
       if (vid && other.vid === vid) {
         if (tab && other.tab === tab) {
-          dropViewer(oid);
+          dropView(oid);
           other.conn.close();
         } else if (other.conn.open) {
-          return refuse(conn, { duplicate: true });
+          return bounce(conn, { duplicate: true });
         }
       }
     }
@@ -4671,9 +4671,9 @@ peer.on("connection", (conn) => {
         a.conn.close();
       }
     }
-    if (viewers.size >= MAX_VIEWERS) return refuse(conn, { full: true });
+    if (viewers.size >= MAX_VIEW) return bounce(conn, { full: true });
     const ctx = { vid, tab, ip, nick, deadline: 0 };
-    if (!nick || nickInUse(nick)) return askNick(conn, ctx, 0);
+    if (!nick || nickUsed(nick)) return askNick(conn, ctx, 0);
     admit(conn, ctx);
   });
   conn.on("data", (d) => {
@@ -4681,7 +4681,7 @@ peer.on("connection", (conn) => {
     if (p) {
       if (!d || typeof d !== "object" || typeof d.nick !== "string") return;
       const n = cleanNick(d.nick);
-      if (!n || nickInUse(n)) return askNick(conn, p.ctx, p.tries + 1);
+      if (!n || nickUsed(n)) return askNick(conn, p.ctx, p.tries + 1);
       clearTimeout(p.timer);
       pending.delete(conn.peer);
       return admit(conn, { ...p.ctx, nick: n });
@@ -4697,7 +4697,7 @@ peer.on("connection", (conn) => {
     if (typeof d.gif === "string") {
       const g = validGif(d.gif);
       const t0 = Date.now();
-      if (!g || !gifsEnabled || v.muted || t0 - v.lastMsg < 700) return;
+      if (!g || !gifsOn || v.muted || t0 - v.lastMsg < 700) return;
       v.lastMsg = t0;
       broadcastChat(v.nick, "", g);
       return;
@@ -4706,20 +4706,20 @@ peer.on("connection", (conn) => {
     const now = Date.now();
     if (now - v.lastMsg < 700) return;
     v.lastMsg = now;
-    const text = d.msg.trim().slice(0, CHAT_MAX);
+    const text = d.msg.trim().slice(0, MSG_MAX);
     if (text) broadcastChat(v.nick, text);
   });
   conn.on("close", () => {
-    dropPending(conn.peer);
+    dropPend(conn.peer);
     dropApproval(conn.peer);
     dropQueued(conn.peer);
-    dropViewer(conn.peer);
+    dropView(conn.peer);
   });
   conn.on("error", () => {
-    dropPending(conn.peer);
+    dropPend(conn.peer);
     dropApproval(conn.peer);
     dropQueued(conn.peer);
-    dropViewer(conn.peer);
+    dropView(conn.peer);
   });
 });
 
@@ -4730,10 +4730,10 @@ peer.on("disconnected", () => {
   peer.on("error", (err) => {
     if (peer !== me) return;
     if (err.type === "unavailable-id" && fixed) {
-      if (attempt < (takeoverMode ? 2 : 8)) {
+      if (attempt < (tkMode ? 2 : 8)) {
         me.destroy();
         setTimeout(() => {
-          if (hosting && peer === me) startPeerHost(attempt + 1, fixed, gen);
+          if (hosting && peer === me) peerHost(attempt + 1, fixed, gen);
         }, 1500);
       } else {
         closeRoom();
@@ -4742,20 +4742,20 @@ peer.on("disconnected", () => {
       }
     } else if (err.type === "unavailable-id" && attempt < 5) {
       peer.destroy();
-      startPeerHost(attempt + 1);
+      peerHost(attempt + 1);
     } else if (err.type !== "peer-unavailable") {
-      setStatus($("hostStatus"), "connError", true, { e: err.type });
+      setSt($("hostStatus"), "connError", true, { e: err.type });
     }
   });
 }
 
-function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra, camGrantList) {
-  graceUntil = Date.now() + GRACE_MS;
-  roomPrivate = priv;
-  if (extra) roomMulti = extra.multi === true;
-  if (extra) gifsEnabled = extra.gifs !== false;
-  $("gifsToggle").checked = gifsEnabled;
-  takeoverMode = noteKey === "nowHost";
+function takeHost(code, priv, allowedList, grantList, noteKey, gen, extra, camGrantList) {
+  grace = Date.now() + GRACE;
+  isPriv = priv;
+  if (extra) isMulti = extra.multi === true;
+  if (extra) gifsOn = extra.gifs !== false;
+  $("gifsToggle").checked = gifsOn;
+  tkMode = noteKey === "nowHost";
   allowed.clear();
   allowedList.forEach((x) => allowed.add(x));
   grants.clear();
@@ -4764,123 +4764,123 @@ function enterHost(code, priv, allowedList, grantList, noteKey, gen, extra, camG
   (camGrantList || []).forEach((x) => camGrants.add(x));
   bans.clear();
   mutedVids.clear();
-  chatLog.length = 0;
-  chatSeq = 0;
-  roomNicks.clear();
+  chatBuf.length = 0;
+  msgSeq = 0;
+  nickHist.clear();
   if (extra) {
     if (Array.isArray(extra.nicks)) {
       extra.nicks.slice(0, 64).forEach((e) => {
         if (Array.isArray(e) && typeof e[0] === "string" && /^[A-Z0-9]{12}$/.test(e[0]) && Array.isArray(e[1])) {
-          e[1].slice(-6).forEach((x) => noteNick(e[0], cleanNick(x)));
+          e[1].slice(-6).forEach((x) => logNick(e[0], cleanNick(x)));
         }
       });
     }
     extra.bans.forEach((b) => bans.set(b[0], b[1]));
     extra.muted.forEach((x) => mutedVids.add(x));
     extra.chat.forEach((m) => {
-      chatLog.push(m);
-      if (m.id > chatSeq) chatSeq = m.id;
+      chatBuf.push(m);
+      if (m.id > msgSeq) msgSeq = m.id;
     });
   }
   setT($("roomType"), priv ? "roomPrivateBadge" : "roomPublicBadge");
   setT($("hostSelfName"), "hostLabel", { name: myNick });
   hosting = true;
-  activeGrid = $("hostGrid");
-  clearTiles();
+  gridEl = $("hostGrid");
+  wipeTiles();
   show(hostView);
   if (extra) {
     extra.chat.forEach((m) => addChat(m, true));
-    chatUnread = 0;
+    unreadN = 0;
     updateUnread();
   }
   $("people").hidden = false;
-  $("liveQuality").value = qualityKey;
-  $("viewQuality").value = qualityKey;
+  $("liveQuality").value = qKey;
+  $("viewQuality").value = qKey;
   $("liveFps").value = fpsValue;
   $("viewFps").value = fpsValue;
   $("liveCamQuality").value = camKey;
   $("hostWarn").hidden = true;
-  setSharingUI(false);
-  refreshOverlays();
-  startMonitor();
+  shareUI(false);
+  refreshOv();
+  monStart();
   succSig = "";
   setT($("hostNote"), noteKey);
   $("hostNote").hidden = false;
-  startPeerHost(0, code, gen);
+  peerHost(0, code, gen);
 }
 
-function stopPendingResume(clear) {
-  if (!pendingResume) return;
-  clearInterval(pendingResume.tick);
-  pendingResume = null;
+function stopRes(clear) {
+  if (!pendRes) return;
+  clearInterval(pendRes.tick);
+  pendRes = null;
   $("awayHome").hidden = true;
-  if (clear) clearHostSession();
+  if (clear) clearHS();
 }
 
 function tickResume() {
-  if (!pendingResume) return;
-  const left = pendingResume.deadline - Date.now();
+  if (!pendRes) return;
+  const left = pendRes.deadline - Date.now();
   if (left <= 0) {
-    stopPendingResume(true);
+    stopRes(true);
     return;
   }
   $("awayHome").hidden = false;
-  setT($("awayHomeText"), "resumeHome", { code: pendingResume.sess.code, time: fmtTime(left) });
+  setT($("awayHomeText"), "resumeHome", { code: pendRes.sess.code, time: fmtTime(left) });
 }
 
 function resumeNow() {
-  const r = pendingResume;
+  const r = pendRes;
   if (!r) return;
-  stopPendingResume(false);
+  stopRes(false);
   const sess = r.sess;
   myNick = cleanNick(sess.nick);
   $("nick").value = myNick;
-  if (RESOLUTIONS[sess.q]) {
-    const f = Math.min(MAX_FPS, Math.max(MIN_FPS, Math.round(Number(sess.fps)) || 30));
-    qualityKey = sess.q;
+  if (RES[sess.q]) {
+    const f = Math.min(FPS_MAX, Math.max(FPS_MIN, Math.round(Number(sess.fps)) || 30));
+    qKey = sess.q;
     fpsValue = f;
-    quality = makeQuality(sess.q, f);
-    chosenQuality = sess.q;
-    chosenFps = f;
+    quality = mkQ(sess.q, f);
+    pickQ = sess.q;
+    pickFps = f;
   }
   const g = Number(sess.gen);
-  roomMulti = sess.multi === true;
-  gifsEnabled = sess.gifs !== false;
-  enterHost(sess.code, sess.priv === true, strList(sess.allowed), strList(sess.grants), "resumedHost", g >= 0 && g < ROOM_GENS ? g : 0, null, strList(sess.camGrants));
+  isMulti = sess.multi === true;
+  gifsOn = sess.gifs !== false;
+  takeHost(sess.code, sess.priv === true, strArr(sess.allowed), strArr(sess.grants), "resumedHost", g >= 0 && g < GENS ? g : 0, null, strArr(sess.camGrants));
 }
 
-function tryResumeHost(urlCode) {
+function tryRes(urlCode) {
   let sess = null;
-  try { sess = JSON.parse(localStorage.getItem(HS_KEY) || "null"); } catch (e) {}
+  try { sess = JSON.parse(localStorage.getItem(HS) || "null"); } catch (e) {}
   if (!sess || typeof sess !== "object") return false;
   const age = Date.now() - Number(sess.t);
   const okCode = typeof sess.code === "string" && /^[A-Z0-9]{6}$/.test(sess.code);
   const nick = cleanNick(sess.nick);
-  if (!okCode || !nick || !(age <= RESUME_MS)) {
-    clearHostSession();
+  if (!okCode || !nick || !(age <= RES_MS)) {
+    clearHS();
     return false;
   }
   if (!(sess.closing === true || age > 6000)) return false;
   if (urlCode && urlCode !== sess.code) return false;
-  pendingResume = { sess, deadline: Number(sess.t) + RESUME_MS, tick: setInterval(tickResume, 1000) };
+  pendRes = { sess, deadline: Number(sess.t) + RES_MS, tick: setInterval(tickResume, 1000) };
   tickResume();
   return true;
 }
 
 function becomeHost() {
   const st = succState;
-  const code = activeCode;
+  const code = joinCode;
   if (!st || !code) return;
-  intentionalEnd = true;
-  retryPending = false;
-  clearTimeout(retryTimer);
-  clearTimeout(viewerTimeout);
-  takeoverTimer = null;
-  iAmSucc = false;
+  manualEnd = true;
+  rtWait = false;
+  clearTimeout(rtTimer);
+  clearTimeout(vTimer);
+  tkTimer = null;
+  amSucc = false;
   succState = null;
-  stopAwayView();
+  awayOff();
   dropMedia();
-  viewerConn = null;
+  vConn = null;
   if (peer) {
     const old = peer;
     peer = null;
@@ -4889,20 +4889,20 @@ function becomeHost() {
   clearChat();
   closeViewPanel();
   $("hostName").hidden = true;
-  setStatus($("viewStatus"), "");
-  enterHost(code, st.priv, st.allowed, st.grants, "nowHost", (roomGen + 1) % ROOM_GENS, st, st.camGrants);
+  setSt($("viewStatus"), "");
+  takeHost(code, st.priv, st.allowed, st.grants, "nowHost", (rGen + 1) % GENS, st, st.camGrants);
 }
 
 function maybeStartTakeover() {
-  if (!iAmSucc || !succState || takeoverTimer || intentionalEnd || blockedTab) return;
-  takeoverTimer = setTimeout(() => {
-    takeoverTimer = null;
-    if (intentionalEnd || blockedTab || !iAmSucc || !succState) return;
+  if (!amSucc || !succState || tkTimer || manualEnd || dupTab) return;
+  tkTimer = setTimeout(() => {
+    tkTimer = null;
+    if (manualEnd || dupTab || !amSucc || !succState) return;
     becomeHost();
-  }, TAKEOVER_MS);
+  }, TK_MS);
 }
 
-function fallbackCopy(text, done) {
+function copyFb(text, done) {
   const ta = document.createElement("textarea");
   ta.value = text;
   ta.style.position = "fixed";
@@ -4915,34 +4915,34 @@ function fallbackCopy(text, done) {
   if (ok) done();
 }
 
-function copyText(text, el) {
+function copyTxt(text, el) {
   const done = () => {
     el.textContent = t("copied");
     setTimeout(() => { el.textContent = t(el.dataset.i18n); }, 1500);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    navigator.clipboard.writeText(text).then(done).catch(() => copyFb(text, done));
   } else {
-    fallbackCopy(text, done);
+    copyFb(text, done);
   }
 }
 
-function startAwayView(ms) {
-  stopAwayView();
+function awayOn(ms) {
+  awayOff();
   if (typeof ms !== "number" || !isFinite(ms)) return;
-  awayView = { deadline: Date.now() + ms, tick: setInterval(renderAwayView, 1000) };
+  awayV = { deadline: Date.now() + ms, tick: setInterval(renderAwayView, 1000) };
   renderAwayView();
 }
 
 function renderAwayView() {
-  if (!awayView) return;
+  if (!awayV) return;
   $("awayBanner").hidden = false;
-  setT($("awayText"), "awayViewer", { time: fmtTime(awayView.deadline - Date.now()) });
+  setT($("awayText"), "awayViewer", { time: fmtTime(awayV.deadline - Date.now()) });
 }
 
 function renderLostView() {
-  if (!lostView) return;
-  const left = lostView.deadline - Date.now();
+  if (!lostV) return;
+  const left = lostV.deadline - Date.now();
   $("awayBanner").hidden = false;
   if (left > 0) {
     setT($("awayText"), "hostLost", { time: fmtTime(left) });
@@ -4952,50 +4952,50 @@ function renderLostView() {
 }
 
 function startLostView() {
-  if (lostView || awayView) return;
-  lostView = { deadline: Date.now() + TAKEOVER_MS, tick: setInterval(renderLostView, 1000) };
+  if (lostV || awayV) return;
+  lostV = { deadline: Date.now() + TK_MS, tick: setInterval(renderLostView, 1000) };
   renderLostView();
 }
 
-function stopAwayView() {
-  if (lostView) clearInterval(lostView.tick);
-  lostView = null;
-  if (awayView) clearInterval(awayView.tick);
-  awayView = null;
+function awayOff() {
+  if (lostV) clearInterval(lostV.tick);
+  lostV = null;
+  if (awayV) clearInterval(awayV.tick);
+  awayV = null;
   $("awayBanner").hidden = true;
 }
 
-function updateViewerUpload() {
+function viewUp() {
   if (hosting) return;
-  enforceCap();
-  if (shareState === "sharing" || camState === "sharing") {
-    setStatus($("viewStatus"), "hostUpload", false, { m: (uploadKbps() / 1000).toFixed(1) });
+  capNow();
+  if (scrState === "sharing" || camState === "sharing") {
+    setSt($("viewStatus"), "hostUpload", false, { m: (upKbps() / 1000).toFixed(1) });
   } else if ($("viewStatus").dataset.i18n === "hostUpload") {
-    setStatus($("viewStatus"), "");
+    setSt($("viewStatus"), "");
   }
 }
 
-function updateShareUI() {
-  $("viewShareOpts").hidden = !canCapture || !viewMulti;
-  $("viewCamOpts").hidden = !canCam || !viewMulti;
-  $("openViewOptions").hidden = !viewMulti || (!canCapture && !canCam);
-  refreshBarButtons();
-  $("viewSwitch").hidden = shareState !== "sharing";
-  updateViewerUpload();
+function viewShareUI() {
+  $("viewShareOpts").hidden = !canCapture || !inMulti;
+  $("viewCamOpts").hidden = !canCam || !inMulti;
+  $("openViewOptions").hidden = !inMulti || (!canCapture && !canCam);
+  refreshBtns();
+  $("viewSwitch").hidden = scrState !== "sharing";
+  viewUp();
 }
 
 function resetShare() {
   if (!hosting) {
-    stopMonitor();
+    monStop();
     $("viewWarn").hidden = true;
   }
-  if (pendingStream) {
-    pendingStream.getTracks().forEach((tr) => tr.stop());
-    pendingStream = null;
+  if (pendScr) {
+    pendScr.getTracks().forEach((tr) => tr.stop());
+    pendScr = null;
   }
-  if (pendingCamStream) {
-    pendingCamStream.getTracks().forEach((tr) => tr.stop());
-    pendingCamStream = null;
+  if (pendCam) {
+    pendCam.getTracks().forEach((tr) => tr.stop());
+    pendCam = null;
   }
   if (!hosting && stream) {
     stream.getTracks().forEach((tr) => tr.stop());
@@ -5005,16 +5005,16 @@ function resetShare() {
     camStream.getTracks().forEach((tr) => tr.stop());
     camStream = null;
   }
-  outCalls.forEach((c) => c.close());
-  outCalls.clear();
-  shareState = "none";
+  outC.forEach((c) => c.close());
+  outC.clear();
+  scrState = "none";
   camState = "none";
-  updateShareUI();
+  viewShareUI();
 }
 
 function watchEnd(s) {
   const track = s.getVideoTracks()[0];
-  track.contentHint = isDetail(qualityKey) ? "detail" : "";
+  track.contentHint = isSharp(qKey) ? "detail" : "";
   track.addEventListener("ended", () => {
     if (stream === s) viewerStopShare(true);
   });
@@ -5022,139 +5022,139 @@ function watchEnd(s) {
 
 function callTarget(id) {
   if (!stream || !peer || id === peer.id) return;
-  const old = outCalls.get(id);
+  const old = outC.get(id);
   if (old) old.close();
   const call = peer.call(id, stream);
-  outCalls.set(id, call);
-  limitBitrate(call, quality.kbps);
+  outC.set(id, call);
+  capBitrate(call, quality.kbps);
   call.on("close", () => {
-    if (outCalls.get(id) === call) {
-      outCalls.delete(id);
-      updateViewerUpload();
+    if (outC.get(id) === call) {
+      outC.delete(id);
+      viewUp();
     }
   });
-  updateViewerUpload();
+  viewUp();
 }
 
 function callCamTarget(id) {
   if (!camStream || !peer || id === peer.id) return;
   const key = id + CAM;
-  const old = outCalls.get(key);
+  const old = outC.get(key);
   if (old) old.close();
   const call = peer.call(id, camStream, { metadata: { cam: true } });
-  outCalls.set(key, call);
-  limitBitrate(call, camQuality.kbps);
+  outC.set(key, call);
+  capBitrate(call, camQ.kbps);
   call.on("close", () => {
-    if (outCalls.get(key) === call) {
-      outCalls.delete(key);
-      updateViewerUpload();
+    if (outC.get(key) === call) {
+      outC.delete(key);
+      viewUp();
     }
   });
-  updateViewerUpload();
+  viewUp();
 }
 
 async function viewerShare() {
-  askNotifyPermission();
-  qualityKey = $("viewQuality").value;
-  fpsValue = readFps($("viewFps"));
-  quality = makeQuality(qualityKey, fpsValue);
-  chosenQuality = qualityKey;
-  chosenFps = fpsValue;
-  lastAutoAt = 0;
-  lastLimitedAt = 0;
-  autoNoteState = null;
-  const s = await captureScreen(quality, $("viewAudio").checked);
+  askNotif();
+  qKey = $("viewQuality").value;
+  fpsValue = getFps($("viewFps"));
+  quality = mkQ(qKey, fpsValue);
+  pickQ = qKey;
+  pickFps = fpsValue;
+  lastAuto = 0;
+  lastLim = 0;
+  autoMsgSt = null;
+  const s = await grabScr(quality, $("viewAudio").checked);
   if (!s) {
-    setStatus($("viewStatus"), "shareFailed", true);
+    setSt($("viewStatus"), "shareFailed", true);
     return;
   }
-  if (shareState !== "allowed" || !viewerConn || !viewerConn.open) {
+  if (scrState !== "allowed" || !vConn || !vConn.open) {
     s.getTracks().forEach((tr) => tr.stop());
     return;
   }
-  pendingStream = s;
-  viewerConn.send({ shareStart: true });
+  pendScr = s;
+  vConn.send({ shareStart: true });
 }
 
 async function viewerCam() {
-  askNotifyPermission();
+  askNotif();
   camKey = $("viewCamQuality").value;
-  camQuality = CAM_QUALITIES[camKey];
-  const s = await captureCamera(camQuality);
+  camQ = CAM_QS[camKey];
+  const s = await grabCam(camQ);
   if (!s) {
-    setStatus($("viewStatus"), "camFailed", true);
+    setSt($("viewStatus"), "camFailed", true);
     return;
   }
-  if (camState !== "allowed" || !viewerConn || !viewerConn.open) {
+  if (camState !== "allowed" || !vConn || !vConn.open) {
     s.getTracks().forEach((tr) => tr.stop());
     return;
   }
-  pendingCamStream = s;
-  viewerConn.send({ camStart: true });
+  pendCam = s;
+  vConn.send({ camStart: true });
 }
 
 function beginViewerShare(targets) {
-  const s = pendingStream;
-  pendingStream = null;
+  const s = pendScr;
+  pendScr = null;
   if (!s) return;
   stream = s;
   watchEnd(s);
-  setSource("me", false, myNick, s, true);
-  shareState = "sharing";
+  putSrc("me", false, myNick, s, true);
+  scrState = "sharing";
   targets.forEach(callTarget);
-  startMonitor();
-  updateShareUI();
+  monStart();
+  viewShareUI();
 }
 
 function beginViewerCam(targets) {
-  const s = pendingCamStream;
-  pendingCamStream = null;
+  const s = pendCam;
+  pendCam = null;
   if (!s) return;
   camStream = s;
   s.getVideoTracks()[0].addEventListener("ended", () => {
     if (camStream === s) viewerStopCam(true);
   });
-  setSource("me", true, myNick, s, true);
+  putSrc("me", true, myNick, s, true);
   camState = "sharing";
   targets.forEach(callCamTarget);
-  startMonitor();
-  updateShareUI();
+  monStart();
+  viewShareUI();
 }
 
 async function viewerReshare() {
-  const s = await captureScreen(quality, $("viewAudio").checked);
+  const s = await grabScr(quality, $("viewAudio").checked);
   if (!s) return;
-  if (shareState !== "sharing") {
+  if (scrState !== "sharing") {
     s.getTracks().forEach((tr) => tr.stop());
     return;
   }
   const old = stream;
   stream = s;
   watchEnd(s);
-  setSource("me", false, myNick, s, true);
+  putSrc("me", false, myNick, s, true);
   if (old) old.getTracks().forEach((tr) => tr.stop());
-  [...outCalls.keys()].filter((k) => !isCamSid(k)).forEach(callTarget);
+  [...outC.keys()].filter((k) => !isCam(k)).forEach(callTarget);
 }
 
 function viewerStopShare(notify) {
-  if (shareState !== "sharing" && !stream) return;
+  if (scrState !== "sharing" && !stream) return;
   if (stream) {
     stream.getTracks().forEach((tr) => tr.stop());
     stream = null;
   }
-  [...outCalls].forEach(([k, c]) => {
-    if (isCamSid(k)) return;
-    outCalls.delete(k);
+  [...outC].forEach(([k, c]) => {
+    if (isCam(k)) return;
+    outC.delete(k);
     c.close();
   });
-  removeSource("me", false);
-  if (notify && viewerConn && viewerConn.open) viewerConn.send({ shareStop: true });
+  delSrc("me", false);
+  if (notify && vConn && vConn.open) vConn.send({ shareStop: true });
   if (!camStream) {
-    stopMonitor();
+    monStop();
     $("viewWarn").hidden = true;
   }
-  shareState = "allowed";
-  updateShareUI();
+  scrState = "allowed";
+  viewShareUI();
 }
 
 function viewerStopCam(notify) {
@@ -5163,32 +5163,32 @@ function viewerStopCam(notify) {
     camStream.getTracks().forEach((tr) => tr.stop());
     camStream = null;
   }
-  [...outCalls].forEach(([k, c]) => {
-    if (!isCamSid(k)) return;
-    outCalls.delete(k);
+  [...outC].forEach(([k, c]) => {
+    if (!isCam(k)) return;
+    outC.delete(k);
     c.close();
   });
-  removeSource("me", true);
-  if (notify && viewerConn && viewerConn.open) viewerConn.send({ camStop: true });
+  delSrc("me", true);
+  if (notify && vConn && vConn.open) vConn.send({ camStop: true });
   if (!stream) {
-    stopMonitor();
+    monStop();
     $("viewWarn").hidden = true;
   }
   camState = "allowed";
-  updateShareUI();
+  viewShareUI();
 }
 
 function viewerEnded(key, vars) {
   clearRoomUrl();
-  clearTimeout(takeoverTimer);
-  takeoverTimer = null;
-  iAmSucc = false;
+  clearTimeout(tkTimer);
+  tkTimer = null;
+  amSucc = false;
   succState = null;
-  intentionalEnd = true;
-  retryPending = false;
-  clearTimeout(retryTimer);
-  clearTimeout(viewerTimeout);
-  stopAwayView();
+  manualEnd = true;
+  rtWait = false;
+  clearTimeout(rtTimer);
+  clearTimeout(vTimer);
+  awayOff();
   dropMedia();
   $("viewOverlay").hidden = false;
   setT($("viewOverlay"), key, vars);
@@ -5197,11 +5197,11 @@ function viewerEnded(key, vars) {
 function openNickDialog(retryAsk) {
   closeViewPanel();
   closeChat();
-  clearTimeout(viewerTimeout);
+  clearTimeout(vTimer);
   $("nickDialogError").hidden = !retryAsk;
   $("nickBackdrop").hidden = false;
   $("nickDialog").hidden = false;
-  $("nickNew").value = lastNickTry || myNick;
+  $("nickNew").value = nickTry || myNick;
   $("nickNew").focus();
   $("nickNew").select();
 }
@@ -5212,8 +5212,8 @@ function closeNickDialog() {
 }
 
 function armNoVideo(p) {
-  clearTimeout(viewerTimeout);
-  viewerTimeout = setTimeout(() => {
+  clearTimeout(vTimer);
+  vTimer = setTimeout(() => {
     if (peer !== p || !$("nickDialog").hidden) return;
     if (!tiles.size && $("viewOverlay").dataset.i18n === "connecting") {
       viewerEnded("noVideo");
@@ -5227,14 +5227,14 @@ function submitNick() {
     $("nickNew").focus();
     return;
   }
-  if (sameNick(n, myNick) || sameNick(n, lastNickTry)) {
+  if (eqNick(n, myNick) || eqNick(n, nickTry)) {
     $("nickDialogError").hidden = false;
     $("nickNew").focus();
     return;
   }
-  if (!viewerConn || !viewerConn.open) return;
-  lastNickTry = n;
-  viewerConn.send({ nick: n });
+  if (!vConn || !vConn.open) return;
+  nickTry = n;
+  vConn.send({ nick: n });
   closeNickDialog();
   setT($("viewOverlay"), "connecting");
   armNoVideo(peer);
@@ -5242,48 +5242,48 @@ function submitNick() {
 
 function dropMedia() {
   closeNickDialog();
-  viewerLive = false;
-  inCalls.forEach((c) => c.close());
-  inCalls.clear();
-  stashed.forEach((c) => c.close());
-  stashed.clear();
-  sharerIds = new Set();
-  sharerNames = new Map();
-  clearTiles();
+  vLive = false;
+  inC.forEach((c) => c.close());
+  inC.clear();
+  held.forEach((c) => c.close());
+  held.clear();
+  shrIds = new Set();
+  shrNames = new Map();
+  wipeTiles();
   resetShare();
 }
 
 function scheduleRetry() {
-  if (intentionalEnd || blockedTab || retryPending) return;
-  clearTimeout(viewerTimeout);
-  if (retry >= MAX_RETRY) {
+  if (manualEnd || dupTab || rtWait) return;
+  clearTimeout(vTimer);
+  if (retry >= MAX_RT) {
     viewerEnded("connLost");
     return;
   }
   retry++;
-  retryPending = true;
+  rtWait = true;
   const wait = Math.min(1000 * 2 ** (retry - 1), 15000);
   dropMedia();
   $("viewOverlay").hidden = false;
-  setT($("viewOverlay"), "reconnecting", { n: retry, max: MAX_RETRY });
-  clearTimeout(retryTimer);
-  retryTimer = setTimeout(() => {
-    retryPending = false;
-    if (intentionalEnd) return;
-    connectToRoom(activeCode);
+  setT($("viewOverlay"), "reconnecting", { n: retry, max: MAX_RT });
+  clearTimeout(rtTimer);
+  rtTimer = setTimeout(() => {
+    rtWait = false;
+    if (manualEnd) return;
+    connectToRoom(joinCode);
   }, wait);
 }
 
 function updateMuteBtn() {
-  const off = viewMuted || viewVolume === 0;
+  const off = vMuted || vVol === 0;
   setT($("muteBtn"), off ? "unmute" : "mute");
   $("audioBtnView").classList.toggle("muted", off);
   if (!off) $("soundWarn").hidden = true;
 }
 
 function joinRoom(code) {
-  if (String(code).trim().length === 6 && cleanNick($("nick").value) && !ipSeen()) {
-    ensureIpNotice().then((ok) => {
+  if (String(code).trim().length === 6 && cleanNick($("nick").value) && !seenIp()) {
+    needIp().then((ok) => {
       if (ok) joinRoomNow(code);
     });
     return;
@@ -5294,40 +5294,40 @@ function joinRoom(code) {
 function joinRoomNow(code) {
   code = code.trim().toUpperCase();
   if (code.length !== 6) {
-    setStatus($("homeStatus"), "codeLength", true);
+    setSt($("homeStatus"), "codeLength", true);
     return;
   }
   if (!requireNick()) return;
-  stopPendingResume(true);
+  stopRes(true);
   if (hosting) closeRoom();
-  activeGrid = $("viewGrid");
-  clearTiles();
+  gridEl = $("viewGrid");
+  wipeTiles();
   show(viewerView);
   $("viewOverlay").hidden = false;
   setT($("viewOverlay"), "connecting");
   $("eyeView").hidden = true;
-  setStatus($("viewStatus"), "");
-  stopAwayView();
-  shareState = "none";
+  setSt($("viewStatus"), "");
+  awayOff();
+  scrState = "none";
   camState = "none";
-  updateShareUI();
+  viewShareUI();
   updateMuteBtn();
-  blockedTab = false;
-  intentionalEnd = false;
-  retryPending = false;
+  dupTab = false;
+  manualEnd = false;
+  rtWait = false;
   retry = 0;
-  activeCode = code;
-  lastNickTry = "";
-  iAmSucc = false;
+  joinCode = code;
+  nickTry = "";
+  amSucc = false;
   succState = null;
   connectToRoom(code);
 }
 
 function connectToRoom(code) {
-  clearTimeout(viewerTimeout);
-  clearTimeout(retryTimer);
+  clearTimeout(vTimer);
+  clearTimeout(rtTimer);
   dropMedia();
-  viewerConn = null;
+  vConn = null;
   const old = peer;
   peer = null;
   if (old) old.destroy();
@@ -5339,11 +5339,11 @@ function connectToRoom(code) {
 
   p.on("open", () => {
     if (peer !== p) return;
-    viewerConn = null;
+    vConn = null;
     const conns = [];
     const wireConn = (conn, g) => {
       conn.on("data", (d) => {
-        if (peer !== p || viewerConn !== conn || !d || typeof d !== "object") return;
+        if (peer !== p || vConn !== conn || !d || typeof d !== "object") return;
         if (typeof d.hostNick === "string") {
           setT($("hostName"), "hostLabel", { name: cleanNick(d.hostNick) });
           $("hostName").hidden = false;
@@ -5351,29 +5351,29 @@ function connectToRoom(code) {
             const accepted = cleanNick(d.yourNick);
             if (accepted) {
               myNick = accepted;
-              lastNickTry = "";
+              nickTry = "";
               $("nick").value = accepted;
               saveNick(accepted);
             }
           }
           retry = 0;
-          chatGifsOn = d.gifs !== false;
+          vGifs = d.gifs !== false;
           updateGifBtn();
-          clearTimeout(takeoverTimer);
-          takeoverTimer = null;
-          iAmSucc = false;
+          clearTimeout(tkTimer);
+          tkTimer = null;
+          amSucc = false;
           succState = null;
-          viewerLive = true;
-          viewMulti = d.multi === true;
-          shareState = d.canShare === true ? "allowed" : "none";
+          vLive = true;
+          inMulti = d.multi === true;
+          scrState = d.canShare === true ? "allowed" : "none";
           camState = d.canCam === true ? "allowed" : "none";
-          updateShareUI();
-          if ("away" in d) startAwayView(d.away);
-          syncRoster(Array.isArray(d.sharers) ? d.sharers : []);
+          viewShareUI();
+          if ("away" in d) awayOn(d.away);
+          setRoster(Array.isArray(d.sharers) ? d.sharers : []);
           return;
         }
         if (typeof d.succ === "boolean") {
-          iAmSucc = d.succ;
+          amSucc = d.succ;
           if (!d.succ) succState = null;
           return;
         }
@@ -5382,12 +5382,12 @@ function connectToRoom(code) {
             priv: d.succState.priv === true,
             multi: d.succState.multi === true,
             gifs: d.succState.gifs !== false,
-            allowed: strList(d.succState.allowed),
-            grants: strList(d.succState.grants),
-            camGrants: strList(d.succState.camGrants),
-            bans: banList(d.succState.bans),
-            muted: strList(d.succState.muted),
-            chat: chatHist(d.succState.chat)
+            allowed: strArr(d.succState.allowed),
+            grants: strArr(d.succState.grants),
+            camGrants: strArr(d.succState.camGrants),
+            bans: banArr(d.succState.bans),
+            muted: strArr(d.succState.muted),
+            chat: histArr(d.succState.chat)
           };
           return;
         }
@@ -5397,17 +5397,17 @@ function connectToRoom(code) {
         }
         if (d.busy === true) {
           leaveRoom();
-          setStatus($("homeStatus"), "roomBusy", true);
+          setSt($("homeStatus"), "roomBusy", true);
           return;
         }
         if (d.waiting === true) {
-          clearTimeout(viewerTimeout);
+          clearTimeout(vTimer);
           setT($("viewOverlay"), "joinWaiting");
           return;
         }
         if (d.denied === true) {
           leaveRoom();
-          setStatus($("homeStatus"), "joinDenied", true);
+          setSt($("homeStatus"), "joinDenied", true);
           return;
         }
         if (d.askNick === true) {
@@ -5417,7 +5417,7 @@ function connectToRoom(code) {
         if (Array.isArray(d.history)) {
           $("chatList").innerHTML = "";
           d.history.forEach((m) => addChat(m));
-          chatUnread = 0;
+          unreadN = 0;
           updateUnread();
           return;
         }
@@ -5426,97 +5426,97 @@ function connectToRoom(code) {
           return;
         }
         if (Number.isInteger(d.del)) {
-          removeMessage(d.del);
+          rmMsg(d.del);
           return;
         }
         if (typeof d.muted === "boolean") {
-          chatMuted = d.muted;
-          updateChatInput();
+          chatMute = d.muted;
+          fixChatIn();
           return;
         }
         if (typeof d.gifs === "boolean") {
-          chatGifsOn = d.gifs;
+          vGifs = d.gifs;
           updateGifBtn();
           return;
         }
         if (d.nickTaken === true) {
           leaveRoom();
-          setStatus($("homeStatus"), "nickTaken", true);
+          setSt($("homeStatus"), "nickTaken", true);
           $("nick").focus();
           return;
         }
         if (d.kicked === true) {
           const mins = Math.max(1, Math.ceil((Number(d.wait) || 300) / 60));
           leaveRoom();
-          setStatus($("homeStatus"), "kicked", true, { min: mins });
+          setSt($("homeStatus"), "kicked", true, { min: mins });
           return;
         }
         if (d.duplicate === true) {
-          blockedTab = true;
+          dupTab = true;
           viewerEnded("duplicateTab");
           return;
         }
         if (d.full === true) {
-          blockedTab = true;
+          dupTab = true;
           viewerEnded("roomFull");
           return;
         }
         if (Array.isArray(d.sharers)) {
-          syncRoster(d.sharers);
+          setRoster(d.sharers);
           return;
         }
         if (typeof d.canShare === "boolean") {
           if (d.canShare) {
-            if (shareState !== "sharing") shareState = "allowed";
-            setStatus($("viewStatus"), "shareAllowed");
+            if (scrState !== "sharing") scrState = "allowed";
+            setSt($("viewStatus"), "shareAllowed");
           } else {
             viewerStopShare(false);
-            shareState = "none";
-            setStatus($("viewStatus"), "shareRevoked", true);
+            scrState = "none";
+            setSt($("viewStatus"), "shareRevoked", true);
           }
-          updateShareUI();
+          viewShareUI();
           return;
         }
         if (typeof d.canCam === "boolean") {
           if (d.canCam) {
             if (camState !== "sharing") camState = "allowed";
-            setStatus($("viewStatus"), "camAllowed");
+            setSt($("viewStatus"), "camAllowed");
           } else {
             viewerStopCam(false);
             camState = "none";
-            setStatus($("viewStatus"), "camRevoked", true);
+            setSt($("viewStatus"), "camRevoked", true);
           }
-          updateShareUI();
+          viewShareUI();
           return;
         }
         if (typeof d.shareDenied === "string") {
-          if (pendingStream) {
-            pendingStream.getTracks().forEach((tr) => tr.stop());
-            pendingStream = null;
+          if (pendScr) {
+            pendScr.getTracks().forEach((tr) => tr.stop());
+            pendScr = null;
           }
           if (d.shareDenied === "limit") {
-            shareState = "allowed";
-            setStatus($("viewStatus"), "shareLimit", true, { n: MAX_SHARERS });
+            scrState = "allowed";
+            setSt($("viewStatus"), "shareLimit", true, { n: MAX_SHR });
           } else {
-            shareState = "none";
-            if (d.shareDenied === "denied") setStatus($("viewStatus"), "shareReqDenied", true);
+            scrState = "none";
+            if (d.shareDenied === "denied") setSt($("viewStatus"), "shareReqDenied", true);
           }
-          updateShareUI();
+          viewShareUI();
           return;
         }
         if (typeof d.camDenied === "string") {
-          if (pendingCamStream) {
-            pendingCamStream.getTracks().forEach((tr) => tr.stop());
-            pendingCamStream = null;
+          if (pendCam) {
+            pendCam.getTracks().forEach((tr) => tr.stop());
+            pendCam = null;
           }
           if (d.camDenied === "limit") {
             camState = "allowed";
-            setStatus($("viewStatus"), "camLimit", true, { n: MAX_CAMS });
+            setSt($("viewStatus"), "camLimit", true, { n: MAX_CAM });
           } else {
             camState = "none";
-            if (d.camDenied === "denied") setStatus($("viewStatus"), "camReqDenied", true);
+            if (d.camDenied === "denied") setSt($("viewStatus"), "camReqDenied", true);
           }
-          updateShareUI();
+          viewShareUI();
           return;
         }
         if (Array.isArray(d.targets)) {
@@ -5537,51 +5537,51 @@ function connectToRoom(code) {
         }
         if (typeof d.left === "string") {
           [d.left, d.left + CAM].forEach((k) => {
-            const c = outCalls.get(k);
+            const c = outC.get(k);
             if (c) {
-              outCalls.delete(k);
+              outC.delete(k);
               c.close();
             }
           });
-          updateViewerUpload();
+          viewUp();
           return;
         }
         if ("away" in d) {
-          startAwayView(d.away);
+          awayOn(d.away);
           return;
         }
         if (Number.isInteger(d.count) && d.count >= 0 && d.count <= 9999) {
-          roomCount = d.count;
+          nWatch = d.count;
           if (Array.isArray(d.people)) {
-            roomPeople = d.people.slice(0, 40).filter((x) => x && typeof x.g === "string" && typeof x.n === "string").map((x) => ({
+            roomWho = d.people.slice(0, 40).filter((x) => x && typeof x.g === "string" && typeof x.n === "string").map((x) => ({
               g: x.g.slice(0, 8),
               n: cleanNick(x.n),
               m: x.m ? 1 : 0,
               p: Array.isArray(x.p) ? x.p.slice(0, 5).map((y) => cleanNick(String(y))) : []
             }));
-            rememberRoom(activeCode, roomPeople.filter((x) => !x.m));
+            rememberRoom(joinCode, roomWho.filter((x) => !x.m));
           }
           $("eyeView").hidden = false;
           setT($("viewCount"), "eyeCount", { n: d.count });
-          refreshWatchers();
-          enforceCap();
+          refreshWatch();
+          capNow();
           return;
         }
         if (d.closed === true) viewerEnded("roomEndedByHost");
       });
       conn.on("open", () => {
         if (peer !== p) return;
-        if (viewerConn && viewerConn !== conn) {
-          blockedTab = true;
+        if (vConn && vConn !== conn) {
+          dupTab = true;
           conns.forEach((o) => o.close());
-          viewerConn = null;
+          vConn = null;
           viewerEnded("roomSuspicious");
           return;
         }
-        viewerConn = conn;
-        roomGen = g;
+        vConn = conn;
+        rGen = g;
         setTimeout(() => {
-          if (peer !== p || viewerConn !== conn) return;
+          if (peer !== p || vConn !== conn) return;
           conns.forEach((o) => {
             if (o !== conn) o.close();
           });
@@ -5589,13 +5589,13 @@ function connectToRoom(code) {
         armNoVideo(p);
       });
       conn.on("close", () => {
-        if (peer !== p || blockedTab || viewerConn !== conn) return;
+        if (peer !== p || dupTab || vConn !== conn) return;
         maybeStartTakeover();
         startLostView();
         scheduleRetry();
       });
       conn.on("error", () => {
-        if (peer !== p || blockedTab || viewerConn !== conn) return;
+        if (peer !== p || dupTab || vConn !== conn) return;
         maybeStartTakeover();
         startLostView();
         scheduleRetry();
@@ -5603,18 +5603,18 @@ function connectToRoom(code) {
     };
     const startConn = (g) => {
       if (conns[g]) return;
-      const c = p.connect(peerIdFor(code, g), { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } });
+      const c = p.connect(pid(code, g), { reliable: true, metadata: { vid: getViewerId(), nick: myNick, tab: tabId } });
       conns[g] = c;
       wireConn(c, g);
     };
     startRest = () => {
-      for (let g = 1; g < ROOM_GENS; g++) startConn(g);
+      for (let g = 1; g < GENS; g++) startConn(g);
     };
     startConn(0);
     setTimeout(() => {
-      if (peer === p && !viewerConn) startRest();
+      if (peer === p && !vConn) startRest();
     }, 3000);
-    viewerTimeout = setTimeout(() => {
+    vTimer = setTimeout(() => {
       if (peer !== p) return;
       if (retry === 0) {
         viewerEnded("cantConnect");
@@ -5626,17 +5626,17 @@ function connectToRoom(code) {
 
   p.on("call", (call) => {
     if (peer !== p) return;
-    handleIncomingCall(call);
+    onCall(call);
   });
 
   let unavailable = 0;
   p.on("error", (err) => {
     if (peer !== p) return;
     if (err.type === "peer-unavailable") {
-      if (viewerConn && viewerConn.open) return;
+      if (vConn && vConn.open) return;
       if (startRest) startRest();
       unavailable++;
-      if (unavailable < ROOM_GENS) return;
+      if (unavailable < GENS) return;
       if (retry === 0) {
         viewerEnded("roomNotFound");
       } else {
@@ -5661,39 +5661,39 @@ function clearRoomUrl() {
 
 function leaveRoom() {
   clearRoomUrl();
-  clearTimeout(takeoverTimer);
-  takeoverTimer = null;
-  iAmSucc = false;
+  clearTimeout(tkTimer);
+  tkTimer = null;
+  amSucc = false;
   succState = null;
   closeNickDialog();
-  lastNickTry = "";
-  intentionalEnd = true;
-  retryPending = false;
+  nickTry = "";
+  manualEnd = true;
+  rtWait = false;
   retry = 0;
-  clearTimeout(retryTimer);
+  clearTimeout(rtTimer);
   leavePip();
   clearChat();
-  clearTimeout(viewerTimeout);
-  viewerConn = null;
-  blockedTab = false;
-  stopAwayView();
+  clearTimeout(vTimer);
+  vConn = null;
+  dupTab = false;
+  awayOff();
   dropMedia();
   if (peer) {
     const old = peer;
     peer = null;
     old.destroy();
   }
-  activeGrid = null;
-  roomCount = 0;
-  viewMulti = false;
+  gridEl = null;
+  nWatch = 0;
+  inMulti = false;
   closeViewPanel();
   $("hostName").hidden = true;
   delete $("hostName").dataset.i18n;
   delete $("hostName").dataset.vars;
   $("hostName").textContent = "";
-  setStatus($("viewStatus"), "");
-  viewMuted = false;
-  viewVolume = 1;
+  setSt($("viewStatus"), "");
+  vMuted = false;
+  vVol = 1;
   $("volume").value = 1;
   updateMuteBtn();
   $("soundWarn").hidden = true;
@@ -5709,18 +5709,18 @@ $("viewBackdrop").addEventListener("click", closeViewPanel);
 setupEye("eyeHost");
 setupEye("eyeView");
 document.addEventListener("click", (e) => {
-  if (!e.target.closest(".eyewrap")) closeWatchers();
+  if (!e.target.closest(".eyewrap")) closeWatch();
 });
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   closeViewPanel();
   closeChat();
-  closePanel();
-  closeSettings();
+  closeOpts();
+  closeCfg();
   closeAudioPops();
   closePipDialog();
-  closeWatchers();
-  if (visResolve) closeVis(null);
+  closeWatch();
+  if (visRes) closeVis(null);
 });
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Tab") return;
@@ -5745,12 +5745,12 @@ document.addEventListener("keydown", (e) => {
   }
 });
 $("soundOn").addEventListener("click", () => {
-  viewMuted = false;
-  if (viewVolume === 0) {
-    viewVolume = 1;
+  vMuted = false;
+  if (vVol === 0) {
+    vVol = 1;
     $("volume").value = 1;
   }
-  applyAudio();
+  applyVol();
   updateMuteBtn();
   tiles.forEach((tl) => {
     [tl.video, tl.camVideo].forEach((v) => {
@@ -5765,9 +5765,9 @@ $("chatSend").addEventListener("click", sendChat);
 $("chatInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendChat();
 });
-$("startHost").addEventListener("click", () => startHost(true));
-$("createRoom").addEventListener("click", () => startHost(false));
-$("camHome").addEventListener("click", () => startHost(false, true));
+$("startHost").addEventListener("click", () => hostStart(true));
+$("createRoom").addEventListener("click", () => hostStart(false));
+$("camHome").addEventListener("click", () => hostStart(false, true));
 $("backToRoom").addEventListener("click", backToRoom);
 $("awayBtn").addEventListener("click", goAway);
 $("pipView").addEventListener("click", () => {
@@ -5775,41 +5775,41 @@ $("pipView").addEventListener("click", () => {
   togglePip($("viewStatus"));
 });
 $("pipHost").addEventListener("click", () => {
-  closePanel();
+  closeOpts();
   togglePip($("hostStatus"));
 });
 window.addEventListener("pageshow", () => {
-  leavingPage = false;
+  unloading = false;
 });
 window.addEventListener("pagehide", () => {
-  leavingPage = true;
-  if (hosting) saveHostSession(true);
+  unloading = true;
+  if (hosting) saveHS(true);
   if (peer) peer.destroy();
 });
 $("shareBtn").addEventListener("click", () => {
-  closePanel();
-  reshare();
+  closeOpts();
+  swapScr();
 });
 $("scrHostBtn").addEventListener("click", () => {
   if (stream) {
-    stopShare();
+    stopScr();
   } else {
-    reshare();
+    swapScr();
   }
 });
 $("camHostBarBtn").addEventListener("click", () => {
   if (camStream) {
-    stopHostCam();
+    hostCamOff();
   } else {
-    startHostCam();
+    hostCamOn();
   }
 });
-$("openOptions").addEventListener("click", openPanel);
-$("closeOptions").addEventListener("click", closePanel);
-$("backdrop").addEventListener("click", closePanel);
+$("openOptions").addEventListener("click", openOpts);
+$("closeOptions").addEventListener("click", closeOpts);
+$("backdrop").addEventListener("click", closeOpts);
 $("hostFs").addEventListener("click", () => {
-  closePanel();
-  toggleFullscreen(fsTarget($("hostStage")));
+  closeOpts();
+  toggleFs(fsEl($("hostStage")));
 });
 function closeEndDialog() {
   $("endDialog").hidden = true;
@@ -5827,18 +5827,18 @@ document.addEventListener("keydown", (e) => {
 });
 $("confirmClose").addEventListener("click", () => {
   closeEndDialog();
-  closePanel();
+  closeOpts();
   closeRoom();
 });
-$("liveQuality").addEventListener("change", () => setQuality($("liveQuality").value, readFps($("liveFps"))));
-$("liveFps").addEventListener("change", () => setQuality($("liveQuality").value, readFps($("liveFps"))));
-$("viewQuality").addEventListener("change", () => setQuality($("viewQuality").value, readFps($("viewFps"))));
-$("viewFps").addEventListener("change", () => setQuality($("viewQuality").value, readFps($("viewFps"))));
-$("liveCamQuality").addEventListener("change", (e) => setCamQuality(e.target.value));
-$("viewCamQuality").addEventListener("change", (e) => setCamQuality(e.target.value));
+$("liveQuality").addEventListener("change", () => setQ($("liveQuality").value, getFps($("liveFps"))));
+$("liveFps").addEventListener("change", () => setQ($("liveQuality").value, getFps($("liveFps"))));
+$("viewQuality").addEventListener("change", () => setQ($("viewQuality").value, getFps($("viewFps"))));
+$("viewFps").addEventListener("change", () => setQ($("viewQuality").value, getFps($("viewFps"))));
+$("liveCamQuality").addEventListener("change", (e) => setCamQ(e.target.value));
+$("viewCamQuality").addEventListener("change", (e) => setCamQ(e.target.value));
 $("lowerQ").addEventListener("click", () => {
-  const d = nextDown(qualityKey, fpsValue);
-  if (d) setQuality(d.res, d.fps);
+  const d = stepDown(qKey, fpsValue);
+  if (d) setQ(d.res, d.fps);
 });
 $("hostMute").addEventListener("click", () => {
   const track = stream && stream.getAudioTracks()[0];
@@ -5858,10 +5858,10 @@ $("audioBtnView").addEventListener("click", (e) => {
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".apop")) closeAudioPops();
 });
-$("copyCode").addEventListener("click", (e) => copyText(currentCode, e.currentTarget));
+$("copyCode").addEventListener("click", (e) => copyTxt(roomCode, e.currentTarget));
 $("copyLink").addEventListener("click", (e) => {
-  const url = location.origin + location.pathname + "?sala=" + currentCode;
-  copyText(url, e.currentTarget);
+  const url = location.origin + location.pathname + "?sala=" + roomCode;
+  copyTxt(url, e.currentTarget);
 });
 $("join").addEventListener("click", () => joinRoom($("codeInput").value));
 $("codeInput").addEventListener("keydown", (e) => {
@@ -5881,7 +5881,7 @@ $("nick").addEventListener("keydown", (e) => {
 $("pipCancel").addEventListener("click", closePipDialog);
 $("pipBackdrop").addEventListener("click", closePipDialog);
 setInterval(() => {
-  if (hosting) saveHostSession(false);
+  if (hosting) saveHS(false);
 }, 2000);
 $("nickConfirm").addEventListener("click", submitNick);
 $("nickCancel").addEventListener("click", leaveRoom);
@@ -5889,26 +5889,26 @@ $("nickNew").addEventListener("keydown", (e) => {
   if (e.key === "Enter") submitNick();
 });
 $("scrViewBtn").addEventListener("click", () => {
-  if (shareState === "none") {
-    if (viewerConn && viewerConn.open) {
-      viewerConn.send({ reqShare: true });
-      shareState = "requested";
-      setStatus($("viewStatus"), "");
-      updateShareUI();
+  if (scrState === "none") {
+    if (vConn && vConn.open) {
+      vConn.send({ reqShare: true });
+      scrState = "requested";
+      setSt($("viewStatus"), "");
+      viewShareUI();
     }
-  } else if (shareState === "allowed") {
+  } else if (scrState === "allowed") {
     viewerShare();
-  } else if (shareState === "sharing") {
+  } else if (scrState === "sharing") {
     viewerStopShare(true);
   }
 });
 $("camViewBtn").addEventListener("click", () => {
   if (camState === "none") {
-    if (viewerConn && viewerConn.open) {
-      viewerConn.send({ reqCam: true });
+    if (vConn && vConn.open) {
+      vConn.send({ reqCam: true });
       camState = "requested";
-      setStatus($("viewStatus"), "");
-      updateShareUI();
+      setSt($("viewStatus"), "");
+      viewShareUI();
     }
   } else if (camState === "allowed") {
     viewerCam();
@@ -5922,37 +5922,37 @@ $("viewSwitch").addEventListener("click", () => {
 });
 $("viewFs").addEventListener("click", () => {
   closeViewPanel();
-  toggleFullscreen(fsTarget($("viewStage")));
+  toggleFs(fsEl($("viewStage")));
 });
 $("muteBtn").addEventListener("click", () => {
-  viewMuted = !viewMuted;
-  if (!viewMuted && viewVolume === 0) {
-    viewVolume = 1;
+  vMuted = !vMuted;
+  if (!vMuted && vVol === 0) {
+    vVol = 1;
     $("volume").value = 1;
   }
-  applyAudio();
+  applyVol();
   updateMuteBtn();
 });
 $("volume").addEventListener("input", (e) => {
-  viewVolume = Number(e.target.value);
-  viewMuted = viewVolume === 0;
-  applyAudio();
+  vVol = Number(e.target.value);
+  vMuted = vVol === 0;
+  applyVol();
   updateMuteBtn();
 });
-$("settingsBtn").addEventListener("click", openSettings);
+$("settingsBtn").addEventListener("click", openCfg);
 $("infoOk").addEventListener("click", () => closeInfo(true));
 $("infoCancel").addEventListener("click", () => closeInfo(false));
 $("infoBackdrop").addEventListener("click", () => closeInfo(false));
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && infoResolve) closeInfo(false);
+  if (e.key === "Escape" && infoRes) closeInfo(false);
 });
-$("termsLink").addEventListener("click", () => showInfo("termsTitle", "termsBody", false));
-$("ipLink").addEventListener("click", () => showInfo("ipTitle", "ipBody", false));
+$("termsLink").addEventListener("click", () => openInfo("termsTitle", "termsBody", false));
+$("ipLink").addEventListener("click", () => openInfo("ipTitle", "ipBody", false));
 let reportPick = null;
-const RECENT_KEY = "recentRooms";
+const RECENT = "recentRooms";
 function loadRecent() {
   try {
-    const a = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+    const a = JSON.parse(localStorage.getItem(RECENT) || "[]");
     if (!Array.isArray(a)) return [];
     return a
       .filter((r) => r && /^[A-Z0-9]{6}$/.test(r.code) && Array.isArray(r.people) && Number.isFinite(r.ts))
@@ -6001,7 +6001,7 @@ function rememberRoom(code, people) {
   entry.ts = Date.now();
   list.unshift(entry);
   try {
-    localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 2)));
+    localStorage.setItem(RECENT, JSON.stringify(list.slice(0, 2)));
   } catch (e) {}
 }
 let reportDoneTimer = 0;
@@ -6092,7 +6092,7 @@ function refreshReport() {
 function fillReportWho() {
   const box = $("reportGroups");
   const groups = loadRecent();
-  const cur = hosting ? currentCode : !viewerView.hidden ? activeCode : "";
+  const cur = hosting ? roomCode : !viewerView.hidden ? joinCode : "";
   box.innerHTML = "";
   reportPick = null;
   groups.forEach((r, gi) => {
@@ -6127,7 +6127,7 @@ function fillReportWho() {
   $("reportChatWrap").classList.toggle("off", !hasChat);
 }
 function openReport() {
-  const code = hosting ? currentCode : !viewerView.hidden ? activeCode : "";
+  const code = hosting ? roomCode : !viewerView.hidden ? joinCode : "";
   $("reportCode").value = code || "";
   $("reportNick").value = "";
   $("reportText").value = "";
@@ -6182,74 +6182,74 @@ $("reportCopy").addEventListener("click", async () => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !$("reportDialog").hidden) closeReport();
 });
-$("homeStatusX").addEventListener("click", () => setStatus($("homeStatus"), ""));
-$("viewStatusX").addEventListener("click", () => setStatus($("viewStatus"), ""));
-$("closeSettings").addEventListener("click", closeSettings);
-$("settingsBackdrop").addEventListener("click", closeSettings);
+$("homeStatusX").addEventListener("click", () => setSt($("homeStatus"), ""));
+$("viewStatusX").addEventListener("click", () => setSt($("viewStatus"), ""));
+$("closeSettings").addEventListener("click", closeCfg);
+$("settingsBackdrop").addEventListener("click", closeCfg);
 $("updateReload").addEventListener("click", () => location.reload());
 $("updateDismiss").addEventListener("click", () => {
-  updateDismissed = true;
-  updateNoticeView();
+  updHide = true;
+  updView();
 });
 $("setTheme").addEventListener("change", (e) => {
-  settings.theme = e.target.value;
-  saveSettings();
+  cfg.theme = e.target.value;
+  saveCfg();
   applyTheme();
-  renderSettings();
+  drawCfg();
 });
 $("setAutoReduce").addEventListener("change", (e) => {
-  settings.autoReduce = e.target.checked;
-  saveSettings();
+  cfg.autoReduce = e.target.checked;
+  saveCfg();
 });
 $("setAutoRecover").addEventListener("change", (e) => {
-  settings.autoRecover = e.target.checked;
-  saveSettings();
+  cfg.autoRecover = e.target.checked;
+  saveCfg();
 });
 $("setNotify").addEventListener("change", (e) => {
   const want = e.target.checked;
   const supported = "Notification" in window;
   if (!want || !supported || Notification.permission === "denied") {
-    settings.notify = false;
-    saveSettings();
-    renderSettings();
+    cfg.notify = false;
+    saveCfg();
+    drawCfg();
     return;
   }
-  settings.notify = true;
-  saveSettings();
+  cfg.notify = true;
+  saveCfg();
   if (Notification.permission === "default") {
-    requestNotifyPermission();
+    reqNotif();
   } else {
-    renderSettings();
+    drawCfg();
   }
 });
 window.addEventListener("focus", () => {
-  syncNotifyState();
-  if ($("settingsPanel").classList.contains("open")) renderSettings();
+  syncNotif();
+  if ($("settingsPanel").classList.contains("open")) drawCfg();
 });
 $("setAnim").addEventListener("change", (e) => {
-  settings.animations = e.target.checked;
-  saveSettings();
+  cfg.animations = e.target.checked;
+  saveCfg();
   applyAnim();
 });
 $("setCap").addEventListener("change", (e) => {
-  settings.capByViewers = e.target.checked;
-  saveSettings();
-  enforceCap();
+  cfg.capByViewers = e.target.checked;
+  saveCfg();
+  capNow();
 });
 $("setAmbient").addEventListener("change", (e) => {
-  settings.ambient = e.target.checked;
-  saveSettings();
-  if (!settings.ambient) ambClear();
+  cfg.glow = e.target.checked;
+  saveCfg();
+  if (!cfg.glow) glowOff();
 });
 $("langPt").addEventListener("click", () => setLang("pt"));
 $("langEn").addEventListener("click", () => setLang("en"));
 
-const AMB = { cv: document.createElement("canvas"), cur: null };
-AMB.cv.width = 32;
-AMB.cv.height = 18;
-const ambCtx = AMB.cv.getContext("2d", { willReadFrequently: true });
+const GLOW = { cv: document.createElement("canvas"), cur: null };
+GLOW.cv.width = 32;
+GLOW.cv.height = 18;
+const gCtx = GLOW.cv.getContext("2d", { willReadFrequently: true });
 
-function ambBand(d, x0, y0, x1, y1) {
+function bandAvg(d, x0, y0, x1, y1) {
   let r = 0, g = 0, b = 0, n = 0;
   for (let y = y0; y < y1; y++) {
     for (let x = x0; x < x1; x++) {
@@ -6263,80 +6263,80 @@ function ambBand(d, x0, y0, x1, y1) {
   return [r / n, g / n, b / n];
 }
 
-function ambClear() {
+function glowOff() {
   ["t", "r", "b", "l", "avg"].forEach((k) => {
     [$("hostStage"), $("viewStage")].forEach((s) => s.style.removeProperty("--amb-" + k));
   });
-  AMB.cur = null;
+  GLOW.cur = null;
 }
 
-function ambTick() {
-  if (!settings.ambient || document.hidden) {
-    if (AMB.cur) ambClear();
+function glowTick() {
+  if (!cfg.glow || document.hidden) {
+    if (GLOW.cur) glowOff();
     return;
   }
   const stage = hosting ? $("hostStage") : viewerView.hidden ? null : $("viewStage");
-  const v = pickVideo();
+  const v = topVideo();
   if (!stage || !v || v.readyState < 2 || !v.videoWidth) {
-    if (AMB.cur) ambClear();
+    if (GLOW.cur) glowOff();
     return;
   }
   try {
-    ambCtx.drawImage(v, 0, 0, 32, 18);
+    gCtx.drawImage(v, 0, 0, 32, 18);
   } catch (e) {
     return;
   }
-  const d = ambCtx.getImageData(0, 0, 32, 18).data;
+  const d = gCtx.getImageData(0, 0, 32, 18).data;
   const next = [
-    ambBand(d, 0, 0, 32, 2),
-    ambBand(d, 30, 0, 32, 18),
-    ambBand(d, 0, 16, 32, 18),
-    ambBand(d, 0, 0, 2, 18)
+    bandAvg(d, 0, 0, 32, 2),
+    bandAvg(d, 30, 0, 32, 18),
+    bandAvg(d, 0, 16, 32, 18),
+    bandAvg(d, 0, 0, 2, 18)
   ];
-  AMB.cur = AMB.cur
-    ? AMB.cur.map((c, i) => c.map((x, k) => x + (next[i][k] - x) * 0.3))
+  GLOW.cur = GLOW.cur
+    ? GLOW.cur.map((c, i) => c.map((x, k) => x + (next[i][k] - x) * 0.3))
     : next;
   const css = (c, a) => "rgba(" + c.map(Math.round).join(",") + "," + a + ")";
-  ["t", "r", "b", "l"].forEach((k, i) => stage.style.setProperty("--amb-" + k, css(AMB.cur[i], 0.4)));
-  const avg = [0, 1, 2].map((k) => AMB.cur.reduce((s, c) => s + c[k], 0) / 4);
+  ["t", "r", "b", "l"].forEach((k, i) => stage.style.setProperty("--amb-" + k, css(GLOW.cur[i], 0.4)));
+  const avg = [0, 1, 2].map((k) => GLOW.cur.reduce((s, c) => s + c[k], 0) / 4);
   stage.style.setProperty("--amb-avg", css(avg, 0.55));
 }
 
-setInterval(ambTick, 100);
+setInterval(glowTick, 100);
 
-function themeMsg(key, err) {
+function thMsg(key, err) {
   const el = $("themeMsg");
   setT(el, key);
   el.style.color = err ? "var(--danger)" : "";
 }
 
-function syncThemeUI() {
-  const custom = settings.theme === "custom";
+function syncTh() {
+  const custom = cfg.theme === "custom";
   $("customBox").hidden = !custom;
-  const acc = custom ? settings.colors.accent : settings.accent;
+  const acc = custom ? cfg.colors.accent : cfg.accent;
   document.querySelectorAll("#swatches .swatch").forEach((b) => {
     b.setAttribute("aria-pressed", String(!!acc && b.dataset.hex === acc.toLowerCase()));
   });
-  THEME_KEYS.forEach((k) => {
+  TH_KEYS.forEach((k) => {
     const i = $("col-" + k);
-    if (i) i.value = settings.colors[k];
+    if (i) i.value = cfg.colors[k];
   });
 }
 
-function effectiveColors() {
-  if (settings.theme === "custom") return { ...settings.colors };
+function curColors() {
+  if (cfg.theme === "custom") return { ...cfg.colors };
   const cs = getComputedStyle(document.documentElement);
   const out = {};
-  THEME_KEYS.forEach((k) => {
+  TH_KEYS.forEach((k) => {
     const v = cs.getPropertyValue("--" + k).trim();
-    out[k] = validHex(v) ? v.toLowerCase() : THEME_DEFAULT[k];
+    out[k] = isHex(v) ? v.toLowerCase() : TH_DEF[k];
   });
   return out;
 }
 
-function buildThemeUI() {
+function buildTh() {
   const sw = $("swatches");
-  PALETTES.forEach((hex) => {
+  PALS.forEach((hex) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "swatch";
@@ -6344,14 +6344,14 @@ function buildThemeUI() {
     b.style.background = hex;
     b.setAttribute("aria-label", hex);
     b.addEventListener("click", () => {
-      if (settings.theme === "custom") {
-        settings.colors.accent = hex;
+      if (cfg.theme === "custom") {
+        cfg.colors.accent = hex;
       } else {
-        settings.accent = settings.accent === hex ? "" : hex;
+        cfg.accent = cfg.accent === hex ? "" : hex;
       }
-      saveSettings();
+      saveCfg();
       applyTheme();
-      syncThemeUI();
+      syncTh();
     });
     sw.appendChild(b);
   });
@@ -6365,7 +6365,7 @@ function buildThemeUI() {
     danger: "colDanger"
   };
   const box = $("customRows");
-  THEME_KEYS.forEach((k) => {
+  TH_KEYS.forEach((k) => {
     const row = document.createElement("label");
     row.className = "setrow";
     const text = document.createElement("span");
@@ -6379,10 +6379,10 @@ function buildThemeUI() {
     input.id = "col-" + k;
     input.className = "colorpick";
     input.addEventListener("input", () => {
-      settings.colors[k] = input.value.toLowerCase();
-      saveSettings();
+      cfg.colors[k] = input.value.toLowerCase();
+      saveCfg();
       applyTheme();
-      syncThemeUI();
+      syncTh();
     });
     row.append(text, input);
     box.appendChild(row);
@@ -6390,60 +6390,60 @@ function buildThemeUI() {
 }
 
 $("themeExport").addEventListener("click", () => {
-  const code = "TF1:" + btoa(JSON.stringify(effectiveColors()));
+  const code = "TF1:" + btoa(JSON.stringify(curColors()));
   $("themeCode").value = code;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(() => themeMsg("themeCopied"), () => themeMsg("themeExported"));
+    navigator.clipboard.writeText(code).then(() => thMsg("themeCopied"), () => thMsg("themeExported"));
   } else {
-    themeMsg("themeExported");
+    thMsg("themeExported");
   }
 });
 
 $("themeImport").addEventListener("click", () => {
   const raw = $("themeCode").value.trim();
   if (!raw.startsWith("TF1:")) {
-    themeMsg("themeBad", true);
+    thMsg("themeBad", true);
     return;
   }
   try {
     const obj = JSON.parse(atob(raw.slice(4)));
-    if (!obj || typeof obj !== "object" || !THEME_KEYS.every((k) => validHex(obj[k]))) throw new Error("bad");
-    settings.colors = cleanColors(obj);
-    settings.theme = "custom";
-    saveSettings();
+    if (!obj || typeof obj !== "object" || !TH_KEYS.every((k) => isHex(obj[k]))) throw new Error("bad");
+    cfg.colors = fixColors(obj);
+    cfg.theme = "custom";
+    saveCfg();
     applyTheme();
-    renderSettings();
-    themeMsg("themeImported");
+    drawCfg();
+    thMsg("themeImported");
   } catch (e) {
-    themeMsg("themeBad", true);
+    thMsg("themeBad", true);
   }
 });
 
 $("themeReset").addEventListener("click", () => {
-  settings.theme = "auto";
-  settings.accent = "";
-  settings.colors = { ...THEME_DEFAULT };
-  saveSettings();
+  cfg.theme = "auto";
+  cfg.accent = "";
+  cfg.colors = { ...TH_DEF };
+  saveCfg();
   applyTheme();
-  renderSettings();
-  themeMsg("themeResetDone");
+  drawCfg();
+  thMsg("themeResetDone");
 });
 
 lang = detectLang();
 applyTheme();
 applyAnim();
-buildThemeUI();
-renderSettings();
+buildTh();
+drawCfg();
 applyLang();
-startUpdateWatch();
+watchUpd();
   let savedNick = "";
   try { savedNick = localStorage.getItem("nick") || ""; } catch (e) {}
   if (!savedNick) {
     try { savedNick = sessionStorage.getItem("nick") || ""; } catch (e) {}
   }
   $("nick").value = savedNick;
-  checkOfficial();
-  updateShareUI();
+  chkOfficial();
+  viewShareUI();
   if (!canCapture) {
   $("shareCard").hidden = true;
   $("shareNotice").hidden = false;
@@ -6461,14 +6461,14 @@ startUpdateWatch();
 
 const params = new URLSearchParams(location.search);
 const roomParam = params.get("sala");
-const resumed = tryResumeHost(roomParam ? roomParam.toUpperCase().slice(0, 6) : "");
+const resumed = tryRes(roomParam ? roomParam.toUpperCase().slice(0, 6) : "");
 if (roomParam && !resumed) {
   const linkCode = roomParam.toUpperCase().slice(0, 6);
   $("codeInput").value = linkCode;
   if ($("nick").value.trim()) {
     joinRoom(linkCode);
   } else {
-    setStatus($("homeStatus"), "nickToJoin");
+    setSt($("homeStatus"), "nickToJoin");
     $("nick").focus();
   }
 }
@@ -6485,12 +6485,12 @@ $("gifQuery").addEventListener("input", () => {
   gifTimer = setTimeout(loadGifs, 450);
 });
 $("gifsToggle").addEventListener("change", (e) => {
-  gifsEnabled = e.target.checked;
+  gifsOn = e.target.checked;
   viewers.forEach((v) => {
-    if (v.conn.open) v.conn.send({ gifs: gifsEnabled });
+    if (v.conn.open) v.conn.send({ gifs: gifsOn });
   });
-  syncSuccessor();
-  saveHostSession(false);
+  syncSucc();
+  saveHS(false);
 });
 </script>
 </body>
