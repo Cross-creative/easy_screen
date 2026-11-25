@@ -32,8 +32,10 @@ jobs:
       - name: Copiar o site para o app
         run: |
           mkdir -p android-app/www
-          cp index.html android-app/www/index.html
-          cp app-bridge.js android-app/www/app-bridge.js
+          cp index.html app-bridge.js android-app/www/
+          for f in *.css *.js; do
+            [ "$f" = "app-bridge.js" ] || cp "$f" android-app/www/
+          done
           if [ -f icone.png ]; then cp icone.png android-app/www/icone.png; fi
 
       - name: Instalar dependências
